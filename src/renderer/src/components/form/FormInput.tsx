@@ -1,4 +1,5 @@
 import { useFormContext } from 'react-hook-form'
+import Input from '../ui/Input'
 
 type FormInputProps = {
   name: string
@@ -17,7 +18,7 @@ export default function FormInput({ name, label }: FormInputProps): React.JSX.El
           {label}
         </label>
       )}
-      <input id={name} {...register(name)} />
+      <Input id={name} {...register(name)} />
       {errors[name] && <div className="py-1 px-2 bg-red-200">{String(errors[name]?.message)}</div>}
     </div>
   )
