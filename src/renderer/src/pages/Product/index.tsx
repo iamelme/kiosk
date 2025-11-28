@@ -1,28 +1,54 @@
-import { ProductType } from '@renderer/utils/types'
-import { useEffect, useState } from 'react'
+import Items from '@renderer/components/Items'
+import ListPage from '@renderer/components/ListPage'
+import Button from '@renderer/components/ui/Button'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
-export default function ProductPage(): React.JSX.Element {
-  const [data, setData] = useState<Array<ProductType & { category_name: string }>>()
-  useEffect(() => {
-    const loadData = async (): Promise<void> => {
-      const res = await window.apiProduct.getAllProducts()
-      console.log('res', res)
-      setData(res)
-    }
+const Action = (): React.JSX.Element => (
+  <div className="flex justify-end">
+    <Link to="/products/new">
+      <Button variant="default">Add</Button>
+    </Link>
+  </div>
+)
 
-    loadData()
-  }, [])
+export default function ProductPage(): React.JSX.Element {
+  const { isPending, error, data } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => window.apiProduct.getAllProducts()
+  })
+
+  if (isPending) {
+    return <>Loading...</>
+  }
+
+  if (error) {
+    return <>{error.message}</>
+  }
 
   return (
-    <ul>
-      {data?.map((product) => (
-        <li key={product.id}>
-          <Link to={`/products/${product.id}`}>
-            {product.name} {product.price / 100} - {product.category_name}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ListPage
+        header={{
+          left: <h2>Products</h2>,
+          right: <Action />
+        }}
+      >
+        <Items
+          items={data}
+          renderItems={(item) => (
+            <tr key={item.id}>
+              <td>
+                <Link to={`/products/${item.id}`}>{item.name}</Link>
+              </td>
+              <td>
+                <Link to={`/categories/${item.category_id}`}>{item.category_name}</Link>
+              </td>
+              <td className="text-right">{item.price / 100}</td>
+            </tr>
+          )}
+        ></Items>
+      </ListPage>
+    </>
   )
 }
