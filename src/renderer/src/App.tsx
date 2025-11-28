@@ -5,9 +5,9 @@ function App(): React.JSX.Element {
   // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 
   return (
-    <div className="flex">
+    <div className="flex h-full text-slate-700 text-sm">
       <Sidebar />
-      <main className="p-4">
+      <main className="flex-1 p-4 bg-slate-50">
         <Outlet />
       </main>
     </div>
