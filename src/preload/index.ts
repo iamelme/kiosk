@@ -6,8 +6,15 @@ import { CategoryType, ProductType } from '../renderer/src/utils/types'
 export const apiCategory = {
   getAllCategories: (): Promise<CategoryType[]> => ipcRenderer.invoke('category:getAll'),
   getCategory: (id: number): Promise<CategoryType> => ipcRenderer.invoke('category:get', id),
-  createCategory: (name: string): Promise<void> => ipcRenderer.invoke('category:create', name),
-  updateCategory: ({ id, name }: { id: number; name: string }): Promise<void> =>
+  createCategory: (name: string): Promise<{ success: boolean; error: string }> =>
+    ipcRenderer.invoke('category:create', name),
+  updateCategory: ({
+    id,
+    name
+  }: {
+    id: number
+    name: string
+  }): Promise<{ success: boolean; error: string }> =>
     ipcRenderer.invoke('category:update', { id, name })
 }
 
