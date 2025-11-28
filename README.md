@@ -1,6 +1,7 @@
 # kiosk-app
 
-An Electron application with React and TypeScript
+An Electron application with React and TypeScript.
+This is an open-source project to help small sari-sari/convenience store to have a their own way to add their products and check their prices.
 
 ## Recommended IDE Setup
 
