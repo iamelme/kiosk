@@ -28,21 +28,25 @@ export class ProductRepository implements IProductRepository {
   create(params: Omit<ProductType, 'id'>): void {
     const { name, description, price, quantity, code, category_id } = params
 
+    const normalizePrice = (price ?? 0) * 100
+
     console.log('params', params)
     const stmt = this._database.prepare(
       'INSERT INTO products (name, description, price, quantity, code, category_id) VALUES(?, ?, ?, ?, ?, ?)'
     )
-    stmt.run(name, description, price, quantity, code, category_id)
+    stmt.run(name, description, normalizePrice, quantity, code, category_id)
   }
 
   update(params: ProductType): void {
     const { id, name, description, price, quantity, code, category_id } = params
     console.log('params', params)
 
+    const normalizePrice = (price ?? 0) * 100
+
     const stmt = this._database.prepare(
       'UPDATE products  SET name = ?,  description = ? ,  price = ?,  quantity = ?,  code = ?,  category_id = ? WHERE id = ?'
     )
 
-    stmt.run(name, description, price, quantity, code, category_id, id)
+    stmt.run(name, description, normalizePrice, quantity, code, category_id, id)
   }
 }
