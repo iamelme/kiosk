@@ -28,18 +28,18 @@ export class AppDatabase {
       `
             CREATE TABLE IF NOT EXISTS categories(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
+                name TEXT UNIQUE NOT NULL,
                 description TEXT
             );
 
             CREATE TABLE IF NOT EXISTS products(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
+                name TEXT UNIQUE NOT NULL,
                 description TEXT NOT NULL,
                 price INTEGER DEFAULT 0,
                 quantity INTEGER DEFAULT 0,
-                code INTEGER DEFAULT 0,
-                category_id TEXT,
+                code INTEGER UNIQUE DEFAULT 0,
+                category_id INTEGER,
                 FOREIGN KEY (category_id) REFERENCES categories(id)           
             );
             `
