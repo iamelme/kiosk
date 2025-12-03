@@ -35,6 +35,7 @@ export class AppDatabase {
             CREATE TABLE IF NOT EXISTS products(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
+                sku TEXT UNIQUE NOT NULL,
                 description TEXT NOT NULL,
                 price INTEGER DEFAULT 0,
                 quantity INTEGER DEFAULT 0,
