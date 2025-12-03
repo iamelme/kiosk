@@ -6,6 +6,7 @@ export type CategoryType = {
 export type ProductType = {
   id: number
   name: string
+  sku: string
   description?: string
   price: number
   quantity: number
