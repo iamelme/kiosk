@@ -21,7 +21,8 @@ const FormWrapper = <TFormValues extends FieldValues = FieldValues>({
     const methods = useForm({
       defaultValues,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(schema as any)
+      resolver: zodResolver(schema as any),
+      mode: 'onBlur'
     })
 
     useEffect(() => {
