@@ -1,30 +1,65 @@
-import { CategoryType } from '@renderer/utils/types'
-import { useEffect, useState } from 'react'
+import Items from '@renderer/components/Items'
+import ListPage from '@renderer/components/ListPage'
+import Button from '@renderer/components/ui/Button'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Trash2 } from 'react-feather'
 import { Link } from 'react-router-dom'
 
+const Action = (): React.JSX.Element => (
+  <div className="flex justify-end">
+    <Link to="/categories/new">
+      <Button>Add</Button>
+    </Link>
+  </div>
+)
+
 export default function CategoryPage(): React.JSX.Element {
-  const [data, setData] = useState<CategoryType[]>()
-
-  useEffect(() => {
-    const loadData = async (): Promise<void> => {
-      const res = await window.apiCategory.getAllCategories()
-
-      console.log('res data', res)
-      setData(res)
+  const { isPending, error, data } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => window.apiCategory.getAllCategories()
+  })
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async (id: number) => window.apiCategory.deleteCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     }
+  })
 
-    loadData()
-  }, [])
+  if (isPending) {
+    return <>Loading...</>
+  }
+
+  if (error) {
+    return <>{error.message}</>
+  }
+
+  const handleDelete = (id: number): void => {
+    mutation.mutate(id)
+  }
 
   return (
-    <>
-      <ul>
-        {data?.map((category) => (
-          <li key={category.id}>
-            <Link to={`/categories/${category.id}`}>{category.name}</Link>
-          </li>
-        ))}
-      </ul>
-    </>
+    <ListPage
+      header={{
+        left: <h2>Categories</h2>,
+        right: <Action />
+      }}
+    >
+      <Items
+        items={data}
+        renderItems={(item) => (
+          <tr key={item.id}>
+            <td>
+              <Link to={`/categories/${item.id}`}>{item.name}</Link>
+            </td>
+            <td className="text-right">
+              <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
+                <Trash2 size={14} />
+              </Button>
+            </td>
+          </tr>
+        )}
+      ></Items>
+    </ListPage>
   )
 }

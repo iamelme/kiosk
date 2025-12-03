@@ -1,14 +1,15 @@
 import { CategoryType } from '@renderer/utils/types'
 
+export type ReturnType = {
+  data: CategoryType | null
+  error: Error | string
+}
+
 export interface ICategoryRepository {
   getAll(): CategoryType[]
-  get(id: number): CategoryType
-  create(name: string): {
-    success: boolean
-    error: string
-  }
-  update({ id, name }: { id: number; name: string }): {
-    success: boolean
-    error: string
-  }
+  getById(id: number): CategoryType
+  getByName(name: string): ReturnType
+  create(name: string): ReturnType
+  update({ id, name }: { id: number; name: string }): ReturnType
+  delete(id: number): { success: boolean; error: Error | string }
 }

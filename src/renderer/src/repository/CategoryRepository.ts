@@ -1,4 +1,4 @@
-import { ICategoryRepository } from '@renderer/interfaces/ICategoryRepository'
+import { ICategoryRepository, ReturnType } from '@renderer/interfaces/ICategoryRepository'
 import { CategoryType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 
@@ -10,11 +10,13 @@ export class CategoryRepository implements ICategoryRepository {
     this._database = database
     // ipcRenderer.
     ipcMain.handle('category:getAll', () => this.getAll())
-    ipcMain.handle('category:get', (_, id: number) => this.get(id))
+    ipcMain.handle('category:getById', (_, id: number) => this.getById(id))
+    ipcMain.handle('category:getByName', (_, name: string) => this.getByName(name))
     ipcMain.handle('category:create', (_, name: string) => this.create(name))
     ipcMain.handle('category:update', (_, { id, name }: { id: number; name: string }) =>
       this.update({ id, name })
     )
+    ipcMain.handle('category:delete', (_, id: number) => this.delete(id))
   }
 
   getAll(): CategoryType[] {
@@ -25,12 +27,45 @@ export class CategoryRepository implements ICategoryRepository {
     // return ipcMain.handle('category:getAll', () => row) as unknown as CategoryType[]
   }
 
-  get(id: number): CategoryType {
+  getById(id: number): CategoryType {
     const category = this._database.prepare('SELECT * FROM categories WHERE id= ?').get(id)
     return category
   }
 
-  create(name: string): { success: boolean; error: string } {
+  getByName(name: string): ReturnType {
+    try {
+      const category = this._database
+        .prepare('SELECT * FROM categories WHERE LOWER(name) = ?')
+        .get(name)
+
+      console.log('repo category', category)
+
+      if (category) {
+        return {
+          data: category,
+          error: ''
+        }
+      }
+
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while saving a category")
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error("Something wen't wrong while saving a category")
+        }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while saving a category")
+      }
+    }
+  }
+
+  create(name: string): ReturnType {
     const normalizeName = name?.trim()
 
     // const found = this._database
@@ -45,65 +80,54 @@ export class CategoryRepository implements ICategoryRepository {
     //   }
     // }
     try {
-      const result = this._database
+      const category = this._database
         .prepare('INSERT INTO categories (name) VALUES ( ?) RETURNING *')
         .get(normalizeName)
 
-      if (result) {
+      console.log('create category', category)
+
+      if (category) {
         return {
-          success: true,
+          data: category,
           error: ''
         }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while saving a category")
       }
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error: ${error.message}`)
         console.log('error name', error.name)
-        // console.log('error', error.code)
-        if (error.name === 'SqliteError') {
+        if (error instanceof Error) {
           return {
-            success: false,
-            error: 'Constraint violation: Data already exists or is invalid.'
+            data: null,
+            error: new Error("Something wen't wrong while saving a category.")
           }
-        }
-        // if (error.code === 'SQLITE_CONSTRAINT') {
-        //   console.error('Constraint violation: Data already exists or is invalid.')
-        //   return {
-        //     success: false,
-        //     error: 'Constraint violation: Data already exists or is invalid.'
-        //   }
-        // }
-        return {
-          success: false,
-          error: error.message
         }
       }
       return {
-        success: false,
-        error: `${error}`
+        data: null,
+        error: new Error("Something wen't wrong while saving a category")
       }
-    }
-
-    return {
-      success: false,
-      error: "Something wen't wrong"
     }
   }
 
-  update({ id, name }: { id: number; name: string }): { success: boolean; error: string } {
+  update({ id, name }: { id: number; name: string }): ReturnType {
     console.log({ id, name })
 
     const normalizeName = name?.trim()
 
-    const found = this._database.prepare('SELECT id FROM categories WHERE name = ?').get(name)
+    // const found = this._database.prepare('SELECT id FROM categories WHERE name = ?').get(name)
 
-    console.log('found', found)
-    if (found && found.id !== id) {
-      return {
-        success: false,
-        error: 'Category already existed'
-      }
-    }
+    // console.log('found', found)
+    // if (found && found.id !== id) {
+    //   return {
+    //     data: null,
+    //     error: new Error('Category already existed')
+    //   }
+    // }
 
     try {
       const stmt = this._database.prepare('UPDATE categories SET name = ? WHERE id = ? RETURNING *')
@@ -113,41 +137,52 @@ export class CategoryRepository implements ICategoryRepository {
 
       if (updatedRow?.id) {
         return {
-          success: true,
+          data: updatedRow,
           error: ''
         }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while updating a category")
       }
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error: ${error.message}`)
         console.log('error name', error.name)
-        // console.log('error', error.code)
-        if (error.name === 'SqliteError') {
-          return {
-            success: false,
-            error: 'Constraint violation: Data already exists or is invalid.'
-          }
+        return {
+          data: null,
+          error: new Error("Something wen't wrong while updating the category.")
         }
-        // if (error.code === 'SQLITE_CONSTRAINT') {
-        //   console.error('Constraint violation: Data already exists or is invalid.')
-        //   return {
-        //     success: false,
-        //     error: 'Constraint violation: Data already exists or is invalid.'
-        //   }
-        // }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while updating the category.")
+      }
+    }
+  }
+
+  delete(id: number): { success: boolean; error: Error | string } {
+    try {
+      const stmt = this._database.prepare('DELETE FROM categories WHERE id = ?')
+
+      stmt.run(id)
+
+      return {
+        success: true,
+        error: ''
+      }
+    } catch (error) {
+      console.error(error)
+      if (error instanceof Error) {
         return {
           success: false,
-          error: error.message
+          error: new Error("Something wen't wrong while deleting the product")
         }
       }
       return {
         success: false,
-        error: `${error}`
+        error: new Error("Something wen't wrong while deleting the product")
       }
-    }
-    return {
-      success: false,
-      error: "something wen't wrong"
     }
   }
 }
