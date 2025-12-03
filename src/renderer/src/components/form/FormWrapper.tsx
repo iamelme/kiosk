@@ -29,9 +29,9 @@ const FormWrapper = <TFormValues extends FieldValues = FieldValues>({
       methods.reset(defaultValues)
     }, [methods, defaultValues])
 
-    const { getValues } = methods
+    // const { getValues } = methods
 
-    console.log(getValues())
+    // console.log(getValues())
 
     const submit: SubmitHandler<TFormValues> = (data, event) => {
       event?.preventDefault()
