@@ -43,6 +43,14 @@ export class AppDatabase {
                 category_id INTEGER,
                 FOREIGN KEY (category_id) REFERENCES categories(id)           
             );
+
+            CREATE TABLE IF NOT EXISTS counts(
+                products INTEGER DEFAULT 0,
+                categories INTEGER DEFAULT 0
+            );
+
+            INSERT INTO counts (products, categories) 
+            VALUES(0, 0);
             `
     )
 
