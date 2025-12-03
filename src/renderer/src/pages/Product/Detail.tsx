@@ -5,7 +5,6 @@ import Alert from '@renderer/components/ui/Alert'
 import Button from '@renderer/components/ui/Button'
 import { ProductType } from '@renderer/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import z from 'zod'
 
@@ -83,44 +82,34 @@ export default function Detail(): React.JSX.Element {
         quantity: 1,
         code: 0,
         category_id: 0
-
-        // const [data, setData] = useState<Omit<ProductType, 'id'>>({
-        //   name: '',
-        //   sku: '',
-        //   description: '',
-        //   price: 0,
-        //   quantity: 1,
-        //   code: 0,
-        //   category_id: 0
-        // })
       }
     }
   })
 
-  const [errorMessage, setErrorMessage] = useState('')
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: async (newData: ProductType): Promise<void> => {
       console.log('submit', newData)
 
-      setErrorMessage('')
-
       if (id !== 'new') {
-        await window.apiProduct.updateProduct({ ...newData, id: Number(id) })
+        const { error } = await window.apiProduct.updateProduct({
+          ...newData,
+          id: Number(id)
+        })
+        if (error) {
+          throw new Error(error.message)
+        }
         navigate(-1)
         return
       }
-      const { data, error } = await window.apiProduct.createProduct(newData)
+      const { error } = await window.apiProduct.createProduct(newData)
 
       if (error) {
-        setErrorMessage(error.message)
         throw new Error(error.message)
       }
 
-      if (data) {
-        navigate(-1)
-      }
+      navigate(-1)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -167,7 +156,6 @@ export default function Detail(): React.JSX.Element {
         {mutation.error?.message && (
           <Alert variant="danger" className="mt-3">
             {mutation.error?.message}
-            {errorMessage}
           </Alert>
         )}
         <Button type="submit" className="mt-4">
