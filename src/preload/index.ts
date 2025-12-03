@@ -22,8 +22,16 @@ export const apiProduct = {
   getAllProducts: (): Promise<Array<ProductType & { category_name: string }>> =>
     ipcRenderer.invoke('product:getAll'),
   getProductById: (id: number): Promise<ProductType> => ipcRenderer.invoke('product:getById', id),
+  getProductByCode: (code: number): Promise<{ data: ProductType | null; error: Error | string }> =>
+    ipcRenderer.invoke('product:getByCode', code),
+  getProductBySku: (sku: string): Promise<{ data: ProductType | null; error: Error | string }> =>
+    ipcRenderer.invoke('product:getBySku', sku),
+  getProductByName: (name: string): Promise<{ data: ProductType | null; error: Error | string }> =>
+    ipcRenderer.invoke('product:getByName', name),
   createProduct: (params: Omit<ProductType, 'id'>) => ipcRenderer.invoke('product:create', params),
-  updateProduct: (params: ProductType) => ipcRenderer.invoke('product:update', params)
+  updateProduct: (params: ProductType) => ipcRenderer.invoke('product:update', params),
+  deleteProduct: (id: number): Promise<{ success: boolean; error: Error | string }> =>
+    ipcRenderer.invoke('product:delete', id)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
