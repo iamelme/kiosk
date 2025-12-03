@@ -1,15 +1,20 @@
 import { useFormContext } from 'react-hook-form'
 import Input from '../ui/Input'
-import { useEffect } from 'react'
+import { DetailedHTMLProps, HTMLAttributes, useEffect } from 'react'
 import Alert from '../ui/Alert'
 
 type FormInputProps = {
   name: string
   label?: string
   fieldWatch?: string
-}
+} & DetailedHTMLProps<HTMLAttributes<HTMLInputElement>, HTMLInputElement>
 
-export default function FormInput({ name, label, fieldWatch }: FormInputProps): React.JSX.Element {
+export default function FormInput({
+  name,
+  label,
+  fieldWatch,
+  ...props
+}: FormInputProps): React.JSX.Element {
   const {
     register,
     formState: { errors },
@@ -38,7 +43,12 @@ export default function FormInput({ name, label, fieldWatch }: FormInputProps): 
           {label}
         </label>
       )}
-      <Input id={name} {...register(name)} />
+      <Input
+        id={name}
+        {...register(name)}
+        {...props}
+        className={`${errors[name] ? 'border-red-400' : ''}`}
+      />
       {errors[name] && (
         <Alert variant="danger" style="mt-2 text-xs">
           {String(errors[name]?.message)}
