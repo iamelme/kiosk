@@ -50,7 +50,8 @@ export class AppDatabase {
             );
 
             INSERT INTO counts (products, categories) 
-            VALUES(0, 0);
+            SELECT 0, 0
+            WHERE NOT EXISTS (SELECT 1 FROM counts);
             `
     )
 
