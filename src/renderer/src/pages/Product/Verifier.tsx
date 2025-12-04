@@ -1,5 +1,5 @@
+// import Combobox from '@renderer/components/ui/Combobox'
 import Input from '@renderer/components/ui/Input'
-// import { ProductType } from '@renderer/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 
@@ -11,23 +11,17 @@ export default function Verifier(): React.ReactElement {
   const { isPending, error, data } = useQuery({
     queryKey: ['product', { search: searchTerm }],
     queryFn: async (searchTerm) => {
-      console.log('searchTerm', searchTerm)
       const value = searchTerm.queryKey[1].search
-      if (value) {
-        const normalizeCode = Number(value)
-        console.log(normalizeCode)
-        if (normalizeCode) {
-          const { data } = await window.apiProduct.getProductByCode(normalizeCode)
 
-          return data
-        }
+      if (value) {
+        const { data } = await window.apiProduct.searchProduct(String(value))
+
+        return data
       }
 
       return null
     }
   })
-
-  console.log('searchTerm outside query', searchTerm)
 
   useEffect(() => {
     if (searchInputRef.current) {
@@ -37,14 +31,14 @@ export default function Verifier(): React.ReactElement {
       //   console.log('event', e)
 
       if (e.metaKey || e.ctrlKey) {
-        console.log('Cmd or Ctrl  + k key pressed!')
+        // console.log('Cmd or Ctrl  + k key pressed!')
         if (searchInputRef.current) {
           searchInputRef?.current.focus()
         }
       }
     }
 
-    console.log('event')
+    // console.log('event')
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
@@ -58,18 +52,27 @@ export default function Verifier(): React.ReactElement {
     setSearchTerm(value)
   }
 
-  console.log('data', data)
+  // console.log('data', data)
   return (
     <>
+      {/* <Combobox>
+        <Combobox.Input placeholder="Search..." autoFocus onChange={handleSearch} />
+        <Combobox.List>
+          {data?.map((item) => (
+            <p key={item.id}>
+              {item.name} {item.sku} - {item.price}
+            </p>
+          ))}
+        </Combobox.List>
+      </Combobox> */}
       <Input placeholder="Search" ref={searchInputRef} onChange={handleSearch} />
       {isPending && <>Loading</>}
       {error && <>{error.message}</>}
-      <p>
-        {data?.name} {data?.sku} - {data?.price}
-      </p>
-      <p>
-        <strong>{data?.code}</strong>
-      </p>
+      {data?.map((item) => (
+        <p key={item.id}>
+          {item.name} {item.sku} - {item.price}
+        </p>
+      ))}
     </>
   )
 }

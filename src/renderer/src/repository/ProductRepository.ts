@@ -13,17 +13,42 @@ export class ProductRepository implements IProductRepository {
     ipcMain.handle('product:getByCode', (_, code: number) => this.getByCode(code))
     ipcMain.handle('product:getByName', (_, name: string) => this.getByName(name))
     ipcMain.handle('product:getBySku', (_, sku: string) => this.getBySku(sku))
+    ipcMain.handle('product:search', (_, term: string) => this.search(term))
     ipcMain.handle('product:create', (_, params: Omit<ProductType, 'id'>) => this.create(params))
     ipcMain.handle('product:update', (_, params: ProductType) => this.update(params))
     ipcMain.handle('product:delete', (_, id: number) => this.delete(id))
   }
 
-  getAll(): Array<ProductType & { category_name: string }> {
-    const row = this._database.prepare(
-      'SELECT p.*, c.name as category_name FROM products AS p LEFT JOIN categories as C ON p.category_id = c.id'
-    )
-    console.log('row', row)
-    return row.all()
+  getAll(): {
+    data: Array<ProductType & { category_name: string }> | null
+    error: Error | ''
+  } {
+    try {
+      const products = this._database
+        .prepare(
+          `SELECT p.*, c.name as category_name 
+      FROM products AS p 
+      LEFT JOIN categories as C ON p.category_id = c.id
+        LIMIT 20
+        `
+        )
+        .all()
+      return {
+        data: products,
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error("Something wen't wrong while searching the product")
+        }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while searching the product")
+      }
+    }
   }
 
   getById(id: number): { data: ProductType | null; error: string } {
@@ -107,6 +132,52 @@ export class ProductRepository implements IProductRepository {
       return {
         data: null,
         error: new Error('Product not found')
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error("Something wen't wrong while searching the product")
+        }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while searching the product")
+      }
+    }
+  }
+
+  search(term: string): {
+    data: Array<ProductType & { category_name: string }> | null
+    error: Error | string
+  } {
+    try {
+      const normalizeTerm = term?.trim()
+      const products = this._database
+        .prepare(
+          `SELECT p.name, p.sku, p.code, p.price
+        FROM products p
+          INNER JOIN products_fts pf ON p.id = pf.product_id
+        WHERE
+          products_fts MATCH ? 
+        ORDER BY rank
+        LIMIT 10`
+        )
+        .all(normalizeTerm)
+
+      console.log('normalize term', normalizeTerm)
+
+      console.log('search products', products)
+
+      if (products.length) {
+        return {
+          data: products,
+          error: ''
+        }
+      }
+      return {
+        data: null,
+        error: ''
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -230,9 +301,13 @@ export class ProductRepository implements IProductRepository {
 
   delete(id: number): { success: boolean; error: Error | string } {
     try {
-      const stmt = this._database.prepare('DELETE FROM products WHERE id = ?')
+      const transaction = this._database.transaction(() => {
+        this._database.prepare('DELETE FROM products WHERE id = ?').run(id)
 
-      stmt.run(id)
+        this._database.prepare('UPDATE counts SET products = products - 1').run()
+      })
+
+      transaction()
 
       return {
         success: true,

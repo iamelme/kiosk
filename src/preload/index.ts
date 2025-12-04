@@ -22,8 +22,10 @@ export const apiCategory = {
 }
 
 export const apiProduct = {
-  getAllProducts: (): Promise<Array<ProductType & { category_name: string }>> =>
-    ipcRenderer.invoke('product:getAll'),
+  getAllProducts: (): Promise<{
+    data: Array<ProductType & { category_name: string }> | null
+    error: Error | string
+  }> => ipcRenderer.invoke('product:getAll'),
   getProductById: (id: number): Promise<ProductType> => ipcRenderer.invoke('product:getById', id),
   getProductByCode: (code: number): Promise<{ data: ProductType | null; error: Error | string }> =>
     ipcRenderer.invoke('product:getByCode', code),
@@ -31,6 +33,12 @@ export const apiProduct = {
     ipcRenderer.invoke('product:getBySku', sku),
   getProductByName: (name: string): Promise<{ data: ProductType | null; error: Error | string }> =>
     ipcRenderer.invoke('product:getByName', name),
+  searchProduct: (
+    term: string
+  ): Promise<{
+    data: Array<ProductType & { category_name: string }> | null
+    error: Error | string
+  }> => ipcRenderer.invoke('product:search', term),
   createProduct: (params: Omit<ProductType, 'id'>) => ipcRenderer.invoke('product:create', params),
   updateProduct: (params: ProductType) => ipcRenderer.invoke('product:update', params),
   deleteProduct: (id: number): Promise<{ success: boolean; error: Error | string }> =>
