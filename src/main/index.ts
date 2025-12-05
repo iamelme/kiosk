@@ -5,10 +5,12 @@ import icon from '../../resources/icon.png?asset'
 import { AppDatabase } from '../renderer/src/database/db'
 import { CategoryRepository } from '../renderer/src/repository/CategoryRepository'
 import { ProductRepository } from '../renderer/src/repository/ProductRepository'
+import { InventoryRepository } from '../renderer/src/repository/InventoryRepository'
 
 export let db
 export let category
 export let product
+export let inventory
 
 function createWindow(): void {
   // Create the browser window.
@@ -53,8 +55,16 @@ app.whenReady().then(() => {
 
   category = new CategoryRepository(db.db)
   product = new ProductRepository(db.db)
+  inventory = new InventoryRepository(db.db)
 
   console.log('db from main', db)
+
+  const locale = app.getLocale()
+  console.log('Current application locale:', locale)
+
+  ipcMain.handle('get-locale', () => {
+    return app.getLocale()
+  })
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

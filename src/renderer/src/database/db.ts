@@ -38,7 +38,6 @@ export class AppDatabase {
                 sku TEXT UNIQUE NOT NULL,
                 description TEXT NOT NULL,
                 price INTEGER DEFAULT 0,
-                quantity INTEGER DEFAULT 0,
                 code INTEGER UNIQUE DEFAULT 0,
                 category_id INTEGER,
                 FOREIGN KEY (category_id) REFERENCES categories(id)           
@@ -52,6 +51,13 @@ export class AppDatabase {
             INSERT INTO counts (products, categories) 
             SELECT 0, 0
             WHERE NOT EXISTS (SELECT 1 FROM counts);
+
+            CREATE TABLE IF NOT EXISTS inventory(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              quantity INTEGER DEFAULT 0,
+              product_id INTEGER,
+              FOREIGN KEY (product_id) REFERENCES products(id)
+            );
             
             CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5(product_id, name, sku, code);
 
