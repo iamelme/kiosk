@@ -9,7 +9,14 @@ export type ProductType = {
   sku: string
   description?: string
   price: number
-  quantity: number
   code: number
   category_id: number
 }
+
+export type InventoryType = {
+  id: number
+  quantity: number
+  product_id: number
+}
+
+export type ErrorType = Error | string
