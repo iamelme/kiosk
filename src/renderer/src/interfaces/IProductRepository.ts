@@ -6,7 +6,7 @@ type ReturnType = { data: ProductType | null; error: Error | string }
 
 export interface IProductRepository {
   getAll(): {
-    data: Array<ProductType & { category_name: string }> | null
+    data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | string
   }
   getById(id: number): ReturnType
@@ -14,10 +14,10 @@ export interface IProductRepository {
   getByCode(code: number): ReturnType
   getBySku(sku: string): ReturnType
   search(term: string): {
-    data: Array<ProductType & { category_name: string }> | null
+    data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | string
   }
-  create({ name, description, price, quantity, category_id }: CreateProduct): {
+  create(params: CreateProduct): {
     data: ProductType | null
     error: Error | string
   }

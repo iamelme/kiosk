@@ -15,7 +15,6 @@ const schema = z
     sku: z.string().min(2),
     description: z.string().optional(),
     price: z.coerce.number(),
-    quantity: z.coerce.number(),
     code: z.coerce.number(),
     category_id: z.coerce.number()
   })
@@ -145,8 +144,6 @@ export default function Detail(): React.JSX.Element {
         <FormInput label="Code" name="code" />
         <FormInput label="Description" name="description" />
         <FormInput label="Price" name="price" />
-        <FormInput label="Quantity" name="quantity" />
-        {/* <FormInput label="Category" name="category_id" /> */}
         <FormDatalist
           label="Category"
           name="category_id"

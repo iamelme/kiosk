@@ -20,15 +20,17 @@ export class ProductRepository implements IProductRepository {
   }
 
   getAll(): {
-    data: Array<ProductType & { category_name: string }> | null
+    data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | ''
   } {
     try {
       const products = this._database
         .prepare(
-          `SELECT p.*, c.name as category_name 
-      FROM products AS p 
-      LEFT JOIN categories as C ON p.category_id = c.id
+          `SELECT p.*, i.quantity, c.name as category_name
+        FROM products AS p 
+        LEFT JOIN categories as c ON p.category_id = c.id
+        LEFT JOIN inventory as i ON p.id = i.product_id
+        WHERE i.quantity > 0
         LIMIT 20
         `
         )
@@ -148,7 +150,7 @@ export class ProductRepository implements IProductRepository {
   }
 
   search(term: string): {
-    data: Array<ProductType & { category_name: string }> | null
+    data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | string
   } {
     try {
@@ -194,7 +196,7 @@ export class ProductRepository implements IProductRepository {
   }
 
   create(params: Omit<ProductType, 'id'>): { data: ProductType | null; error: Error | string } {
-    const { name, sku, description, price, quantity, code, category_id } = params
+    const { name, sku, description, price, code, category_id } = params
 
     const normalizePrice = (price ?? 0) * 100
     const normalizeSKU = sku?.trim()?.toLowerCase()?.replace(/ /g, '-')
@@ -206,17 +208,9 @@ export class ProductRepository implements IProductRepository {
     try {
       const transaction = this._database.transaction(() => {
         const stmt = this._database.prepare(
-          'INSERT INTO products (name, sku, description, price, quantity, code, category_id) VALUES(?, ?, ?, ?, ?, ?, ?) RETURNING *'
+          'INSERT INTO products (name, sku, description, price, code, category_id) VALUES(?, ?, ?, ?, ?, ?) RETURNING *'
         )
-        product = stmt.run(
-          name,
-          normalizeSKU,
-          description,
-          normalizePrice,
-          quantity,
-          code,
-          category_id
-        )
+        product = stmt.run(name, normalizeSKU, description, normalizePrice, code, category_id)
 
         this._database.prepare('UPDATE counts SET products = products + 1').run()
       })
@@ -249,7 +243,7 @@ export class ProductRepository implements IProductRepository {
   }
 
   update(params: ProductType): { data: ProductType | null; error: Error | string } {
-    const { id, name, sku, description, price, quantity, code, category_id } = params
+    const { id, name, sku, description, price, code, category_id } = params
     console.log('params', params)
 
     const normalizePrice = (price ?? 0) * 100
@@ -257,7 +251,7 @@ export class ProductRepository implements IProductRepository {
 
     try {
       const stmt = this._database.prepare(
-        'UPDATE products  SET name = ?, sku = ?,  description = ? ,  price = ?,  quantity = ?,  code = ?,  category_id = ? WHERE id = ? RETURNING *'
+        'UPDATE products  SET name = ?, sku = ?,  description = ? ,  price = ?,  code = ?,  category_id = ? WHERE id = ? RETURNING *'
       )
 
       const product = stmt.all(
@@ -265,7 +259,6 @@ export class ProductRepository implements IProductRepository {
         normalizeSKU,
         description,
         normalizePrice,
-        quantity,
         code,
         category_id,
         id
