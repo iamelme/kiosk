@@ -14,6 +14,8 @@ import ProductPage from './pages/Product'
 import ProductDetail from './pages/Product/Detail'
 import ProductVerifier from './pages/Product/Verifier'
 
+import InventoryPage from './pages/Inventory'
+
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
@@ -31,6 +33,10 @@ createRoot(document.getElementById('root')!).render(
               <Route index element={<ProductPage />} />
               <Route path=":id" element={<ProductDetail />} />
               <Route path="verifier" element={<ProductVerifier />} />
+            </Route>
+
+            <Route path="inventory">
+              <Route index element={<InventoryPage />} />
             </Route>
           </Route>
         </Routes>
