@@ -10,7 +10,9 @@ export default function Input({ className, ...props }: InputProps): React.JSX.El
   return (
     <input
       {...props}
-      className={twMerge('w-full py-1 px-2 border border-slate-400 rounded-sm', className)}
+      className={twMerge(
+        `w-full py-1 px-2 border border-slate-400 rounded-t-sm rounded-b-sm ${className}`
+      )}
     />
   )
 }
