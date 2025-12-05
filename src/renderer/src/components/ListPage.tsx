@@ -1,14 +1,22 @@
 import React, { ReactNode } from 'react'
+import Alert from './ui/Alert'
 
 type ListPageProp = {
   header?: {
     left?: ReactNode
     right?: ReactNode
   }
+  isPending: boolean
+  error: Error | null
   children: ReactNode
 }
 
-export default function ListPage({ header, children }: ListPageProp): React.JSX.Element {
+export default function ListPage({
+  header,
+  isPending,
+  error,
+  children
+}: ListPageProp): React.JSX.Element {
   return (
     <>
       {header && (
@@ -17,7 +25,33 @@ export default function ListPage({ header, children }: ListPageProp): React.JSX.
           <div className="flex-1">{header?.right}</div>
         </div>
       )}
-      {children}
+      {error && <Alert variant="danger">{error.message}</Alert>}
+      {isPending ? (
+        <div className="mx-auto w-full rounded-md border border-slate-200 p-4">
+          <div className="flex animate-pulse space-x-4">
+            <div className="flex-1 space-y-6 py-1">
+              <div className="grid grid-cols-4 gap-4">
+                <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-2 rounded bg-gray-200"></div>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                  <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                  <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                  <div className="col-span-1 h-2 rounded bg-gray-200"></div>
+                </div>
+                <div className="h-2 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </>
   )
 }
