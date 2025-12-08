@@ -30,8 +30,7 @@ export class ProductRepository implements IProductRepository {
         FROM products AS p 
         LEFT JOIN categories as c ON p.category_id = c.id
         LEFT JOIN inventory as i ON p.id = i.product_id
-        WHERE i.quantity > 0 
-        AND p.is_active = 1
+        WHERE p.is_active = 1
         LIMIT 20
         `
         )
@@ -209,15 +208,23 @@ export class ProductRepository implements IProductRepository {
     let product
 
     try {
-      const transaction = this._database.transaction(() => {
-        const stmt = this._database.prepare(
-          'INSERT INTO products (name, sku, description, price, code, category_id) VALUES(?, ?, ?, ?, ?, ?) RETURNING *'
-        )
-        product = stmt.run(name, normalizeSKU, description, normalizePrice, code, category_id)
+      // const transaction = this._database.transaction(() => {
+      const stmt = this._database.prepare(
+        'INSERT INTO products (name, sku, description, price, code, category_id) VALUES(?, ?, ?, ?, ?, ?) RETURNING *'
+      )
+      product = stmt.run(name, normalizeSKU, description, normalizePrice, code, category_id)
 
-        this._database.prepare('UPDATE counts SET products = products + 1').run()
-      })
-      transaction()
+      // this._database
+      //   .prepare(
+      //     `
+      //     INSERT INTO inventory (product_id)
+      //     VALUES(?)`
+      //   )
+      //   .run(product.lastInsertRowid)
+
+      // this._database.prepare('UPDATE counts SET products = products + 1').run()
+      // })
+      // transaction()
 
       if (product) {
         return {
@@ -226,7 +233,10 @@ export class ProductRepository implements IProductRepository {
         }
       }
 
-      throw new Error('Error while creating a new product')
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while creating a product.")
+      }
     } catch (error) {
       console.error('catch error ===>', error)
       //   if (error instanceof Error) throw new Error(error.message)
@@ -297,13 +307,13 @@ export class ProductRepository implements IProductRepository {
 
   delete(id: number): { success: boolean; error: Error | string } {
     try {
-      const transaction = this._database.transaction(() => {
-        this._database.prepare('DELETE FROM products WHERE id = ?').run(id)
+      // const transaction = this._database.transaction(() => {
+      this._database.prepare('DELETE FROM products WHERE id = ?').run(id)
 
-        this._database.prepare('UPDATE counts SET products = products - 1').run()
-      })
+      //   this._database.prepare('UPDATE counts SET products = products - 1').run()
+      // })
 
-      transaction()
+      // transaction()
 
       return {
         success: true,
