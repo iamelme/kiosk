@@ -4,3 +4,15 @@ html,
 body {
   height: 100%;
 }
+
+details > summary {
+  list-style: none; /* Hides the marker in some browsers */
+}
+
+details > summary::marker {
+  content: ''; /* Hides the marker in Chrome and Firefox */
+}
+
+details > summary::-webkit-details-marker {
+  display: none; /* Hides the marker in Safari */
+}
