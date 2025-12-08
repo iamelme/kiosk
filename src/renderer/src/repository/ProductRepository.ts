@@ -30,7 +30,8 @@ export class ProductRepository implements IProductRepository {
         FROM products AS p 
         LEFT JOIN categories as c ON p.category_id = c.id
         LEFT JOIN inventory as i ON p.id = i.product_id
-        WHERE i.quantity > 0
+        WHERE i.quantity > 0 
+        AND p.is_active = 1
         LIMIT 20
         `
         )
@@ -157,9 +158,11 @@ export class ProductRepository implements IProductRepository {
       const normalizeTerm = term?.trim()
       const products = this._database
         .prepare(
-          `SELECT p.name, p.sku, p.code, p.price
+          `SELECT p.name, p.sku, p.code, p.price, c.name AS category_name, i.quantity
         FROM products p
           INNER JOIN products_fts pf ON p.id = pf.product_id
+          LEFT JOIN categories as c ON p.category_id = c.id
+          LEFT JOIN inventory as i ON p.id = i.product_id
         WHERE
           products_fts MATCH ? 
         ORDER BY rank

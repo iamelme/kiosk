@@ -39,6 +39,7 @@ export class AppDatabase {
                 description TEXT NOT NULL,
                 price INTEGER DEFAULT 0,
                 code INTEGER UNIQUE DEFAULT 0,
+                is_active INTEGER DEFAULT 1,
                 category_id INTEGER,
                 FOREIGN KEY (category_id) REFERENCES categories(id)           
             );
