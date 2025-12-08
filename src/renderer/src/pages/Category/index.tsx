@@ -41,7 +41,10 @@ export default function CategoryPage(): React.JSX.Element {
   return (
     <ListPage
       header={{
-        left: <h2>Categories</h2>,
+        left: {
+          title: 'Categories',
+          subTitle: 'All Product Categories'
+        },
         right: <Action />
       }}
       isPending={isPending}

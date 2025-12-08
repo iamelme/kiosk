@@ -2,6 +2,7 @@ import Items from '@renderer/components/Items'
 import ListPage from '@renderer/components/ListPage'
 import Button from '@renderer/components/ui/Button'
 import Input from '@renderer/components/ui/Input'
+import Price from '@renderer/components/ui/Price'
 // import Dropdown from '@renderer/components/ui/Dropdown'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -70,7 +71,10 @@ export default function ProductPage(): React.JSX.Element {
     <>
       <ListPage
         header={{
-          left: <h2>Products</h2>,
+          left: {
+            title: 'Products',
+            subTitle: 'All products with quantities'
+          },
           right: (
             <div className="flex gap-x-2">
               <Input
@@ -102,7 +106,9 @@ export default function ProductPage(): React.JSX.Element {
                     <Link to={`/categories/${item.category_id}`}>{item.category_name}</Link>
                   </td>
                   <td className="">{item.quantity}</td>
-                  <td className="text-right">{item.price / 100}</td>
+                  <td className="text-right">
+                    <Price value={item.price / 100} />
+                  </td>
                   <td className="text-right">
                     <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 size={14} />
