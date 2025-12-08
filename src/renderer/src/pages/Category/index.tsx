@@ -13,10 +13,18 @@ const Action = (): React.JSX.Element => (
   </div>
 )
 
+const headers = [
+  { label: 'Name', className: '' },
+  { label: '', className: 'text-right' }
+]
+
 export default function CategoryPage(): React.JSX.Element {
   const { isPending, error, data } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => window.apiCategory.getAllCategories()
+    queryFn: async () => {
+      const { data } = await window.apiCategory.getAllCategories()
+      return data
+    }
   })
   const queryClient = useQueryClient()
   const mutation = useMutation({
@@ -25,14 +33,6 @@ export default function CategoryPage(): React.JSX.Element {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
     }
   })
-
-  if (isPending) {
-    return <>Loading...</>
-  }
-
-  if (error) {
-    return <>{error.message}</>
-  }
 
   const handleDelete = (id: number): void => {
     mutation.mutate(id)
@@ -44,22 +44,27 @@ export default function CategoryPage(): React.JSX.Element {
         left: <h2>Categories</h2>,
         right: <Action />
       }}
+      isPending={isPending}
+      error={error}
     >
-      <Items
-        items={data}
-        renderItems={(item) => (
-          <tr key={item.id}>
-            <td>
-              <Link to={`/categories/${item.id}`}>{item.name}</Link>
-            </td>
-            <td className="text-right">
-              <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
-                <Trash2 size={14} />
-              </Button>
-            </td>
-          </tr>
-        )}
-      ></Items>
+      {data && (
+        <Items
+          headers={headers}
+          items={data}
+          renderItems={(item) => (
+            <tr key={item.id}>
+              <td>
+                <Link to={`/categories/${item.id}`}>{item.name}</Link>
+              </td>
+              <td className="text-right">
+                <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
+                  <Trash2 size={14} />
+                </Button>
+              </td>
+            </tr>
+          )}
+        />
+      )}
     </ListPage>
   )
 }

@@ -63,7 +63,10 @@ export default function Detail(): React.JSX.Element {
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => window.apiCategory.getAllCategories()
+    queryFn: async () => {
+      const { data } = await window.apiCategory.getAllCategories()
+      return data
+    }
   })
 
   const { isPending, error, data } = useQuery({

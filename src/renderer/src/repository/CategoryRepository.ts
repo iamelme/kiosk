@@ -19,17 +19,62 @@ export class CategoryRepository implements ICategoryRepository {
     ipcMain.handle('category:delete', (_, id: number) => this.delete(id))
   }
 
-  getAll(): CategoryType[] {
+  getAll(): { data: CategoryType[] | null; error: Error | string } {
     console.log('getall top =====>')
-    const row = this._database.prepare('SELECT * FROM categories')
-    console.log('row ===>', row.all())
-    return row.all()
-    // return ipcMain.handle('category:getAll', () => row) as unknown as CategoryType[]
+    try {
+      const categories = this._database.prepare('SELECT * FROM categories').all()
+
+      if (categories) {
+        return {
+          data: categories,
+          error: ''
+        }
+      }
+
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while retrieving the products")
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error("Something wen't wrong while deleting the product")
+        }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while deleting the product")
+      }
+    }
   }
 
-  getById(id: number): CategoryType {
-    const category = this._database.prepare('SELECT * FROM categories WHERE id= ?').get(id)
-    return category
+  getById(id: number): ReturnType {
+    try {
+      const category = this._database.prepare('SELECT * FROM categories WHERE id= ?').get(id)
+      if (category) {
+        return {
+          data: category,
+          error: ''
+        }
+      }
+
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while retrieving the products")
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error("Something wen't wrong while deleting the product")
+        }
+      }
+      return {
+        data: null,
+        error: new Error("Something wen't wrong while deleting the product")
+      }
+    }
   }
 
   getByName(name: string): ReturnType {

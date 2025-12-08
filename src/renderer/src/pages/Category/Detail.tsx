@@ -36,7 +36,14 @@ export default function Detail(): React.JSX.Element {
     queryKey: ['category', { id }],
     queryFn: async () => {
       if (Number(id)) {
-        return window.apiCategory.getCategoryById(Number(id))
+        console.log(id)
+
+        const { data } = await window.apiCategory.getCategoryById(Number(id))
+        console.log('data', data)
+
+        if (data) {
+          return data
+        }
       }
 
       return {

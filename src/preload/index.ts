@@ -2,20 +2,21 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { CategoryType, ErrorType, InventoryType, ProductType } from '../renderer/src/utils/types'
 
-type ReturnType = {
+type CategoryReturnType = {
   data: CategoryType | null
   error: ErrorType
 }
 // Custom APIs for renderer
 export const apiCategory = {
-  getAllCategories: (): Promise<CategoryType[]> => ipcRenderer.invoke('category:getAll'),
-  getCategoryById: (id: number): Promise<CategoryType> =>
+  getAllCategories: (): Promise<{ data: CategoryType[]; error: ErrorType }> =>
+    ipcRenderer.invoke('category:getAll'),
+  getCategoryById: (id: number): Promise<CategoryReturnType> =>
     ipcRenderer.invoke('category:getById', id),
-  getCategoryByName: (name: string): Promise<ReturnType> =>
+  getCategoryByName: (name: string): Promise<CategoryReturnType> =>
     ipcRenderer.invoke('category:getByName', name),
-  createCategory: (name: string): Promise<ReturnType> =>
+  createCategory: (name: string): Promise<CategoryReturnType> =>
     ipcRenderer.invoke('category:create', name),
-  updateCategory: ({ id, name }: { id: number; name: string }): Promise<ReturnType> =>
+  updateCategory: ({ id, name }: { id: number; name: string }): Promise<CategoryReturnType> =>
     ipcRenderer.invoke('category:update', { id, name }),
   deleteCategory: (id: number): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('category:delete', id)
