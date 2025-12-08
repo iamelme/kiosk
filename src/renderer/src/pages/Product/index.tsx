@@ -107,15 +107,6 @@ export default function ProductPage(): React.JSX.Element {
                     <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
                       <Trash2 size={14} />
                     </Button>
-                    {/* <Dropdown menu={{ className: 'w-[100px] p-3 border border-slate-200 rounded-sm' }}>
-                <ul className="">
-                  <li>
-                    <Button size="icon" onClick={() => handleDelete(item.id)}>
-                      <Trash2 size={14} />
-                    </Button>
-                  </li>
-                </ul>
-              </Dropdown> */}
                   </td>
                 </tr>
               )}

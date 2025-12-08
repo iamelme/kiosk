@@ -18,13 +18,18 @@ export default function Items<T>({
         <thead>
           <tr>
             {headers?.map((header, idx) => (
-              <th key={idx} className={twMerge(`font-medium text-left ${header.className}`)}>
+              <th
+                key={idx}
+                className={twMerge(
+                  `text-xs uppercase font-medium text-left text-slate-400 ${header.className}`
+                )}
+              >
                 {header.label}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>{items?.map((item) => renderItems(item))}</tbody>
+        <tbody className="[&_td]:py-1 align-top">{items?.map((item) => renderItems(item))}</tbody>
       </table>
     </div>
   )
