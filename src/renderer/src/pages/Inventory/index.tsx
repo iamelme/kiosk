@@ -8,12 +8,13 @@ const headers = [{ label: 'Product' }, { label: 'Qty' }, { label: '' }]
 
 export default function Inventory(): ReactNode {
   const { isPending, error, data } = useQuery({
-    queryKey: ['inventory'],
+    queryKey: ['inventory-products'],
     queryFn: async () => {
       const { data } = await window.apiInventory.getAllInventory()
       return data
     }
   })
+
   return (
     <>
       <ListPage isPending={isPending} error={error}>
