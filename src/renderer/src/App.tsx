@@ -1,8 +1,20 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
+import { useEffect } from 'react'
+import useBoundStore from './stores/boundStore'
 
 function App(): React.JSX.Element {
-  // const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const updateLocale = useBoundStore((state) => state.updateLocale)
+
+  useEffect(() => {
+    const ipcHandle = async (): Promise<void> => {
+      const locale = await window.apiElectron.getLocale()
+
+      updateLocale(locale)
+    }
+
+    ipcHandle()
+  }, [])
 
   return (
     <div className="flex h-full text-slate-700 text-sm">
