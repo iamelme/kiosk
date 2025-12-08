@@ -25,7 +25,7 @@ const menu = [
   },
   {
     label: 'Price Verifier',
-    to: `/products/verifier`,
+    to: `/price-verifier`,
     icon: <DollarSign size={14} />
   },
   {
@@ -37,7 +37,7 @@ const menu = [
 
 export default function Sidebar(): React.JSX.Element {
   return (
-    <aside className="w-[175px] border-r border-slate-200">
+    <aside className="w-[200px] border-r border-slate-200">
       <Menu items={menu} />
     </aside>
   )
