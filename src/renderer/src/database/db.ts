@@ -66,6 +66,9 @@ export class AppDatabase {
             AFTER INSERT ON products
             BEGIN
 
+              INSERT INTO inventory (product_id) VALUES(NEW.id);
+              UPDATE counts SET products = products + 1;
+
               INSERT INTO products_fts (product_id, name, sku, code) 
               VALUES(NEW.id, NEW.name, NEW.sku, NEW.code);
             END;
@@ -83,6 +86,11 @@ export class AppDatabase {
             AFTER DELETE ON products
             BEGIN
 
+              UPDATE counts SET products = products - 1;
+              
+              DELETE FROM inventory 
+              WHERE product_id = OLD.id;
+              
               DELETE FROM products_fts
               WHERE product_id = OLD.id;
             END;
