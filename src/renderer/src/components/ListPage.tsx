@@ -3,7 +3,10 @@ import Alert from './ui/Alert'
 
 type ListPageProp = {
   header?: {
-    left?: ReactNode
+    left?: {
+      title: string
+      subTitle?: string
+    }
     right?: ReactNode
   }
   isPending: boolean
@@ -21,7 +24,10 @@ export default function ListPage({
     <>
       {header && (
         <div className="flex">
-          <div className="flex-1">{header?.left}</div>
+          <div className="flex-1">
+            <h2 className="text-xl">{header?.left?.title}</h2>
+            <p className="text-slate-400">{header?.left?.subTitle}</p>
+          </div>
           <div className="flex-1">{header?.right}</div>
         </div>
       )}
