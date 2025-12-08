@@ -15,6 +15,7 @@ import ProductDetail from './pages/Product/Detail'
 import ProductVerifier from './pages/Product/Verifier'
 
 import InventoryPage from './pages/Inventory'
+import InventoryDetail from './pages/Inventory/Detail'
 
 const queryClient = new QueryClient()
 
@@ -38,6 +39,7 @@ createRoot(document.getElementById('root')!).render(
 
             <Route path="inventory">
               <Route index element={<InventoryPage />} />
+              <Route path=":id" element={<InventoryDetail />} />
             </Route>
           </Route>
         </Routes>
