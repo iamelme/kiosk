@@ -1,4 +1,4 @@
-import { Box, Database, DollarSign, Grid, Home } from 'react-feather'
+import { Box, Database, DollarSign, Grid, Home, ShoppingCart } from 'react-feather'
 import Menu from './Menu'
 
 const menu = [
@@ -6,6 +6,11 @@ const menu = [
     label: 'Home',
     to: '/',
     icon: <Home size={14} />
+  },
+  {
+    label: 'POS',
+    to: '/post',
+    icon: <ShoppingCart size={14} />
   },
   {
     label: 'Products',
