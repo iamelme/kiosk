@@ -32,8 +32,9 @@ createRoot(document.getElementById('root')!).render(
             <Route path="products">
               <Route index element={<ProductPage />} />
               <Route path=":id" element={<ProductDetail />} />
-              <Route path="verifier" element={<ProductVerifier />} />
             </Route>
+
+            <Route path="price-verifier" element={<ProductVerifier />} />
 
             <Route path="inventory">
               <Route index element={<InventoryPage />} />
