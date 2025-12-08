@@ -2,8 +2,18 @@ import { ErrorType, InventoryType, ProductType } from '@renderer/utils/types'
 
 export type ProductInventoryType = ProductType & InventoryType
 
+export type ProdInventoryType = {
+  id: number
+  quantity: number
+  product_id: number
+  product_name: string
+  product_sku: string
+}
+
 export interface IInventoryRepository {
   getAll(): { data: Array<ProductInventoryType> | null; error: ErrorType }
-  getById(id: number): { data: ProductInventoryType | null; error: ErrorType }
+  getById(id: number): { data: ProdInventoryType | null; error: ErrorType }
   create(params: InventoryType): { data: InventoryType | null; error: ErrorType }
+  update(params: InventoryType): { data: InventoryType | null; error: ErrorType }
+  delete(id: number): { success: boolean; error: ErrorType }
 }

@@ -1,8 +1,9 @@
 import {
   IInventoryRepository,
-  ProductInventoryType
+  ProductInventoryType,
+  ProdInventoryType
 } from '@renderer/interfaces/IInventoryRepository'
-import { ProductType, InventoryType, ErrorType } from '@renderer/utils/types'
+import { InventoryType, ErrorType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 
 export class InventoryRepository implements IInventoryRepository {
@@ -11,6 +12,10 @@ export class InventoryRepository implements IInventoryRepository {
   constructor(database) {
     this._database = database
     ipcMain.handle('inventory:getAll', () => this.getAll())
+    ipcMain.handle('inventory:getById', (_, id: number) => this.getById(id))
+    ipcMain.handle('inventory:create', (_, params: InventoryType) => this.create(params))
+    ipcMain.handle('inventory:update', (_, params: InventoryType) => this.update(params))
+    ipcMain.handle('inventory:delete', (_, id: number) => this.delete(id))
   }
 
   getAll(): { data: Array<ProductInventoryType> | null; error: ErrorType } {
@@ -45,13 +50,15 @@ export class InventoryRepository implements IInventoryRepository {
       }
     }
   }
-  getById(id: number): { data: (ProductType & InventoryType) | null; error: ErrorType } {
+  getById(id: number): { data: ProdInventoryType | null; error: ErrorType } {
     try {
       const product = this._database
         .prepare(
           `
-            SELECT * FROM inventory 
-            WHERE id = ?
+            SELECT i.*, p.name AS product_name, p.sku AS product_sku
+            FROM inventory AS i
+            LEFT JOIN products AS p ON i.product_id = p.id
+            WHERE i.id = ?
             `
         )
         .get(id)
@@ -111,6 +118,71 @@ export class InventoryRepository implements IInventoryRepository {
       return {
         data: null,
         error: new Error("Something wen't wrong while searching the product")
+      }
+    }
+  }
+  update(params: InventoryType): { data: InventoryType | null; error: ErrorType } {
+    const { quantity, id } = params
+
+    console.log('params', params)
+
+    try {
+      console.log('inside try catch')
+      const product = this._database
+        .prepare(
+          `UPDATE inventory 
+          SET quantity = ?
+          WHERE id = ?`
+        )
+        .run(quantity, id)
+
+      console.log({ product })
+
+      if (product) {
+        return {
+          data: product,
+          error: ''
+        }
+      }
+
+      const errorMessage = new Error("Something wen't wrong while updating an inventory.")
+      return {
+        data: null,
+        error: errorMessage
+      }
+    } catch (error) {
+      const errorMessage = new Error("Something wen't wrong while updating an inventory.")
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: errorMessage
+        }
+      }
+      return {
+        data: null,
+        error: errorMessage
+      }
+    }
+  }
+  delete(id: number): { success: boolean; error: ErrorType } {
+    const errorMessage = new Error("Something wen't wrong while updating an inventory.")
+    try {
+      this._database.prepare(`DELETE FROM inventory WHERE id = ?`).run(id)
+
+      return {
+        success: true,
+        error: errorMessage
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          error: errorMessage
+        }
+      }
+      return {
+        success: false,
+        error: errorMessage
       }
     }
   }

@@ -2,6 +2,14 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { CategoryType, ErrorType, InventoryType, ProductType } from '../renderer/src/utils/types'
 
+type ProdInventoryType = {
+  id: number
+  quantity: number
+  product_id: number
+  product_name: string
+  product_sku: string
+}
+
 type CategoryReturnType = {
   data: CategoryType | null
   error: ErrorType
@@ -50,7 +58,15 @@ export const apiInventory = {
   getAllInventory: (): Promise<{
     data: Array<ProductType & InventoryType>
     error: ErrorType
-  }> => ipcRenderer.invoke('inventory:getAll')
+  }> => ipcRenderer.invoke('inventory:getAll'),
+  getInventoryById: (id: number): Promise<{ data: ProdInventoryType | null; error: ErrorType }> =>
+    ipcRenderer.invoke('inventory:getById', id),
+  createInventory: (params: InventoryType): Promise<{ data: InventoryType; error: ErrorType }> =>
+    ipcRenderer.invoke('inventory:create', params),
+  updateInventory: (params: InventoryType): Promise<{ data: InventoryType; error: ErrorType }> =>
+    ipcRenderer.invoke('inventory:update', params),
+  deleteInventory: (id: number): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('inventory:delete', id)
 }
 
 export const apiElectron = {
