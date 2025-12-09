@@ -14,7 +14,7 @@ function App(): React.JSX.Element {
     }
 
     ipcHandle()
-  }, [])
+  }, [updateLocale])
 
   return (
     <div className="flex h-full text-slate-700 text-sm">
