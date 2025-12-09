@@ -16,6 +16,9 @@ import ProductVerifier from './pages/Product/Verifier'
 
 import InventoryPage from './pages/Inventory'
 import InventoryDetail from './pages/Inventory/Detail'
+import Login from './pages/Auth/Login'
+import ProtectedRoutes from './pages/ProtectedRoutes'
+import Signup from './pages/Auth/Signup'
 
 const queryClient = new QueryClient()
 
@@ -24,8 +27,17 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <HashRouter>
         <Routes>
-          <Route path="/" element={<App />}>
-            <Route index element={<>Home page</>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoutes>
+                <App />
+              </ProtectedRoutes>
+            }
+          >
+            <Route index element={<>Home Dashboard</>} />
             <Route path="categories">
               <Route index element={<CategoryPage />} />
               <Route path=":id" element={<CategoryDetail />} />
