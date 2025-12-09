@@ -1,13 +1,14 @@
 import { useFormContext } from 'react-hook-form'
 import Input from '../ui/Input'
-import { DetailedHTMLProps, HTMLAttributes, useEffect } from 'react'
+import { InputHTMLAttributes, useEffect } from 'react'
 import Alert from '../ui/Alert'
 
 type FormInputProps = {
   name: string
   label?: string
   fieldWatch?: string
-} & DetailedHTMLProps<HTMLAttributes<HTMLInputElement>, HTMLInputElement>
+} & InputHTMLAttributes<HTMLInputElement>
+// } & DetailedHTMLProps<HTMLAttributes<HTMLInputElement>, HTMLInputElement>
 
 export default function FormInput({
   name,
