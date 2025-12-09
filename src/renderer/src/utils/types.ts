@@ -1,3 +1,9 @@
+export type UserType = {
+  id: number
+  user_name: string
+  password: string
+}
+
 export type CategoryType = {
   id: number
   name: string

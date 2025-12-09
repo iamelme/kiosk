@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { CategoryType, ErrorType, InventoryType, ProductType } from '../renderer/src/utils/types'
+import {
+  CategoryType,
+  ErrorType,
+  InventoryType,
+  ProductType,
+  UserType
+} from '../renderer/src/utils/types'
 
 type ProdInventoryType = {
   id: number
@@ -14,6 +20,14 @@ type CategoryReturnType = {
   data: CategoryType | null
   error: ErrorType
 }
+
+export const apiUser = {
+  create: (params: UserType): Promise<{ data: UserType | null; error: ErrorType }> =>
+    ipcRenderer.invoke('user:create', params),
+  login: (params: UserType): Promise<{ data: UserType | null; error: ErrorType }> =>
+    ipcRenderer.invoke('user:login', params)
+}
+
 // Custom APIs for renderer
 export const apiCategory = {
   getAllCategories: (): Promise<{ data: CategoryType[]; error: ErrorType }> =>
@@ -78,6 +92,7 @@ export const apiElectron = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('apiUser', apiUser)
     contextBridge.exposeInMainWorld('apiCategory', apiCategory)
     contextBridge.exposeInMainWorld('apiProduct', apiProduct)
     contextBridge.exposeInMainWorld('apiInventory', apiInventory)

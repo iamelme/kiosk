@@ -26,6 +26,14 @@ export class AppDatabase {
   setUp(): void {
     this.db.exec(
       `
+            CREATE TABLE IF NOT EXISTS users(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME,
+              user_name TEXT NOT NULL,
+              password TEXT NOT NULL
+            );
+            
             CREATE TABLE IF NOT EXISTS categories(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,

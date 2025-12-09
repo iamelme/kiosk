@@ -6,6 +6,7 @@ import { AppDatabase } from '../renderer/src/database/db'
 import { CategoryRepository } from '../renderer/src/repository/CategoryRepository'
 import { ProductRepository } from '../renderer/src/repository/ProductRepository'
 import { InventoryRepository } from '../renderer/src/repository/InventoryRepository'
+import { UserRepository } from '../renderer/src/repository/UserRepository'
 
 export let db
 export let category
@@ -56,6 +57,7 @@ app.whenReady().then(() => {
   category = new CategoryRepository(db.db)
   product = new ProductRepository(db.db)
   inventory = new InventoryRepository(db.db)
+  new UserRepository(db.db)
 
   console.log('db from main', db)
 
