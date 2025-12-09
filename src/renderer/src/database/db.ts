@@ -76,6 +76,21 @@ export class AppDatabase {
             
             CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5(product_id, name, sku, code);
 
+            CREATE TABLE IF NOT EXISTS carts(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER,
+              FOREIGN KEY (user_id) REFERENCES users(id)
+            ); 
+    
+            CREATE TABLE IF NOT EXISTS cart_items(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              quantity INTEGER,
+              cart_id INTEGER,             
+              product_id INTEGER,
+              FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
+              FOREIGN KEY (product_id) REFERENCES products(id)
+            );
+
             CREATE TRIGGER IF NOT EXISTS products_after_insert 
             AFTER INSERT ON products
             BEGIN
