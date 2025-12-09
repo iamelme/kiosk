@@ -125,6 +125,7 @@ export class InventoryRepository implements IInventoryRepository {
     const { quantity, id } = params
 
     console.log('params', params)
+    const errorMessage = new Error("Something wen't wrong while updating an inventory.")
 
     try {
       console.log('inside try catch')
@@ -145,13 +146,11 @@ export class InventoryRepository implements IInventoryRepository {
         }
       }
 
-      const errorMessage = new Error("Something wen't wrong while updating an inventory.")
       return {
         data: null,
         error: errorMessage
       }
     } catch (error) {
-      const errorMessage = new Error("Something wen't wrong while updating an inventory.")
       if (error instanceof Error) {
         return {
           data: null,
