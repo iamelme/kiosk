@@ -36,12 +36,16 @@ export class AppDatabase {
             
             CREATE TABLE IF NOT EXISTS categories(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME,
                 name TEXT UNIQUE NOT NULL,
                 description TEXT
             );
 
             CREATE TABLE IF NOT EXISTS products(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME,
                 name TEXT UNIQUE NOT NULL,
                 sku TEXT UNIQUE NOT NULL,
                 description TEXT NOT NULL,
@@ -63,6 +67,8 @@ export class AppDatabase {
 
             CREATE TABLE IF NOT EXISTS inventory(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME,
               quantity INTEGER DEFAULT 0,
               product_id INTEGER,
               FOREIGN KEY (product_id) REFERENCES products(id)
