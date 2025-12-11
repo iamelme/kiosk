@@ -7,11 +7,9 @@ import { CategoryRepository } from '../renderer/src/repository/CategoryRepositor
 import { ProductRepository } from '../renderer/src/repository/ProductRepository'
 import { InventoryRepository } from '../renderer/src/repository/InventoryRepository'
 import { UserRepository } from '../renderer/src/repository/UserRepository'
+import { CartRepository } from '../renderer/src/repository/CartRepository'
 
 export let db
-export let category
-export let product
-export let inventory
 
 function createWindow(): void {
   // Create the browser window.
@@ -54,12 +52,13 @@ app.whenReady().then(() => {
 
   db = new AppDatabase()
 
-  category = new CategoryRepository(db.db)
-  product = new ProductRepository(db.db)
-  inventory = new InventoryRepository(db.db)
+  new CategoryRepository(db.db)
+  new ProductRepository(db.db)
+  new InventoryRepository(db.db)
   new UserRepository(db.db)
+  new CartRepository(db.db)
 
-  console.log('db from main', db)
+  // console.log('db from main', db)
 
   const locale = app.getLocale()
   console.log('Current application locale:', locale)
