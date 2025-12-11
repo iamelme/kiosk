@@ -5,13 +5,13 @@ import Input from '@renderer/components/ui/Input'
 import Price from '@renderer/components/ui/Price'
 // import Dropdown from '@renderer/components/ui/Dropdown'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PlusCircle, Trash2 } from 'react-feather'
 import { Link } from 'react-router-dom'
 
 const Action = (): React.JSX.Element => (
   <div className="flex justify-end">
-    <Link to="/products/new">
+    <Link to="/products/new" tabIndex={-1}>
       <Button variant="default">
         <PlusCircle size={14} />
         Add
@@ -32,6 +32,23 @@ const headers = [
 
 export default function ProductPage(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
+
+  const dataGridRef = useRef<HTMLTableElement>(null)
+
+  useEffect(() => {
+    function focusElem(): void {
+      if (dataGridRef.current && dataGridRef.current.contains(document.activeElement)) {
+        console.log('dataGridRef', dataGridRef.current)
+
+        console.log('Focus is inside the container')
+      }
+    }
+    window.addEventListener('keydown', focusElem)
+
+    return () => {
+      window.removeEventListener('keydown', focusElem)
+    }
+  }, [])
 
   const { isPending, error, data } = useQuery({
     queryKey: ['products', { search: searchTerm }],
@@ -93,28 +110,38 @@ export default function ProductPage(): React.JSX.Element {
         <>
           {data && (
             <Items
+              ref={dataGridRef}
               items={data}
               headers={headers}
               renderItems={(item) => (
-                <tr key={item.id}>
+                <>
                   <td>
-                    <Link to={`/products/${item.id}`}>{item.name}</Link>
+                    <Link to={`/products/${item.id}`} tabIndex={-1}>
+                      {item.name}
+                    </Link>
                   </td>
                   <td>{item.sku}</td>
                   <td>{item.code}</td>
                   <td>
-                    <Link to={`/categories/${item.category_id}`}>{item.category_name}</Link>
+                    <Link to={`/categories/${item.category_id}`} tabIndex={-1}>
+                      {item.category_name}
+                    </Link>
                   </td>
                   <td className="">{item.quantity}</td>
                   <td className="text-right">
-                    <Price value={item.price / 100} />
+                    <Price value={item.price} />
                   </td>
                   <td className="text-right">
-                    <Button variant="outline" size="icon" onClick={() => handleDelete(item.id)}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      tabIndex={-1}
+                      onClick={() => handleDelete(item.id)}
+                    >
                       <Trash2 size={14} />
                     </Button>
                   </td>
-                </tr>
+                </>
               )}
             ></Items>
           )}

@@ -55,7 +55,7 @@ export default function CategoryPage(): React.JSX.Element {
           headers={headers}
           items={data}
           renderItems={(item) => (
-            <tr key={item.id}>
+            <>
               <td>
                 <Link to={`/categories/${item.id}`}>{item.name}</Link>
               </td>
@@ -64,7 +64,7 @@ export default function CategoryPage(): React.JSX.Element {
                   <Trash2 size={14} />
                 </Button>
               </td>
-            </tr>
+            </>
           )}
         />
       )}

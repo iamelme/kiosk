@@ -23,12 +23,12 @@ export default function Inventory(): ReactNode {
             items={data}
             headers={headers}
             renderItems={(item) => (
-              <tr key={item.id}>
+              <>
                 <td>
                   <Link to={`/inventory/${item.id}`}>{item.name} </Link>
                 </td>
                 <td>{item.quantity}</td>
-              </tr>
+              </>
             )}
           />
         )}
