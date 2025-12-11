@@ -11,7 +11,7 @@ const menu = [
   },
   {
     label: 'POS',
-    to: '/post',
+    to: '/pos',
     icon: <ShoppingCart size={14} />
   },
   {
@@ -53,7 +53,7 @@ export default function Sidebar(): React.JSX.Element {
         <Button
           variant="outline"
           onClick={() => updateUser({ id: undefined, user_name: undefined })}
-          className="w-full"
+          full
         >
           Logout
         </Button>
