@@ -51,7 +51,7 @@ export default function FormInput({
         className={`${errors[name] ? 'border-red-400' : ''}`}
       />
       {errors[name] && (
-        <Alert variant="danger" style="mt-2 text-xs">
+        <Alert variant="danger" className="mt-2 text-xs">
           {String(errors[name]?.message)}
         </Alert>
       )}
