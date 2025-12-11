@@ -25,4 +25,18 @@ export type InventoryType = {
   product_id: number
 }
 
+export type CartType = {
+  id: number
+  user_id: number
+}
+
+export type CartItemType = {
+  id: number
+  quantity: number
+  product_id: number
+  price: number
+  cart_id: number
+  user_id: number
+}
+
 export type ErrorType = Error | string
