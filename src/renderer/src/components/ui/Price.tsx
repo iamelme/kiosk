@@ -14,7 +14,7 @@ export default function Price({ value }: { value: number }): ReactNode {
       {new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: getCurrency(locale) as string
-      }).format(value)}
+      }).format(value / 100)}
     </>
   )
 }
