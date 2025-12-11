@@ -1,5 +1,6 @@
 import FormInput from '@renderer/components/form/FormInput'
 import FormWrapper from '@renderer/components/form/FormWrapper'
+import Alert from '@renderer/components/ui/Alert'
 import Button from '@renderer/components/ui/Button'
 import useBoundStore from '@renderer/stores/boundStore'
 import { UserType } from '@renderer/utils/types'
@@ -9,8 +10,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import z from 'zod'
 
 const schema = z.object({
-  user_name: z.string().min(4),
-  password: z.string().min(6)
+  user_name: z.string().min(4, { message: 'At least 4 characters' }),
+  password: z.string().min(6, { message: 'At least 6 characters' })
 })
 
 type ValuesType = z.infer<typeof schema>
@@ -47,7 +48,7 @@ export default function Login(): ReactNode {
     console.log('test', test)
   }
   return (
-    <div className="max-w-[300px] mx-auto">
+    <div className="max-w-[300px] mx-auto text-slate-700 text-sm">
       <FormWrapper<ValuesType>
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
@@ -55,10 +56,17 @@ export default function Login(): ReactNode {
       >
         <FormInput autoFocus label="User Name" name="user_name" />
         <FormInput label="Password" name="password" type="password" />
-        <p>
+        <p className="mb-3 text-blue-500">
           <Link to="/signup">Register</Link>
         </p>
-        <Button type="submit">Login</Button>
+        {mutation.error && (
+          <Alert variant="danger" className="mb-3 test">
+            {mutation.error.message}
+          </Alert>
+        )}
+        <Button type="submit" full>
+          Login
+        </Button>
       </FormWrapper>
     </div>
   )

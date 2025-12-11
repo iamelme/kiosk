@@ -4,12 +4,13 @@ import Button from '@renderer/components/ui/Button'
 import { UserType } from '@renderer/utils/types'
 import { useMutation } from '@tanstack/react-query'
 import { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import z from 'zod'
 
 const schema = z.object({
-  user_name: z.string().min(4),
-  password: z.string().min(6)
+  user_name: z.string().min(4, { message: 'At least 4 characters' }),
+  password: z.string().min(6, { message: 'At least 6 characters' }),
+  confirm_password: z.string().min(6, { message: 'At least 6 characters' })
 })
 
 type ValuesType = z.infer<typeof schema>
@@ -37,7 +38,7 @@ export default function Signup(): ReactNode {
     console.log('test', test)
   }
   return (
-    <div className="max-w-[300px] mx-auto">
+    <div className="max-w-[300px] mx-auto text-slate-700 text-sm">
       <FormWrapper<ValuesType>
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
@@ -45,7 +46,15 @@ export default function Signup(): ReactNode {
       >
         <FormInput autoFocus label="User Name" name="user_name" />
         <FormInput label="Password" name="password" type="password" />
-        <Button type="submit">Signup</Button>
+        <FormInput label="Confirm Password" name="confirm_password" type="password" />
+        <p className="mb-3">
+          <Link to="/login" className="text-blue-500">
+            Already have an account?
+          </Link>
+        </p>
+        <Button type="submit" full>
+          Signup
+        </Button>
       </FormWrapper>
     </div>
   )
