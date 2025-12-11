@@ -18,14 +18,14 @@ type Styles = typeof styles
 type ButtonProps = {
   variant?: keyof Styles['variants']
   size?: keyof Styles['sizes']
-  className?: string
+  full?: boolean
   children: ReactNode
 } & DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
 
 export default function Button({
-  className,
   variant = 'default',
   size = 'default',
+  full = false,
   children,
   ...props
 }: ButtonProps): React.JSX.Element {
@@ -33,8 +33,8 @@ export default function Button({
     <button
       {...props}
       className={twMerge(
-        `inline-flex items-center gap-x-1 ${styles.variants[variant]} ${styles.sizes[size]} rounded-sm  cursor-pointer`,
-        className
+        `inline-flex  justify-center items-center gap-x-1 ${styles.variants[variant]} ${styles.sizes[size]} rounded-sm  cursor-pointer`,
+        `${props.className} ${full ? 'w-full' : ''}`
       )}
     >
       {children}
