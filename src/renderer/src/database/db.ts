@@ -78,6 +78,7 @@ export class AppDatabase {
 
             CREATE TABLE IF NOT EXISTS carts(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
+              is_active DEFAULT 1,
               user_id INTEGER,
               FOREIGN KEY (user_id) REFERENCES users(id)
             ); 
