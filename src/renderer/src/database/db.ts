@@ -88,8 +88,10 @@ export class AppDatabase {
               quantity INTEGER,
               cart_id INTEGER,             
               product_id INTEGER,
+              user_id INTEGER,
               FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
-              FOREIGN KEY (product_id) REFERENCES products(id)
+              FOREIGN KEY (product_id) REFERENCES products(id),
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
             CREATE TRIGGER IF NOT EXISTS products_after_insert 
