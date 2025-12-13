@@ -2,15 +2,15 @@ import { createContext, ReactNode, useContext } from 'react'
 import { Trash2 } from 'react-feather'
 import Button from './ui/Button'
 import Price from './ui/Price'
-import { CartItemType } from '@renderer/utils/types'
+import { ReturnCartType } from '@renderer/utils/types'
 
-const SummaryContext = createContext<CartItemType[] | undefined>(undefined)
+const SummaryContext = createContext<ReturnCartType | undefined>(undefined)
 
 export default function Summary({
   data,
   children
 }: {
-  data: CartItemType[] | undefined
+  data: ReturnCartType | undefined
   children: ReactNode
 }): ReactNode {
   console.log('ctx data', data)
@@ -30,7 +30,7 @@ export default function Summary({
   )
 }
 
-const useSummaryContext = (): CartItemType[] => {
+const useSummaryContext = (): ReturnCartType => {
   const ctx = useContext(SummaryContext)
 
   if (!ctx) {
@@ -43,10 +43,12 @@ const useSummaryContext = (): CartItemType[] => {
 function NoOfItems(): ReactNode {
   const ctx = useSummaryContext()
 
+  const num = ctx?.items?.reduce((acc, cur) => (acc += cur.quantity), 0)
+
   return (
     <dl className="flex justify-between">
       <dt>No. of Items:</dt>
-      <dd>{ctx?.length ?? 0}</dd>
+      <dd>{num ?? 0}</dd>
     </dl>
   )
 }
@@ -54,26 +56,26 @@ function NoOfItems(): ReactNode {
 function SubTotal(): ReactNode {
   const ctx = useSummaryContext()
 
-  const subTotal = ctx?.reduce((acc, cur) => (acc += cur.quantity * cur.price), 0)
+  //   const subTotal = ctx?.reduce((acc, cur) => (acc += cur.quantity * cur.price), 0)
 
   return (
     <dl className="flex justify-between">
       <dt>Sub Total:</dt>
       <dd>
-        <Price value={subTotal} />
+        <Price value={ctx.sub_total} />
       </dd>
     </dl>
   )
 }
 
 function Discount(): ReactNode {
-  // const ctx = useSummaryContext()
+  const ctx = useSummaryContext()
 
   return (
     <dl className="flex justify-between">
       <dt>Discount:</dt>
       <dd>
-        <Price value={0} />
+        <Price value={ctx.discount} />
       </dd>
     </dl>
   )
@@ -93,13 +95,13 @@ function Tax(): ReactNode {
 }
 
 function Total(): ReactNode {
-  // const ctx = useSummaryContext()
+  const ctx = useSummaryContext()
 
   return (
     <dl className="flex justify-between text-xl">
       <dt className="font-medium">Total:</dt>
       <dd>
-        <Price value={0} />
+        <Price value={ctx.total} />
       </dd>
     </dl>
   )
