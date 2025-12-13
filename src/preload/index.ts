@@ -1,11 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import {
-  CartItemType,
   CategoryType,
   ErrorType,
   InventoryType,
   ProductType,
+  ReturnCartType,
   UserType
 } from '../renderer/src/utils/types'
 
@@ -23,10 +23,16 @@ type CategoryReturnType = {
 }
 
 type CartReturnType = {
-  data: CartItemType[] | null
+  data: ReturnCartType | null
   error: ErrorType
 }
 
+type CartItem = {
+  cart_id: number
+  // item_id: number
+  product_id: number
+  user_id: number
+}
 export const apiUser = {
   create: (params: UserType): Promise<{ data: UserType | null; error: ErrorType }> =>
     ipcRenderer.invoke('user:create', params),
@@ -35,7 +41,9 @@ export const apiUser = {
 }
 
 export const apiCart = {
-  getByUserId: (id: number): Promise<CartReturnType> => ipcRenderer.invoke('cart:getByUserId', id)
+  getByUserId: (id: number): Promise<CartReturnType> => ipcRenderer.invoke('cart:getByUserId', id),
+  insertItem: (params: CartItem): Promise<CartReturnType> =>
+    ipcRenderer.invoke('cart:insertItem', params)
 }
 
 // Custom APIs for renderer

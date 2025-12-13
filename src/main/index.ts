@@ -60,8 +60,8 @@ app.whenReady().then(() => {
 
   // console.log('db from main', db)
 
-  const locale = app.getLocale()
-  console.log('Current application locale:', locale)
+  // const locale = app.getLocale()
+  // console.log('Current application locale:', locale)
 
   ipcMain.handle('get-locale', () => {
     return app.getLocale()

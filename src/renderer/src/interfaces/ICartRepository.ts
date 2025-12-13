@@ -1,10 +1,18 @@
-import { CartItemType } from '@renderer/utils/types'
+import { ReturnCartType } from '@renderer/utils/types'
 
 export type ReturnType = {
-  data: CartItemType[] | null
+  data: ReturnCartType | null
   error: Error | string
+}
+
+export type CartItem = {
+  cart_id: number
+  // item_id: number
+  product_id: number
+  user_id: number
 }
 
 export interface ICartRepository {
   getByUserId(id: number): ReturnType
+  insertItem(params: CartItem): ReturnType
 }
