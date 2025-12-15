@@ -33,18 +33,18 @@ export class CategoryRepository implements ICategoryRepository {
 
       return {
         data: null,
-        error: new Error("Something wen't wrong while retrieving the products")
+        error: new Error('Something went wrong while retrieving the products')
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while deleting the product")
+          error: new Error('Something went wrong while deleting the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while deleting the product")
+        error: new Error('Something went wrong while deleting the product')
       }
     }
   }
@@ -61,18 +61,18 @@ export class CategoryRepository implements ICategoryRepository {
 
       return {
         data: null,
-        error: new Error("Something wen't wrong while retrieving the products")
+        error: new Error('Something went wrong while retrieving the products')
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while deleting the product")
+          error: new Error('Something went wrong while deleting the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while deleting the product")
+        error: new Error('Something went wrong while deleting the product')
       }
     }
   }
@@ -94,18 +94,18 @@ export class CategoryRepository implements ICategoryRepository {
 
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving a category")
+        error: new Error('Something went wrong while saving a category')
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while saving a category")
+          error: new Error('Something went wrong while saving a category')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving a category")
+        error: new Error('Something went wrong while saving a category')
       }
     }
   }
@@ -139,7 +139,7 @@ export class CategoryRepository implements ICategoryRepository {
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving a category")
+        error: new Error('Something went wrong while saving a category')
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -148,13 +148,13 @@ export class CategoryRepository implements ICategoryRepository {
         if (error instanceof Error) {
           return {
             data: null,
-            error: new Error("Something wen't wrong while saving a category.")
+            error: new Error('Something went wrong while saving a category.')
           }
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving a category")
+        error: new Error('Something went wrong while saving a category')
       }
     }
   }
@@ -188,7 +188,7 @@ export class CategoryRepository implements ICategoryRepository {
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while updating a category")
+        error: new Error('Something went wrong while updating a category')
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -196,12 +196,12 @@ export class CategoryRepository implements ICategoryRepository {
         console.log('error name', error.name)
         return {
           data: null,
-          error: new Error("Something wen't wrong while updating the category.")
+          error: new Error('Something went wrong while updating the category.')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while updating the category.")
+        error: new Error('Something went wrong while updating the category.')
       }
     }
   }
@@ -221,12 +221,12 @@ export class CategoryRepository implements ICategoryRepository {
       if (error instanceof Error) {
         return {
           success: false,
-          error: new Error("Something wen't wrong while deleting the product")
+          error: new Error('Something went wrong while deleting the product')
         }
       }
       return {
         success: false,
-        error: new Error("Something wen't wrong while deleting the product")
+        error: new Error('Something went wrong while deleting the product')
       }
     }
   }

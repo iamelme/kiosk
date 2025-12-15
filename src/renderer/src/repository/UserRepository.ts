@@ -14,7 +14,7 @@ export class UserRepository implements IUserRepository {
 
   async create(params: UserType): Promise<ReturnType> {
     const { user_name, password } = params
-    const errorMessage = new Error("Something wen't wrong while creating a user.")
+    const errorMessage = new Error('Something went wrong while creating a user.')
     try {
       const foundUser = this._database
         .prepare(
@@ -60,7 +60,7 @@ export class UserRepository implements IUserRepository {
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving the user")
+        error: new Error('Something went wrong while saving the user')
       }
     }
   }
@@ -95,7 +95,7 @@ export class UserRepository implements IUserRepository {
 
       return {
         data: null,
-        error: new Error("Something wen't wrong while signing up.")
+        error: new Error('Something went wrong while signing up.')
       }
     } catch (error) {
       if (error instanceof SqliteError) {
@@ -108,7 +108,7 @@ export class UserRepository implements IUserRepository {
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving the user")
+        error: new Error('Something went wrong while saving the user')
       }
     }
   }

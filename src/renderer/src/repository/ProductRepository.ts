@@ -43,12 +43,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -79,12 +79,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -107,12 +107,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -139,12 +139,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -187,12 +187,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -235,7 +235,7 @@ export class ProductRepository implements IProductRepository {
 
       return {
         data: null,
-        error: new Error("Something wen't wrong while creating a product.")
+        error: new Error('Something went wrong while creating a product.')
       }
     } catch (error) {
       console.error('catch error ===>', error)
@@ -250,7 +250,7 @@ export class ProductRepository implements IProductRepository {
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while saving the product")
+        error: new Error('Something went wrong while saving the product')
       }
     }
   }
@@ -295,12 +295,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while updating the product")
+          error: new Error('Something went wrong while updating the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while updating the product")
+        error: new Error('Something went wrong while updating the product')
       }
     }
   }
@@ -324,12 +324,12 @@ export class ProductRepository implements IProductRepository {
       if (error instanceof Error) {
         return {
           success: false,
-          error: new Error("Something wen't wrong while updating the product")
+          error: new Error('Something went wrong while updating the product')
         }
       }
       return {
         success: false,
-        error: new Error("Something wen't wrong while updating the product")
+        error: new Error('Something went wrong while updating the product')
       }
     }
   }

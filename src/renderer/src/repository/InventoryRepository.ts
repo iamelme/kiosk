@@ -41,12 +41,12 @@ export class InventoryRepository implements IInventoryRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -78,12 +78,12 @@ export class InventoryRepository implements IInventoryRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -106,18 +106,18 @@ export class InventoryRepository implements IInventoryRepository {
 
       return {
         data: null,
-        error: "Something wen't wrong while saving an inventory."
+        error: 'Something went wrong while saving an inventory.'
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while searching the product")
+          error: new Error('Something went wrong while searching the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while searching the product")
+        error: new Error('Something went wrong while searching the product')
       }
     }
   }
@@ -125,7 +125,7 @@ export class InventoryRepository implements IInventoryRepository {
     const { quantity, id } = params
 
     console.log('params', params)
-    const errorMessage = new Error("Something wen't wrong while updating an inventory.")
+    const errorMessage = new Error('Something went wrong while updating an inventory.')
 
     try {
       console.log('inside try catch')
@@ -164,7 +164,7 @@ export class InventoryRepository implements IInventoryRepository {
     }
   }
   delete(id: number): { success: boolean; error: ErrorType } {
-    const errorMessage = new Error("Something wen't wrong while updating an inventory.")
+    const errorMessage = new Error('Something went wrong while updating an inventory.')
     try {
       this._database.prepare(`DELETE FROM inventory WHERE id = ?`).run(id)
 
