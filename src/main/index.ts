@@ -8,6 +8,7 @@ import { ProductRepository } from '../renderer/src/repository/ProductRepository'
 import { InventoryRepository } from '../renderer/src/repository/InventoryRepository'
 import { UserRepository } from '../renderer/src/repository/UserRepository'
 import { CartRepository } from '../renderer/src/repository/CartRepository'
+import { SaleRepository } from '../renderer/src/repository/SaleRepository'
 
 export let db
 
@@ -57,6 +58,7 @@ app.whenReady().then(() => {
   new InventoryRepository(db.db)
   new UserRepository(db.db)
   new CartRepository(db.db)
+  new SaleRepository(db.db)
 
   // console.log('db from main', db)
 

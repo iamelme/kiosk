@@ -15,4 +15,5 @@ export type CartItem = {
 export interface ICartRepository {
   getByUserId(id: number): ReturnType
   insertItem(params: CartItem): ReturnType
+  deleteAllItems(cart_id: number): { success: boolean; error: Error | string }
 }

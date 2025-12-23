@@ -6,7 +6,10 @@ import {
   InventoryType,
   ProductType,
   ReturnCartType,
-  UserType
+  UserType,
+  SaleItemType,
+  ReturnSaleType,
+  PlaceOrderType
 } from '../renderer/src/utils/types'
 
 type ProdInventoryType = {
@@ -27,9 +30,19 @@ type CartReturnType = {
   error: ErrorType
 }
 
+type SaleReturnType = {
+  data: ReturnSaleType | null
+  error: ErrorType
+}
+
+type SaleItem = {
+  sale_id: number
+  product_id: number
+  user_id: number
+}
+
 type CartItem = {
   cart_id: number
-  // item_id: number
   product_id: number
   user_id: number
 }
@@ -43,7 +56,19 @@ export const apiUser = {
 export const apiCart = {
   getByUserId: (id: number): Promise<CartReturnType> => ipcRenderer.invoke('cart:getByUserId', id),
   insertItem: (params: CartItem): Promise<CartReturnType> =>
-    ipcRenderer.invoke('cart:insertItem', params)
+    ipcRenderer.invoke('cart:insertItem', params),
+  deleteAllItems: (cart_id: number): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('cart:deleteAllItems', cart_id)
+}
+
+export const apiSale = {
+  getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
+  placeOrder: (params: PlaceOrderType): Promise<{ data: null; error: ErrorType }> =>
+    ipcRenderer.invoke('sale:placeOrder', params),
+  insertItem: (params: SaleItem): Promise<SaleReturnType> =>
+    ipcRenderer.invoke('sale:insertItem', params),
+  deleteAllItems: (sale_id: number): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('sale:deleteAllItems', sale_id)
 }
 
 // Custom APIs for renderer
@@ -111,6 +136,7 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('apiCart', apiCart)
+    contextBridge.exposeInMainWorld('apiSale', apiSale)
     contextBridge.exposeInMainWorld('apiUser', apiUser)
     contextBridge.exposeInMainWorld('apiCategory', apiCategory)
     contextBridge.exposeInMainWorld('apiProduct', apiProduct)

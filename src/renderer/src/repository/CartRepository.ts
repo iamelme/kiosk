@@ -7,6 +7,7 @@ export class CartRepository implements ICartRepository {
     this._database = database
     ipcMain.handle('cart:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle('cart:insertItem', (_, params: CartItem) => this.insertItem(params))
+    ipcMain.handle('cart:deleteAllItems', (_, cart_id: number) => this.deleteAllItems(cart_id))
   }
   getByUserId(id: number): ReturnType {
     try {
@@ -38,7 +39,7 @@ export class CartRepository implements ICartRepository {
       })
       transaction()
 
-      console.log('cart', cart, cartItems)
+      // console.log('cart', cart, cartItems)
 
       if (cart) {
         return {
@@ -52,19 +53,19 @@ export class CartRepository implements ICartRepository {
 
       return {
         data: null,
-        error: new Error("Something wen't wrong while retrieving the product.")
+        error: new Error('Something went wrong while retrieving the product.')
       }
     } catch (error) {
       console.log('inside catch', error)
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while retrieving the product")
+          error: new Error('Something went wrong while retrieving the product')
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while  retrieving the product")
+        error: new Error('Something went wrong while  retrieving the product')
       }
     }
   }
@@ -72,6 +73,7 @@ export class CartRepository implements ICartRepository {
   insertItem(params: CartItem): ReturnType {
     const { cart_id, product_id, user_id } = params
     try {
+      let items
       const transaction = this._database.transaction(() => {
         const foundItem = this._database
           .prepare(
@@ -89,7 +91,11 @@ export class CartRepository implements ICartRepository {
 
         console.log({ foundItem })
 
-        if (foundItem && foundItem.quantity < foundItem.product_quantity) {
+        if (foundItem) {
+          if (foundItem.quantity >= foundItem.product_quantity) {
+            throw new Error('You cannot add more to this product')
+          }
+
           this._database
             .prepare(
               `
@@ -113,7 +119,7 @@ export class CartRepository implements ICartRepository {
         // select all items
         // calculate the subtotal, discount, and total
 
-        const items = this._database
+        items = this._database
           .prepare(
             `SELECT * 
             FROM cart_items AS ci
@@ -151,13 +157,22 @@ export class CartRepository implements ICartRepository {
           .run(subTotal, total, cart_id)
 
         console.log('done inserting')
+
+        return {
+          data: items,
+          error: ''
+        }
       })
 
-      transaction()
+      const result = transaction()
+
+      if (!result) {
+        throw new Error('Something went wrong while creating an item the product')
+      }
 
       return {
-        data: null,
-        error: new Error("Something wen't wrong while creating an item the product")
+        data: items,
+        error: ''
       }
     } catch (error) {
       console.log('error insert ', error)
@@ -165,12 +180,58 @@ export class CartRepository implements ICartRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something wen't wrong while creating an item the product")
+          error: new Error(
+            error.message ?? 'Something went wrong while creating an item the product'
+          )
         }
       }
       return {
         data: null,
-        error: new Error("Something wen't wrong while creating an item the product")
+        error: new Error('Something went wrong while creating an item the product')
+      }
+    }
+  }
+
+  deleteAllItems(cart_id: number): { success: boolean; error: Error | string } {
+    try {
+      const transaction = this._database.transaction(() => {
+        this._database
+          .prepare(
+            `DELETE FROM cart_items
+        WHERE cart_id = ?`
+          )
+          .run(cart_id)
+
+        this._database
+          .prepare(
+            `UPDATE carts
+          SET discount = 0,
+          sub_total = 0,
+          total = 0
+          WHERE id = ?
+          `
+          )
+          .run(cart_id)
+      })
+
+      transaction()
+
+      return {
+        success: true,
+        error: new Error('Something went wrong while deleting the cart')
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          error: new Error(
+            error.message ?? 'Something went wrong while deleting an item the product'
+          )
+        }
+      }
+      return {
+        success: false,
+        error: new Error('Something went wrong while deleting an item the product')
       }
     }
   }
