@@ -33,3 +33,17 @@ $ npm run build:mac
 # For Linux
 $ npm run build:linux
 ```
+
+| Type   | Meaning           |
+| ------ | ----------------- |
+| IN     | Stock increase    |
+| OUT    | Stock decrease    |
+| ADJUST | Manual correction |
+
+| Reference  | Source             |
+| ---------- | ------------------ |
+| PURCHASE   | Supplier receiving |
+| SALE       | POS sale           |
+| RETURN     | Customer return    |
+| TRANSFER   | Store transfer     |
+| ADJUSTMENT | Stock count        |

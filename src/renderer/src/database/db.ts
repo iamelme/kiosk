@@ -51,9 +51,59 @@ export class AppDatabase {
                 description TEXT NOT NULL,
                 price INTEGER DEFAULT 0,
                 code INTEGER UNIQUE DEFAULT 0,
+                cost INTEGER DEFAULT 0,
                 is_active INTEGER DEFAULT 1,
                 category_id INTEGER,
                 FOREIGN KEY (category_id) REFERENCES categories(id)           
+            );
+
+            CREATE TABLE IF NOT EXISTS sales(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              invoice_number INTEGER DEFAULT 0,
+              sub_total INTEGER DEFAULT 0,
+              discount INTEGER DEFAULT 0,
+              tax INTEGER DEFAULT 0,
+              total INTEGER DEFAULT 0,
+              status TEXT, -- in-progress, completed, refunded, voided
+              user_id INTEGER,
+              FOREIGN KEY (user_id) REFERENCES users(id),
+              FOREIGN KEY (status) REFERENCES sale_statuses(key)
+            );
+
+            CREATE TABLE IF NOT EXISTS sale_statuses(
+              key TEXT PRIMARY KEY,
+              name TEXT UNIQUE
+            );
+
+            CREATE TABLE IF NOT EXISTS sale_items(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              quantity INTEGER,
+              unit_price INTEGER DEFAULT 0,
+              discount INTEGER DEFAULT 0,
+              line_total INTEGER DEFAULT 0,
+              sale_id INTEGER,
+              product_id INTEGER,
+              user_id INTEGER,
+              FOREIGN KEY (user_id) REFERENCES users(id),
+              FOREIGN KEY (sale_id) REFERENCES sales(id),
+              FOREIGN KEY (product_id) REFERENCES products(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS payments(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              amount INTEGER DEFAULT 0,
+              reference_number TEXT,
+              method TEXT, --- CASH, CARD, E-WALLET
+              sale_id INTEGER,
+              FOREIGN KEY (sale_id) REFERENCES sales(id),
+              FOREIGN KEY (method) REFERENCES payment_methods(key)
+            );
+
+            CREATE TABLE IF NOT EXISTS payment_methods(
+              key PRIMARY KEY,
+              name TEXT UNIQUE
             );
 
             CREATE TABLE IF NOT EXISTS counts(
@@ -71,6 +121,19 @@ export class AppDatabase {
               updated_at DATETIME,
               quantity INTEGER DEFAULT 0,
               product_id INTEGER,
+              FOREIGN KEY (product_id) REFERENCES products(id)
+            );
+            
+            CREATE TABLE IF NOT EXISTS inventory_movement(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              movement_type INTEGER, --- IN, OUT, ADJUST
+              reference_type TEXT, --- SALES, PURCHASE, RETURN, TRANSFER, ADJUSTMENT
+              quantity INTEGER,
+              reference_id INTEGER, --- id from SALES, PURCHASE, RETURN, TRANSFER, ADJUSTMENT              user_id INTEGER,
+              product_id INTEGER,
+              user_id INTEGER,
+              FOREIGN KEY (user_id) REFERENCES users(id),
               FOREIGN KEY (product_id) REFERENCES products(id)
             );
             
