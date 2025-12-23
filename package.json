@@ -36,6 +36,7 @@
     "feather-icons": "^4.29.2",
     "immer": "^11.0.1",
     "locale-currency": "^1.0.0",
+    "react-error-boundary": "^6.0.0",
     "react-feather": "^2.0.10",
     "react-hook-form": "^7.66.1",
     "react-router-dom": "^7.9.6",

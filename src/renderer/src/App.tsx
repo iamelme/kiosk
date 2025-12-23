@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom'
+import { ErrorBoundary } from 'react-error-boundary'
 import Sidebar from './components/Sidebar'
 import { useEffect } from 'react'
 import useBoundStore from './stores/boundStore'
@@ -20,7 +21,9 @@ function App(): React.JSX.Element {
     <div className="flex h-full text-slate-700 text-sm">
       <Sidebar />
       <main className="flex-1 p-4 bg-slate-50">
-        <Outlet />
+        <ErrorBoundary fallback={<div>Something went wrong</div>}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
     </div>
   )
