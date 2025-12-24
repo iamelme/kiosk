@@ -6,6 +6,11 @@ export class CartRepository implements ICartRepository {
   constructor(database) {
     this._database = database
     ipcMain.handle('cart:getByUserId', (_, id: number) => this.getByUserId(id))
+    ipcMain.handle(
+      'cart:updateDiscount',
+      (_, params: { discount: number; total: number; cart_id: number }) =>
+        this.updateDiscount(params)
+    )
     ipcMain.handle('cart:insertItem', (_, params: CartItem) => this.insertItem(params))
     ipcMain.handle('cart:deleteAllItems', (_, cart_id: number) => this.deleteAllItems(cart_id))
   }
@@ -65,6 +70,55 @@ export class CartRepository implements ICartRepository {
       }
       return {
         data: null,
+        error: new Error('Something went wrong while  retrieving the product')
+      }
+    }
+  }
+
+  updateDiscount(params: { discount: number; total: number; cart_id: number }): {
+    success: boolean
+    error: Error | string
+  } {
+    const { discount, cart_id } = params
+    const normalizeDiscount = discount * 100
+    try {
+      console.log({ normalizeDiscount })
+
+      const cart = this._database
+        .prepare(
+          `
+        SELECT sub_total, id
+        FROM carts
+        WHERE id = ?
+        `
+        )
+        .get(cart_id)
+      const normalizeTotal = cart.sub_total - normalizeDiscount
+
+      this._database
+        .prepare(
+          `UPDATE carts
+        SET discount = ?,
+        total = ?
+        WHERE id = ?
+        `
+        )
+        .run(normalizeDiscount, normalizeTotal, cart_id)
+
+      return {
+        success: true,
+        error: ''
+      }
+    } catch (error) {
+      console.log('inside catch', error)
+      if (error instanceof Error) {
+        return {
+          success: false,
+          error: new Error('Something went wrong while retrieving the product')
+        }
+      }
+      return {
+        success: false,
         error: new Error('Something went wrong while  retrieving the product')
       }
     }

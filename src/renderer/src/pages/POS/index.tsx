@@ -5,15 +5,21 @@ import Input from '@renderer/components/ui/Input'
 import Price from '@renderer/components/ui/Price'
 import useBoundStore from '@renderer/stores/boundStore'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ReactNode, useRef } from 'react'
+import { ReactNode, useRef, useState } from 'react'
 import { Trash2 } from 'react-feather'
+import { NumericFormat } from 'react-number-format'
 
 export default function POS(): ReactNode {
   const inputRef = useRef<HTMLInputElement>(null)
   const inputAmountRef = useRef<HTMLInputElement>(null)
+  const inputRefNoRef = useRef<HTMLInputElement>(null)
+
+  const [amount, setAmount] = useState(0)
+  const [paymentMethod, setPaymentMethod] = useState('cash')
 
   const user = useBoundStore((state) => state.user)
-  const { isPending, data } = useQuery({
+
+  const { isPending, data, error } = useQuery({
     queryKey: ['cart', user.id],
     queryFn: async () => {
       if (!user.id) {
@@ -30,7 +36,16 @@ export default function POS(): ReactNode {
       }
       console.log('data', data)
 
-      return data ?? undefined
+      return (
+        data ?? {
+          id: 0,
+          items: [],
+          sub_total: 0,
+          discount: 0,
+          tax: 0,
+          total: 0
+        }
+      )
     }
   })
 
@@ -88,6 +103,22 @@ export default function POS(): ReactNode {
     }
   })
 
+  const mutationUpdateDiscount = useMutation({
+    mutationFn: async (discount: number) => {
+      if (!data?.id) {
+        return
+      }
+      console.log('data from mutate', data)
+      console.log('discount from mutate', discount)
+
+      await window.apiCart.updateDiscount({ discount, total: data?.total, cart_id: data?.id })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      console.log('invalidate cart iwth discount')
+    }
+  })
+
   const mutationPlaceOrder = useMutation({
     mutationFn: async () => {
       // amount: number
@@ -103,25 +134,31 @@ export default function POS(): ReactNode {
       // user_id INTEGER,
       console.log('click id', data?.id)
 
-      if (data?.id && user.id) {
-        const payload = {
-          cart: {
-            items: data.items,
-            sub_total: data.sub_total,
-            discount: data.discount,
-            total: data.total
-          },
-          amount: inputAmountRef.current ? Number(inputAmountRef.current?.value) : 0,
-          reference_number: '',
-          method: 'cash',
-          sale_id: data.id,
-          user_id: user.id
-        }
-
-        console.log({ payload })
-
-        await window.apiSale.placeOrder(payload)
+      if (!data?.id || !user.id || !data?.items?.length) {
+        throw new Error('Something went wrong')
       }
+
+      // TODO:
+      // user input for discount
+      // remove specific cart item
+
+      const payload = {
+        cart: {
+          items: data.items,
+          sub_total: data.sub_total,
+          discount: data.discount,
+          total: data.total
+        },
+        amount: amount ?? 0,
+        reference_number: inputRefNoRef.current ? inputRefNoRef.current.value : '',
+        method: paymentMethod,
+        sale_id: data.id,
+        user_id: user.id
+      }
+
+      console.log({ payload })
+
+      await window.apiSale.placeOrder(payload)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] })
@@ -139,6 +176,10 @@ export default function POS(): ReactNode {
 
   const handleClearCart = async (): Promise<void> => {
     mutationRemoveCart.mutate()
+    setPaymentMethod('cash')
+    if (inputRefNoRef.current) {
+      inputRefNoRef.current.value = ''
+    }
   }
 
   const handlePlaceOrder = async (): Promise<void> => {
@@ -166,6 +207,10 @@ export default function POS(): ReactNode {
   //   }, [])
 
   console.log({ mutationRemoveCart })
+
+  if (error) {
+    return <>Error</>
+  }
 
   return (
     <div className="flex min-h-full">
@@ -197,7 +242,15 @@ export default function POS(): ReactNode {
           </div>
         </div>
         <div className="mb-3">
-          <Summary data={data}>
+          <Summary
+            data={data}
+            onChangeDiscount={(v) => {
+              console.log('on change summary', v)
+
+              mutationUpdateDiscount.mutate(v)
+              // setDiscount(v)
+            }}
+          >
             <Summary.NoOfItems />
             <Summary.SubTotal />
             <Summary.Discount />
@@ -207,19 +260,48 @@ export default function POS(): ReactNode {
         </div>
 
         <div className="mb-3">
-          <h3 className="mb-2 text-lg font-medium">Payment Method</h3>
+          <h3 className="mb-2 text-lg font-medium">Payment</h3>
 
           <div className="mb-3">
-            <select className="w-full py-1 px-2 border border-slate-400 rounded-md">
+            <label htmlFor="method">Method</label>
+            <select
+              id="method"
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              value={paymentMethod}
+              className="w-full py-1 px-2 border border-slate-400 rounded-md"
+            >
+              <option value="e-wallet">E-wallet</option>
               <option value="cash">Cash</option>
             </select>
+
+            {paymentMethod !== 'cash' && (
+              <div className="my-3">
+                <label htmlFor="refNo">Reference No.</label>
+                <Input ref={inputRefNoRef} id="refNo" />
+              </div>
+            )}
           </div>
 
-          <Input ref={inputAmountRef} />
+          <div className="mb-3">
+            <label htmlFor="amount">Amount Paid</label>
+
+            <NumericFormat
+              getInputRef={inputAmountRef}
+              onValueChange={(values) => {
+                const { floatValue } = values
+                if (floatValue) {
+                  setAmount(floatValue)
+                }
+              }}
+              customInput={Input}
+              thousandSeparator
+              className="text-right"
+            />
+          </div>
         </div>
 
         <div className="">
-          <Button full onClick={handlePlaceOrder}>
+          <Button full onClick={handlePlaceOrder} disabled={!data?.items?.length}>
             Place an Order
           </Button>
         </div>

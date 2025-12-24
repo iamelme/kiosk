@@ -183,6 +183,8 @@ export class SaleRepository implements ISaleRepository {
 
         console.log('after loop')
 
+        const normalizeAmount = amount * 100
+
         this._database
           .prepare(
             `
@@ -190,7 +192,7 @@ export class SaleRepository implements ISaleRepository {
           VALUES(?, ?, ?, ?)
           `
           )
-          .run(amount, reference_number, method, saleId)
+          .run(normalizeAmount, reference_number, method, saleId)
 
         return true
       })

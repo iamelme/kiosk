@@ -55,6 +55,12 @@ export const apiUser = {
 
 export const apiCart = {
   getByUserId: (id: number): Promise<CartReturnType> => ipcRenderer.invoke('cart:getByUserId', id),
+  updateDiscount: (params: {
+    discount: number
+    total: number
+    cart_id: number
+  }): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('cart:updateDiscount', params),
   insertItem: (params: CartItem): Promise<CartReturnType> =>
     ipcRenderer.invoke('cart:insertItem', params),
   deleteAllItems: (cart_id: number): Promise<{ success: boolean; error: ErrorType }> =>
