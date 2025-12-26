@@ -36,9 +36,32 @@ function Trigger(
   const { dialogRef } = useDialogContext()
   const handleClick = (): void => {
     if (dialogRef.current) {
-      dialogRef.current.showModal()
+      console.log('dialog open')
+      if (!dialogRef.current.open) {
+        dialogRef.current.showModal()
+        return
+      }
+      dialogRef.current.close()
     }
   }
+
+  return (
+    <Button onClick={handleClick} {...props}>
+      {props.children}
+    </Button>
+  )
+}
+
+function Close(
+  props: ButtonHTMLAttributes<HTMLButtonElement> & Omit<ButtonProps, 'children'>
+): ReactNode {
+  const { dialogRef } = useDialogContext()
+  const handleClick = (): void => {
+    if (dialogRef.current) {
+      dialogRef.current.close()
+    }
+  }
+
   return (
     <Button onClick={handleClick} {...props}>
       {props.children}
@@ -58,3 +81,4 @@ function Content({ children }: { children: ReactNode }): ReactNode {
 
 Dialog.Trigger = Trigger
 Dialog.Content = Content
+Dialog.Close = Close

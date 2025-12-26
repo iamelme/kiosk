@@ -34,7 +34,7 @@ export default function Button({
       {...props}
       className={twMerge(
         `inline-flex  justify-center items-center gap-x-1 ${styles.variants[variant]} ${styles.sizes[size]} rounded-sm  cursor-pointer`,
-        `${props.className} ${full ? 'w-full' : ''}`
+        `${props.className} ${full ? 'w-full' : ''} ${props.disabled ? 'opacity-75 cursor-default' : ''}`
       )}
     >
       {children}
