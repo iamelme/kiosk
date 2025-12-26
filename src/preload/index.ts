@@ -7,7 +7,6 @@ import {
   ProductType,
   ReturnCartType,
   UserType,
-  SaleItemType,
   ReturnSaleType,
   PlaceOrderType
 } from '../renderer/src/utils/types'
@@ -61,8 +60,16 @@ export const apiCart = {
     cart_id: number
   }): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('cart:updateDiscount', params),
+  updateItemQty: (params: {
+    id: number
+    cart_id: number
+    quantity: number
+  }): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('cart:updateItemQty', params),
   insertItem: (params: CartItem): Promise<CartReturnType> =>
     ipcRenderer.invoke('cart:insertItem', params),
+  removeItem: (id: number, cart_id: number): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('cart:removeItem', id, cart_id),
   deleteAllItems: (cart_id: number): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('cart:deleteAllItems', cart_id)
 }
