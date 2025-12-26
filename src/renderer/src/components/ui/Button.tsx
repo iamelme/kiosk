@@ -9,7 +9,8 @@ const styles = {
   },
   sizes: {
     default: 'py-2 px-4',
-    icon: 'p-2'
+    icon: 'p-2',
+    sm: 'py-2 px-4 text-xs'
   }
 }
 
