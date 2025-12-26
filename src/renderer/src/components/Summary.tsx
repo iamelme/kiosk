@@ -1,36 +1,47 @@
 import { createContext, ReactNode, useContext } from 'react'
-import { Trash2 } from 'react-feather'
-import Button from './ui/Button'
+import { NumericFormat } from 'react-number-format'
+
 import Price from './ui/Price'
 import { ReturnCartType } from '@renderer/utils/types'
+import Input from './ui/Input'
 
-const SummaryContext = createContext<ReturnCartType | undefined>(undefined)
+type Summary = ReturnCartType & {
+  handleDiscount: (v: number) => void
+}
+
+const SummaryContext = createContext<Summary | undefined>(undefined)
 
 export default function Summary({
   data,
+  onChangeDiscount,
   children
 }: {
-  data: ReturnCartType | undefined
+  data: ReturnCartType
+  onChangeDiscount: (v: number) => void
   children: ReactNode
 }): ReactNode {
   console.log('ctx data', data)
 
+  // const handleDiscount = (v: number): void => setDiscount(v)
+  const handleDiscount = (v: number): void => onChangeDiscount(v)
+  // const handleDiscount = (v: number): void => {
+  //   onChangeDiscount(v)
+  // }
+
   return (
-    <SummaryContext value={data}>
-      <div className="flex justify-between gap-x-2">
-        <h2 className="font-medium text-xl mb-3">Order Summary</h2>
-        <div>
-          <Button variant="danger" size="icon" title="Remove Order">
-            <Trash2 size={14} />
-          </Button>
-        </div>
-      </div>
+    <SummaryContext
+      value={{
+        ...data,
+        // discount,
+        handleDiscount
+      }}
+    >
       <div className="flex flex-col gap-y-2">{children}</div>
     </SummaryContext>
   )
 }
 
-const useSummaryContext = (): ReturnCartType => {
+const useSummaryContext = (): Summary => {
   const ctx = useContext(SummaryContext)
 
   if (!ctx) {
@@ -71,11 +82,25 @@ function SubTotal(): ReactNode {
 function Discount(): ReactNode {
   const ctx = useSummaryContext()
 
+  console.log('discount ctx', ctx)
+
   return (
-    <dl className="flex justify-between">
+    <dl className="flex justify-between gap-x-2">
       <dt>Discount:</dt>
       <dd>
-        <Price value={ctx.discount} />
+        <NumericFormat
+          value={ctx.discount / 100}
+          customInput={Input}
+          onValueChange={(values) => {
+            const { floatValue } = values
+
+            if (floatValue) {
+              ctx.handleDiscount(floatValue)
+            }
+          }}
+          thousandSeparator
+          className="text-right"
+        />
       </dd>
     </dl>
   )
@@ -98,8 +123,8 @@ function Total(): ReactNode {
   const ctx = useSummaryContext()
 
   return (
-    <dl className="flex justify-between text-xl">
-      <dt className="font-medium">Total:</dt>
+    <dl className="flex justify-between font-bold">
+      <dt className="">Total:</dt>
       <dd>
         <Price value={ctx.total} />
       </dd>
