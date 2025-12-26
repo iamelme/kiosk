@@ -15,7 +15,7 @@ const styles = {
 
 type Styles = typeof styles
 
-type ButtonProps = {
+export type ButtonProps = {
   variant?: keyof Styles['variants']
   size?: keyof Styles['sizes']
   full?: boolean
