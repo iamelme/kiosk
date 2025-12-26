@@ -27,7 +27,7 @@ export class CartRepository implements ICartRepository {
         const cartItems = this._database
           .prepare(
             `
-                SELECT  ci.*, p.price, p.name, p.sku, p.code, i.quantity AS product_quantity
+                SELECT  ci.*, p.price, p.cost, p.name, p.sku, p.code, i.quantity AS product_quantity
                 FROM cart_items AS ci
                 LEFT JOIN products AS p ON p.id = ci.product_id
                 LEFT JOIN inventory AS i ON i.product_id = p.id
