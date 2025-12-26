@@ -15,10 +15,10 @@ export default function Items<T extends { id: string | number }>({
   ref
 }: ItemsProps<T>): React.JSX.Element {
   return (
-    <div className="my-6 w-full overflow-y-auto">
+    <div className="my-6 w-full max-h-lvh overflow-y-auto">
       <table className="w-full" ref={ref}>
         <thead>
-          <tr>
+          <tr className="sticky top-0 bg-white">
             {headers?.map((header, idx) => (
               <th
                 key={idx}
@@ -33,7 +33,7 @@ export default function Items<T extends { id: string | number }>({
         </thead>
         <tbody className="[&_td]:py-1 align-top">
           {items?.map((item) => (
-            <tr key={item.id} data-selected="0" tabIndex={0}>
+            <tr key={item.id} data-selected="0" className="even:bg-white" tabIndex={0}>
               {renderItems(item)}
             </tr>
           ))}
