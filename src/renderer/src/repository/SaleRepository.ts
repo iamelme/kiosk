@@ -1,16 +1,52 @@
 import { SaleItem, ISaleRepository, ReturnType } from '@renderer/interfaces/ISaleRepository'
-import { PlaceOrderType } from '@renderer/utils/types'
+import { PlaceOrderType, SaleType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 
 export class SaleRepository implements ISaleRepository {
   private _database
   constructor(database) {
     this._database = database
+    ipcMain.handle('sale:getAll', (_, user_id: number) => this.getAll(user_id))
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle('sale:insertItem', (_, params: SaleItem) => this.insertItem(params))
     ipcMain.handle('sale:placeOrder', (_, params: PlaceOrderType) => this.placeOrder(params))
     ipcMain.handle('sale:deleteAllItems', (_, sale_id: number) => this.deleteAllItems(sale_id))
   }
+  getAll(user_id: number): { data: SaleType[] | null; error: Error | string } {
+    try {
+      const db = this._database
+
+      const sales = db
+        .prepare(
+          `SELECT * 
+        FROM sales
+        WHERE user_id = ?
+        `
+        )
+        .all(user_id)
+
+      if (!sales) {
+        throw new Error('Sorry no sales')
+      }
+
+      return {
+        data: sales,
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error('Something went wrong while retrieving the product')
+        }
+      }
+      return {
+        data: null,
+        error: new Error('Something went wrong while  retrieving the product')
+      }
+    }
+  }
+
   getByUserId(id: number): ReturnType {
     try {
       let saleItems, sale
@@ -145,8 +181,8 @@ export class SaleRepository implements ISaleRepository {
 
         try {
           const saleItemsStmt = this._database.prepare(`
-            INSERT INTO sale_items (quantity, unit_price, line_total, sale_id, product_id, user_id)
-            VALUES(?, ?, ?, ?, ?, ?)
+            INSERT INTO sale_items (quantity, unit_price, unit_cost, line_total, sale_id, product_id, user_id)
+            VALUES(?, ?, ?, ?, ?, ?, ?)
             `)
 
           const invStmt = this._database.prepare(
@@ -168,6 +204,7 @@ export class SaleRepository implements ISaleRepository {
             saleItemsStmt.run(
               item.quantity,
               item.price,
+              item.cost,
               line_total,
               saleId,
               item.product_id,

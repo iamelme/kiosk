@@ -21,6 +21,8 @@ import ProtectedRoutes from './pages/ProtectedRoutes'
 import Signup from './pages/Auth/Signup'
 import POS from './pages/POS'
 
+import SalesPage from './pages/Sales'
+
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
@@ -54,6 +56,11 @@ createRoot(document.getElementById('root')!).render(
 
             <Route path="inventory">
               <Route index element={<InventoryPage />} />
+              <Route path=":id" element={<InventoryDetail />} />
+            </Route>
+
+            <Route path="Sales">
+              <Route index element={<SalesPage />} />
               <Route path=":id" element={<InventoryDetail />} />
             </Route>
           </Route>

@@ -39,6 +39,7 @@ export type CartItemType = {
   sku: string
   code: number
   price: number
+  cost: number
   cart_id: number
   user_id: number
 }
@@ -55,6 +56,7 @@ export type ErrorType = Error | string
 
 export type SaleType = {
   id: number
+  created_at: Date
   sub_total: number
   tax: number
   discount: number

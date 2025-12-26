@@ -1,4 +1,4 @@
-import { Box, Database, DollarSign, Grid, Home, ShoppingCart } from 'react-feather'
+import { Box, Database, DollarSign, Grid, Home, ShoppingCart, TrendingUp } from 'react-feather'
 import Menu from './Menu'
 import Button from './ui/Button'
 import useBoundStore from '@renderer/stores/boundStore'
@@ -39,6 +39,11 @@ const menu = [
     label: 'Inventory',
     to: `/inventory`,
     icon: <Database size={14} />
+  },
+  {
+    label: 'Sales',
+    to: `/Sales`,
+    icon: <TrendingUp size={14} />
   }
 ]
 
