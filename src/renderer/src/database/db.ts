@@ -80,6 +80,7 @@ export class AppDatabase {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               quantity INTEGER,
               unit_price INTEGER DEFAULT 0,
+              unit_cost INTEGER DEFAULT 0,
               discount INTEGER DEFAULT 0,
               line_total INTEGER DEFAULT 0,
               sale_id INTEGER,

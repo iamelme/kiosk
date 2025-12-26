@@ -8,7 +8,8 @@ import {
   ReturnCartType,
   UserType,
   ReturnSaleType,
-  PlaceOrderType
+  PlaceOrderType,
+  SaleType
 } from '../renderer/src/utils/types'
 
 type ProdInventoryType = {
@@ -75,6 +76,8 @@ export const apiCart = {
 }
 
 export const apiSale = {
+  getAll: (user_id: number): Promise<{ data: SaleType[] | null; error: ErrorType }> =>
+    ipcRenderer.invoke('sale:getAll', user_id),
   getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
   placeOrder: (params: PlaceOrderType): Promise<{ data: null; error: ErrorType }> =>
     ipcRenderer.invoke('sale:placeOrder', params),

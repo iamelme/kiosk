@@ -1,4 +1,4 @@
-import { PlaceOrderType, ReturnSaleType } from '@renderer/utils/types'
+import { PlaceOrderType, ReturnSaleType, SaleType } from '@renderer/utils/types'
 
 export type ReturnType = {
   data: ReturnSaleType | null
@@ -13,6 +13,7 @@ export type SaleItem = {
 }
 
 export interface ISaleRepository {
+  getAll(user_id: number): { data: SaleType[] | null; error: Error | string }
   getByUserId(id: number): ReturnType
   create(user_id: number): ReturnType
   placeOrder(params: PlaceOrderType): ReturnType
