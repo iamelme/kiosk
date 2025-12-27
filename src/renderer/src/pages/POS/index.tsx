@@ -205,7 +205,13 @@ export default function POS(): ReactNode {
 
       console.log({ payload })
 
-      await window.apiSale.placeOrder(payload)
+      const { success, error } = await window.apiSale.placeOrder(payload)
+
+      if (error instanceof Error) {
+        throw new Error(error.message)
+      }
+
+      return success
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] })
@@ -433,6 +439,11 @@ export default function POS(): ReactNode {
         </div>
 
         <div className="">
+          {mutationPlaceOrder.error && (
+            <Alert className="my-3" variant="danger">
+              {mutationPlaceOrder.error.message}
+            </Alert>
+          )}
           <Button full onClick={handlePlaceOrder} disabled={!data?.items?.length}>
             Place an Order
           </Button>

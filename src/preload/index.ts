@@ -79,10 +79,16 @@ export const apiSale = {
   getAll: (user_id: number): Promise<{ data: SaleType[] | null; error: ErrorType }> =>
     ipcRenderer.invoke('sale:getAll', user_id),
   getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
-  placeOrder: (params: PlaceOrderType): Promise<{ data: null; error: ErrorType }> =>
+  getById: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getById', id),
+  placeOrder: (params: PlaceOrderType): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('sale:placeOrder', params),
   insertItem: (params: SaleItem): Promise<SaleReturnType> =>
     ipcRenderer.invoke('sale:insertItem', params),
+  updateSaleStatus: (params: {
+    id: number
+    status: string
+  }): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('sale:updateStatus', params),
   deleteAllItems: (sale_id: number): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('sale:deleteAllItems', sale_id)
 }

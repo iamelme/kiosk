@@ -1,8 +1,8 @@
-import { PlaceOrderType, ReturnSaleType, SaleType } from '@renderer/utils/types'
+import { ErrorType, PlaceOrderType, ReturnSaleType, SaleType } from '@renderer/utils/types'
 
 export type ReturnType = {
   data: ReturnSaleType | null
-  error: Error | string
+  error: ErrorType
 }
 
 export type SaleItem = {
@@ -13,10 +13,12 @@ export type SaleItem = {
 }
 
 export interface ISaleRepository {
-  getAll(user_id: number): { data: SaleType[] | null; error: Error | string }
+  getAll(user_id: number): { data: SaleType[] | null; error: ErrorType }
   getByUserId(id: number): ReturnType
+  getById(id: number): ReturnType
   create(user_id: number): ReturnType
-  placeOrder(params: PlaceOrderType): ReturnType
+  placeOrder(params: PlaceOrderType): { success: boolean; error: ErrorType }
   insertItem(params: SaleItem): ReturnType
-  deleteAllItems(sale_id: number): { success: boolean; error: Error | string }
+  updateStatus(params: { id: number; status: string }): { success: boolean; error: ErrorType }
+  deleteAllItems(sale_id: number): { success: boolean; error: ErrorType }
 }

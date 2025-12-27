@@ -58,6 +58,7 @@ export type ErrorType = Error | string
 export type SaleType = {
   id: number
   created_at: Date
+  invoice_number: string
   sub_total: number
   tax: number
   discount: number
@@ -74,16 +75,23 @@ export type SaleItemType = {
   sku: string
   code: number
   price: number
+  unit_price: number
+  unit_cost: number
   sale_id: number
   user_id: number
 }
 
 export type ReturnSaleType = {
   id: number
+  created_at: Date
+  invoice_number: string
+  status: string
   items: SaleItemType[]
   sub_total: number
   discount: number
   total: number
+  amount: number
+  method: string
 }
 
 export type PlaceOrderType = {

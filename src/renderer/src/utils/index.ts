@@ -8,3 +8,9 @@ export function humanize(str): string {
       return m.toUpperCase()
     })
 }
+
+export const saleStatuses = [
+  { label: 'In-progress', value: 'in-progress' },
+  { label: 'Complete', value: 'complete' },
+  { label: 'Void', value: 'void' }
+]
