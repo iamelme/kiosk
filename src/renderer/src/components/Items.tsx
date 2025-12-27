@@ -23,7 +23,7 @@ export default function Items<T extends { id: string | number }>({
               <th
                 key={idx}
                 className={twMerge(
-                  `text-xs uppercase font-medium text-left text-slate-400 ${header.className}`
+                  `px-2 text-xs uppercase font-medium text-left text-slate-400 ${header.className}`
                 )}
               >
                 {header.label}
@@ -31,7 +31,7 @@ export default function Items<T extends { id: string | number }>({
             ))}
           </tr>
         </thead>
-        <tbody className="[&_td]:py-1 align-top">
+        <tbody className="[&_td]:py-1 [&_td]:px-2 align-top">
           {items?.map((item) => (
             <tr key={item.id} data-selected="0" className="even:bg-white" tabIndex={0}>
               {renderItems(item)}

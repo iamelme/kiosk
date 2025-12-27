@@ -5,7 +5,7 @@ const styles = {
   variants: {
     default: 'bg-indigo-600 text-white',
     danger: 'bg-red-600 text-white',
-    outline: 'border border-slate-200'
+    outline: 'border border-slate-400'
   },
   sizes: {
     default: 'py-2 px-4',
