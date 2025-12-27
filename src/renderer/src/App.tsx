@@ -18,7 +18,7 @@ function App(): React.JSX.Element {
   }, [updateLocale])
 
   return (
-    <div className="flex h-full text-slate-700 text-sm">
+    <div className="flex min-h-svh text-slate-700 text-sm">
       <Sidebar />
       <main className="flex-1 p-4 bg-slate-50">
         <ErrorBoundary fallback={<div>Something went wrong</div>}>
