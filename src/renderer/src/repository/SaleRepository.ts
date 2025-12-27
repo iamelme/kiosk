@@ -1,5 +1,5 @@
 import { SaleItem, ISaleRepository, ReturnType } from '@renderer/interfaces/ISaleRepository'
-import { PlaceOrderType, SaleType } from '@renderer/utils/types'
+import { ErrorType, PlaceOrderType, SaleType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 
 export class SaleRepository implements ISaleRepository {
@@ -8,8 +8,12 @@ export class SaleRepository implements ISaleRepository {
     this._database = database
     ipcMain.handle('sale:getAll', (_, user_id: number) => this.getAll(user_id))
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
+    ipcMain.handle('sale:getById', (_, id: number) => this.getById(id))
     ipcMain.handle('sale:insertItem', (_, params: SaleItem) => this.insertItem(params))
     ipcMain.handle('sale:placeOrder', (_, params: PlaceOrderType) => this.placeOrder(params))
+    ipcMain.handle('sale:updateStatus', (_, params: { id: number; status: string }) =>
+      this.updateStatus(params)
+    )
     ipcMain.handle('sale:deleteAllItems', (_, sale_id: number) => this.deleteAllItems(sale_id))
   }
   getAll(user_id: number): { data: SaleType[] | null; error: Error | string } {
@@ -117,15 +121,77 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
+  getById(id: number): ReturnType {
+    const db = this._database
+    try {
+      const transaction = db.transaction(() => {
+        try {
+          const sales = db
+            .prepare(
+              `
+          SELECT  s.*, p.amount, p.method
+          FROM sales AS s
+          LEFT JOIN payments AS p ON p.sale_id = s.id
+          WHERE s.id = ?
+          `
+            )
+            .get(id)
+
+          const saleItems = db
+            .prepare(
+              `SELECT si.*, p.name, p.code
+            FROM sale_items AS si
+          LEFT JOIN products AS p ON p.id = si.product_id
+          WHERE sale_id = ?`
+            )
+            .all(id)
+
+          return {
+            sales,
+            saleItems
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      })
+
+      const res = transaction()
+
+      if (!res) {
+        throw new Error('Something went wrong while retrieving the product')
+      }
+
+      return {
+        data: {
+          ...res.sales,
+          items: res.saleItems
+        },
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error('Something went wrong while retrieving the product')
+        }
+      }
+      return {
+        data: null,
+        error: new Error('Something went wrong while  retrieving the product')
+      }
+    }
+  }
+
   create(user_id: number): ReturnType {
+    const createdAt = new Date().toISOString()
     try {
       const stmt = this._database.prepare(`
-        INSERT INTO sales (status, user_id)
-        VALUES(?, ?)
+        INSERT INTO sales (created_at, status, user_id)
+        VALUES(?, ?, ?)
         RETURNING id
         `)
 
-      const sale = stmt.get('in-progress', user_id)
+      const sale = stmt.get(createdAt, 'in-progress', user_id)
 
       console.log('returning sale', sale)
 
@@ -152,8 +218,9 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
-  placeOrder(params: PlaceOrderType): ReturnType {
+  placeOrder(params: PlaceOrderType): { success: boolean; error: Error | string } {
     const { cart, amount, reference_number, method, user_id } = params
+    const createdAt = new Date().toISOString()
     try {
       const transaction = this._database.transaction(() => {
         console.log('place order start', params)
@@ -164,24 +231,27 @@ export class SaleRepository implements ISaleRepository {
           return false
         }
 
+        const invoiceNo = String(saleId).padStart(8, '0')
+
         this._database
           .prepare(
             `
           UPDATE sales
           SET status = ?,
+          invoice_number = ?,
           sub_total = ?,
           discount = ?,
           total = ?
           WHERE id = ?
           `
           )
-          .run('complete', cart.sub_total, cart.discount, cart.total, saleId)
+          .run('complete', invoiceNo, cart.sub_total, cart.discount, cart.total, saleId)
 
         console.log('cart items', cart.items)
 
         try {
           const saleItemsStmt = this._database.prepare(`
-            INSERT INTO sale_items (quantity, unit_price, unit_cost, line_total, sale_id, product_id, user_id)
+            INSERT INTO sale_items ( quantity, unit_price, unit_cost, line_total, sale_id, product_id, user_id)
             VALUES(?, ?, ?, ?, ?, ?, ?)
             `)
 
@@ -194,8 +264,8 @@ export class SaleRepository implements ISaleRepository {
           )
 
           const invMovStmt = this._database.prepare(
-            `INSERT INTO inventory_movement (movement_type, reference_type, quantity, reference_id, product_id, user_id)
-          VALUES(?, ?, ?, ?, ?, ?)
+            `INSERT INTO inventory_movement (created_at, movement_type, reference_type, quantity, reference_id, product_id, user_id)
+          VALUES(?, ?, ?, ?, ?, ?, ?)
           `
           )
           for (const item of cart.items) {
@@ -212,7 +282,15 @@ export class SaleRepository implements ISaleRepository {
             )
 
             invStmt.run(item.quantity, item.product_id)
-            invMovStmt.run(1, 'sales', item.quantity, saleId, item.product_id, item.user_id)
+            invMovStmt.run(
+              createdAt,
+              1,
+              'sales',
+              item.quantity,
+              saleId,
+              item.product_id,
+              item.user_id
+            )
           }
         } catch (error) {
           console.error(error)
@@ -225,36 +303,36 @@ export class SaleRepository implements ISaleRepository {
         this._database
           .prepare(
             `
-          INSERT INTO payments (amount, reference_number, method, sale_id)
-          VALUES(?, ?, ?, ?)
+          INSERT INTO payments (created_at, amount, reference_number, method, sale_id)
+          VALUES(?, ?, ?, ?, ?)
           `
           )
-          .run(normalizeAmount, reference_number, method, saleId)
+          .run(createdAt, normalizeAmount, reference_number, method, saleId)
 
         return true
       })
 
-      const result = transaction()
+      const res = transaction()
 
-      console.log('result transaction', result)
+      console.log('res transaction', res)
 
-      if (!result) {
+      if (!res) {
         throw new Error('Something went wrong while creating an item the product')
       }
 
       return {
-        data: null,
+        success: true,
         error: ''
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
-          data: null,
+          success: false,
           error: new Error('Something went wrong while creating a sale')
         }
       }
       return {
-        data: null,
+        success: false,
         error: new Error('Something went wrong while creating a sale')
       }
     }
@@ -386,6 +464,46 @@ export class SaleRepository implements ISaleRepository {
       return {
         data: null,
         error: new Error('Something went wrong while creating an item the product')
+      }
+    }
+  }
+
+  updateStatus(params: { id: number; status: string }): { success: boolean; error: ErrorType } {
+    const { id, status } = params
+    try {
+      const db = this._database
+
+      const sales = db
+        .prepare(
+          `
+        UPDATE sales
+        SET status = ?
+        WHERE id = ?
+        RETURNING id
+        `
+        )
+        .run(status, id)
+
+      if (!sales) {
+        throw new Error('Something went wrong while updating the sale')
+      }
+
+      return {
+        success: true,
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          error: new Error(
+            error.message ?? 'Something went wrong while deleting an item the product'
+          )
+        }
+      }
+      return {
+        success: false,
+        error: new Error('Something went wrong while deleting an item the product')
       }
     }
   }

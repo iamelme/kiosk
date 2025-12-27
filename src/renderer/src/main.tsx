@@ -22,6 +22,7 @@ import Signup from './pages/Auth/Signup'
 import POS from './pages/POS'
 
 import SalesPage from './pages/Sales'
+import SalesDetail from './pages/Sales/Detail'
 
 const queryClient = new QueryClient()
 
@@ -61,7 +62,7 @@ createRoot(document.getElementById('root')!).render(
 
             <Route path="Sales">
               <Route index element={<SalesPage />} />
-              <Route path=":id" element={<InventoryDetail />} />
+              <Route path=":id" element={<SalesDetail />} />
             </Route>
           </Route>
         </Routes>

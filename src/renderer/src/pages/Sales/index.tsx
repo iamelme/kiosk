@@ -6,9 +6,11 @@ import { humanize } from '@renderer/utils'
 import { SaleType } from '@renderer/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 // import { Link } from 'react-router-dom'
 
 const headers = [
+  { label: 'Invoice No.', className: '' },
   { label: 'Date', className: '' },
   { label: 'Subtotal', className: 'text-right' },
   { label: 'Discount', className: 'text-right' },
@@ -59,6 +61,9 @@ export default function Sales(): ReactNode {
           headers={headers}
           renderItems={(item) => (
             <>
+              <td>
+                <Link to={`/sales/${item.id}`}>{item.invoice_number}</Link>
+              </td>
               <td>{String(new Date(item.created_at).toLocaleDateString())}</td>
               <td className="text-right">
                 <Price value={item.sub_total} />
