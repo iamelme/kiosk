@@ -136,7 +136,7 @@ export const apiInventory = {
     ipcRenderer.invoke('inventory:getById', id),
   createInventory: (params: InventoryType): Promise<{ data: InventoryType; error: ErrorType }> =>
     ipcRenderer.invoke('inventory:create', params),
-  updateInventory: (params: InventoryType): Promise<{ data: InventoryType; error: ErrorType }> =>
+  updateInventory: (params: InventoryType): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('inventory:update', params),
   deleteInventory: (id: number): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('inventory:delete', id)

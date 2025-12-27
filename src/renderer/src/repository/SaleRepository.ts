@@ -212,7 +212,7 @@ export class SaleRepository implements ISaleRepository {
             )
 
             invStmt.run(item.quantity, item.product_id)
-            invMovStmt.run(0, 'sales', item.quantity, saleId, item.product_id, item.user_id)
+            invMovStmt.run(1, 'sales', item.quantity, saleId, item.product_id, item.user_id)
           }
         } catch (error) {
           console.error(error)

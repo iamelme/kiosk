@@ -14,6 +14,6 @@ export interface IInventoryRepository {
   getAll(): { data: Array<ProductInventoryType> | null; error: ErrorType }
   getById(id: number): { data: ProdInventoryType | null; error: ErrorType }
   create(params: InventoryType): { data: InventoryType | null; error: ErrorType }
-  update(params: InventoryType): { data: InventoryType | null; error: ErrorType }
+  update(params: InventoryType): { success: boolean; error: ErrorType }
   delete(id: number): { success: boolean; error: ErrorType }
 }

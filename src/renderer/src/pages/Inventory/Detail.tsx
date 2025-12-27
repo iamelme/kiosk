@@ -3,6 +3,7 @@ import FormWrapper from '@renderer/components/form/FormWrapper'
 import Alert from '@renderer/components/ui/Alert'
 import Button from '@renderer/components/ui/Button'
 import { ProdInventoryType } from '@renderer/interfaces/IInventoryRepository'
+import useBoundStore from '@renderer/stores/boundStore'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -10,7 +11,7 @@ import z from 'zod'
 
 const schema = z.object({
   id: z.coerce.number().optional(),
-  // product_id: z.coerce.number(),
+  product_id: z.coerce.number(),
   quantity: z.coerce.number()
 })
 
@@ -20,6 +21,8 @@ export default function Detail(): ReactNode {
   const { id } = useParams()
 
   const navigate = useNavigate()
+
+  const user = useBoundStore((state) => state.user)
 
   const { isPending, error, data } = useQuery({
     queryKey: ['inventory'],
@@ -40,7 +43,8 @@ export default function Detail(): ReactNode {
 
   const mutation = useMutation({
     mutationFn: async (data: ProdInventoryType) => {
-      const { error } = await window.apiInventory.updateInventory(data)
+      if (!user?.id) return
+      const { error } = await window.apiInventory.updateInventory({ ...data, user_id: user.id })
       if (error instanceof Error) {
         throw new Error(error.message)
       }

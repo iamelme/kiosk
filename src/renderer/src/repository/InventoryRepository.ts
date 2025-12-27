@@ -121,44 +121,54 @@ export class InventoryRepository implements IInventoryRepository {
       }
     }
   }
-  update(params: InventoryType): { data: InventoryType | null; error: ErrorType } {
-    const { quantity, id } = params
+  update(params: InventoryType): { success: boolean; error: ErrorType } {
+    const { quantity, id, product_id, user_id } = params
 
     console.log('params', params)
     const errorMessage = new Error('Something went wrong while updating an inventory.')
 
+    const db = this._database
+
     try {
-      console.log('inside try catch')
-      const product = this._database
-        .prepare(
-          `UPDATE inventory 
+      const transaction = db.transaction(() => {
+        const inventory = db
+          .prepare(
+            `UPDATE inventory 
           SET quantity = ?
           WHERE id = ?`
-        )
-        .run(quantity, id)
+          )
+          .run(quantity, id)
 
-      console.log({ product })
+        console.log({ inventory })
 
-      if (product) {
-        return {
-          data: product,
-          error: ''
-        }
+        db.prepare(
+          `INSERT INTO inventory_movement (movement_type, reference_type, quantity, reference_id, product_id, user_id)
+          VALUES(?, ?, ?, ?, ?, ?)
+        `
+        ).run(0, 'adjustment', quantity, id, product_id, user_id)
+
+        return true
+      })
+
+      const res = transaction()
+
+      if (!res) {
+        throw new Error(errorMessage.message)
       }
 
       return {
-        data: null,
-        error: errorMessage
+        success: true,
+        error: ''
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
-          data: null,
+          success: false,
           error: errorMessage
         }
       }
       return {
-        data: null,
+        success: false,
         error: errorMessage
       }
     }
