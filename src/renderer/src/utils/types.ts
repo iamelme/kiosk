@@ -23,6 +23,7 @@ export type InventoryType = {
   id: number
   quantity: number
   product_id: number
+  user_id: number
 }
 
 export type CartType = {
