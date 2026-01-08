@@ -1,12 +1,13 @@
 import Items from '@renderer/components/Items'
+import Pagination from '@renderer/components/Pagination'
 import Alert from '@renderer/components/ui/Alert'
 import Price from '@renderer/components/ui/Price'
 import useBoundStore from '@renderer/stores/boundStore'
 import { humanize } from '@renderer/utils'
 import { SaleType } from '@renderer/utils/types'
 import { useQuery } from '@tanstack/react-query'
-import { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { ReactNode, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 // import { Link } from 'react-router-dom'
 
 const headers = [
@@ -19,29 +20,68 @@ const headers = [
   { label: 'Status', className: '' }
 ]
 
+const pageSize = 10
+
 export default function Sales(): ReactNode {
   const user = useBoundStore((state) => state.user)
+
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const [hasLastItem, setHasLastItem] = useState(false)
+  let dir = searchParams.get('dir')
 
   const {
     data: sales,
     isPending,
     error
   } = useQuery({
-    queryKey: ['sales', user.id],
+    queryKey: ['sales', user.id, searchParams.get('currentId'), dir],
     queryFn: async (): Promise<SaleType[] | null> => {
       if (!user.id) {
         throw new Error('User not found')
       }
 
-      const res = await window.apiSale.getAll(user.id)
+      const currentId = searchParams.get('currentId') ? Number(searchParams.get('currentId')) : 0
 
-      if (res.error && error instanceof Error) {
+      dir = dir ?? 'next'
+
+      const { data, error } = await window.apiSale.getAll({
+        pageSize,
+        cursorId: currentId,
+        userId: user.id,
+        direction: dir as 'prev' | 'next'
+      })
+
+      if (error instanceof Error) {
         throw new Error(error.message)
       }
 
-      return res.data
+      if (!data) {
+        return null
+      }
+
+      // console.log(dir)
+
+      // console.log('data ', data)
+      setHasLastItem(false)
+
+      if (data.length > pageSize) {
+        setHasLastItem(true)
+        data.pop()
+      }
+
+      return dir == 'next' ? data : data?.toReversed()
     }
   })
+
+  // const queryClient = useQueryClient()
+
+  // const mutationUpdateNav = useMutation({
+  //   mutationFn: async (id: string) => {},
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ['sales'] })
+  //   }
+  // })
 
   if (isPending) {
     return <>Loading...</>
@@ -52,6 +92,8 @@ export default function Sales(): ReactNode {
   if (error) {
     return <Alert variant="danger">{error.message}</Alert>
   }
+
+  console.log('currentId', searchParams.get('currentId'))
 
   return (
     <>
@@ -80,6 +122,16 @@ export default function Sales(): ReactNode {
               <td className="">{humanize(item.status)}</td>
             </>
           )}
+        />
+      )}
+      {sales && (
+        <Pagination
+          direction={dir}
+          firstId={sales[0]?.id}
+          lastId={sales[sales.length - 1]?.id}
+          hasLastItem={hasLastItem}
+          searchParams={searchParams}
+          onSearchParams={setSearchParams}
         />
       )}
     </>

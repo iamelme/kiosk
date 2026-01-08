@@ -76,8 +76,13 @@ export const apiCart = {
 }
 
 export const apiSale = {
-  getAll: (user_id: number): Promise<{ data: SaleType[] | null; error: ErrorType }> =>
-    ipcRenderer.invoke('sale:getAll', user_id),
+  getAll: (params: {
+    pageSize: number
+    cursorId: number
+    userId: number
+    direction?: 'prev' | 'next'
+  }): Promise<{ data: SaleType[] | null; error: ErrorType }> =>
+    ipcRenderer.invoke('sale:getAll', params),
   getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
   getById: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getById', id),
   placeOrder: (params: PlaceOrderType): Promise<{ success: boolean; error: ErrorType }> =>
@@ -89,8 +94,8 @@ export const apiSale = {
     status: string
   }): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('sale:updateStatus', params),
-  deleteAllItems: (sale_id: number): Promise<{ success: boolean; error: ErrorType }> =>
-    ipcRenderer.invoke('sale:deleteAllItems', sale_id)
+  deleteAllItems: (saleId: number): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('sale:deleteAllItems', saleId)
 }
 
 // Custom APIs for renderer
