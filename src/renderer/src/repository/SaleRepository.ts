@@ -1,4 +1,9 @@
-import { SaleItem, ISaleRepository, ReturnType } from '@renderer/interfaces/ISaleRepository'
+import {
+  SaleItem,
+  ISaleRepository,
+  ReturnType,
+  Direction
+} from '@renderer/interfaces/ISaleRepository'
 import { ErrorType, PlaceOrderType, SaleType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 
@@ -6,7 +11,11 @@ export class SaleRepository implements ISaleRepository {
   private _database
   constructor(database) {
     this._database = database
-    ipcMain.handle('sale:getAll', (_, user_id: number) => this.getAll(user_id))
+    ipcMain.handle(
+      'sale:getAll',
+      (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
+        this.getAll(params)
+    )
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle('sale:getById', (_, id: number) => this.getById(id))
     ipcMain.handle('sale:insertItem', (_, params: SaleItem) => this.insertItem(params))
@@ -16,18 +25,35 @@ export class SaleRepository implements ISaleRepository {
     )
     ipcMain.handle('sale:deleteAllItems', (_, sale_id: number) => this.deleteAllItems(sale_id))
   }
-  getAll(user_id: number): { data: SaleType[] | null; error: Error | string } {
+  getAll(params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
+    data: SaleType[] | null
+    error: Error | string
+  } {
+    const { cursorId, userId, direction = 'next', pageSize } = params
+    console.log('repo currentId', params)
+
     try {
       const db = this._database
 
-      const sales = db
-        .prepare(
-          `SELECT * 
+      let stmt = `
+     SELECT * 
         FROM sales
-        WHERE user_id = ?
-        `
-        )
-        .all(user_id)
+        WHERE user_id = ? AND id > ?
+        LIMIT ?`
+
+      if (direction === 'prev') {
+        stmt = `SELECT * 
+        FROM sales
+        WHERE user_id = ? AND id < ?
+        ORDER BY id DESC
+        LIMIT ?`
+      }
+
+      console.log('statement', stmt)
+
+      const sales = db.prepare(stmt).all(userId, cursorId, pageSize + 1)
+
+      // console.log({ sales })
 
       if (!sales) {
         throw new Error('Sorry no sales')
@@ -508,7 +534,7 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
-  deleteAllItems(sale_id: number): { success: boolean; error: Error | string } {
+  deleteAllItems(saleId: number): { success: boolean; error: Error | string } {
     try {
       const transaction = this._database.transaction(() => {
         this._database
@@ -516,7 +542,7 @@ export class SaleRepository implements ISaleRepository {
             `DELETE FROM sale_items
         WHERE sale_id = ?`
           )
-          .run(sale_id)
+          .run(saleId)
 
         this._database
           .prepare(
@@ -527,7 +553,7 @@ export class SaleRepository implements ISaleRepository {
           WHERE id = ?
           `
           )
-          .run(sale_id)
+          .run(saleId)
       })
 
       transaction()

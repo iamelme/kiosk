@@ -12,13 +12,18 @@ export type SaleItem = {
   user_id: number
 }
 
+export type Direction = 'prev' | 'next'
+
 export interface ISaleRepository {
-  getAll(user_id: number): { data: SaleType[] | null; error: ErrorType }
+  getAll(params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
+    data: SaleType[] | null
+    error: ErrorType
+  }
   getByUserId(id: number): ReturnType
   getById(id: number): ReturnType
-  create(user_id: number): ReturnType
+  create(userId: number): ReturnType
   placeOrder(params: PlaceOrderType): { success: boolean; error: ErrorType }
   insertItem(params: SaleItem): ReturnType
   updateStatus(params: { id: number; status: string }): { success: boolean; error: ErrorType }
-  deleteAllItems(sale_id: number): { success: boolean; error: ErrorType }
+  deleteAllItems(saleId: number): { success: boolean; error: ErrorType }
 }
