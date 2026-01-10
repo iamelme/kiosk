@@ -1,8 +1,10 @@
-import FormDatalist from '@renderer/components/form/FormDatalist'
+import FormCombobox from '@renderer/components/form/FormCombobox'
+// import FormDatalist from '@renderer/components/form/FormDatalist'
 import FormInput from '@renderer/components/form/FormInput'
 import FormWrapper from '@renderer/components/form/FormWrapper'
 import Alert from '@renderer/components/ui/Alert'
 import Button from '@renderer/components/ui/Button'
+// import Combobox from '@renderer/components/ui/Combobox'
 import { ProductType } from '@renderer/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -163,6 +165,7 @@ export default function Detail(): React.JSX.Element {
             <FormInput label="Cost" name="cost" />
           </div>
         </div>
+        <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} />
         {/* <FormDatalist
           label="Category"
           name="category_id"
