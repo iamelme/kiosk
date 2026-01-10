@@ -27,9 +27,10 @@ export default function POS(): ReactNode {
   const inputRefNoRef = useRef<HTMLInputElement>(null)
   const btnUpdateQtyRef = useRef({})
 
-  const setBtnRef = (item, el): void => {
+  const setBtnRef = (item, el: HTMLElement | null): void => {
     if (el) {
       btnUpdateQtyRef.current[item.id] = el
+      btnUpdateQtyRef.current[item.id].quantity = item.quantity
     } else {
       delete btnUpdateQtyRef.current[item.id]
     }
@@ -37,8 +38,6 @@ export default function POS(): ReactNode {
 
   const [amount, setAmount] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState('cash')
-
-  const [quantity, setQuantity] = useState(0)
 
   const user = useBoundStore((state) => state.user)
 
@@ -146,15 +145,19 @@ export default function POS(): ReactNode {
         return
       }
 
+      const quantity = btnUpdateQtyRef.current[id].quantity
+      console.log({ quantity })
+
       await window.apiCart.updateItemQty({ id, cart_id: data.id, quantity })
     },
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] })
-      setQuantity(0)
+      // setQuantity(0)
 
       if (btnUpdateQtyRef.current) {
         btnUpdateQtyRef.current[variables].click()
+        btnUpdateQtyRef.current[variables].quantity = 0
       }
     }
   })
@@ -262,7 +265,7 @@ export default function POS(): ReactNode {
   //     }
   //   }, [])
 
-  console.log({ mutationRemoveCart })
+  // console.log({ mutationRemoveCart })
 
   console.log(btnUpdateQtyRef)
 
@@ -310,33 +313,43 @@ export default function POS(): ReactNode {
                         <Edit size={14} />
                       </Dialog.Trigger>
                       <Dialog.Content>
-                        {item?.id}
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault()
-                            mutationUpdateItemQty.mutate(item.id)
-                          }}
-                        >
-                          <Input
-                            type="number"
-                            defaultValue={item.quantity}
-                            onChange={(e) => {
-                              if (Number(e.target.value) > item.product_quantity) {
-                                setQuantity(item.product_quantity)
-                                return
-                              }
-
-                              setQuantity(Number(e.target.value) || 1)
+                        <div className="py-2 px-3">
+                          {item.name} - <strong>Stock: {item.product_quantity}</strong>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault()
+                              mutationUpdateItemQty.mutate(item.id)
                             }}
-                          />
-                        </form>
-                        <div className="flex gap-x-2">
-                          <Button onClick={() => mutationUpdateItemQty.mutate(item.id)} size="sm">
-                            Update
-                          </Button>
-                          <Dialog.Close variant="outline" size="icon">
-                            <X size={14} />
-                          </Dialog.Close>
+                          >
+                            <NumericFormat
+                              value={item.quantity}
+                              customInput={Input}
+                              onValueChange={(values) => {
+                                const { floatValue } = values
+
+                                if (floatValue && btnUpdateQtyRef.current) {
+                                  if (Number(floatValue) > item.product_quantity) {
+                                    btnUpdateQtyRef.current[item.id].quantity =
+                                      item.product_quantity
+                                    return
+                                  }
+                                  btnUpdateQtyRef.current[item.id].quantity = Number(
+                                    floatValue || 1
+                                  )
+                                }
+                              }}
+                              thousandSeparator
+                              className="text-right"
+                            />
+                            <div className="flex gap-x-2 mt-2">
+                              <Button type="submit" className="sm">
+                                Update
+                              </Button>
+                              <Dialog.Close type="button" variant="outline" size="icon">
+                                Close
+                              </Dialog.Close>
+                            </div>
+                          </form>
                         </div>
                       </Dialog.Content>
                     </Dialog>
