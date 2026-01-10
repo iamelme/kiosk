@@ -28,7 +28,7 @@ export default function Pagination({
           onSearchParams({
             ...searchParams,
             dir: 'prev',
-            currentId: String(firstId)
+            cursorId: String(firstId)
           })
         }}
       >
@@ -41,7 +41,7 @@ export default function Pagination({
           onSearchParams({
             ...searchParams,
             dir: 'next',
-            currentId: String(lastId)
+            cursorId: String(lastId)
           })
         }}
       >
