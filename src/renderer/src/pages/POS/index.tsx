@@ -52,12 +52,9 @@ export default function POS(): ReactNode {
 
       const { error, data } = await window.apiCart.getByUserId(user.id)
 
-      console.log('error query', error)
-
       if (error instanceof Error) {
         throw new Error(error.message)
       }
-      console.log('data', data)
 
       return (
         data ?? {
@@ -86,7 +83,6 @@ export default function POS(): ReactNode {
             user_id: user.id,
             product_id: product.id
           }
-          console.log('submit ', payload)
           const { error } = await window.apiCart.insertItem(payload)
           if (error instanceof Error) {
             console.error(error.message)
@@ -136,14 +132,11 @@ export default function POS(): ReactNode {
       if (!data?.id) {
         return
       }
-      console.log('data from mutate', data)
-      console.log('discount from mutate', discount)
 
       await window.apiCart.updateDiscount({ discount, total: data?.total, cart_id: data?.id })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] })
-      console.log('invalidate cart iwth discount')
     }
   })
 
@@ -179,7 +172,6 @@ export default function POS(): ReactNode {
       // reference_id INTEGER, --- id from SALES, PURCHASE, RETURN, TRANSFER, ADJUSTMENT              user_id INTEGER,
       // product_id INTEGER,
       // user_id INTEGER,
-      console.log('click id', data?.id)
 
       if (!data?.id || !user.id || !data?.items?.length) {
         throw new Error('Something went wrong')
@@ -203,8 +195,6 @@ export default function POS(): ReactNode {
         user_id: user.id
       }
 
-      console.log({ payload })
-
       const { success, error } = await window.apiSale.placeOrder(payload)
 
       if (error instanceof Error) {
@@ -226,7 +216,6 @@ export default function POS(): ReactNode {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] })
-      console.log('onsuccess data', data)
 
       if (data?.items?.length === 1) {
         mutationRemoveCart.mutate()
@@ -331,7 +320,14 @@ export default function POS(): ReactNode {
                           <Input
                             type="number"
                             defaultValue={item.quantity}
-                            onChange={(e) => setQuantity(Number(e.target.value) || 0)}
+                            onChange={(e) => {
+                              if (Number(e.target.value) > item.product_quantity) {
+                                setQuantity(item.product_quantity)
+                                return
+                              }
+
+                              setQuantity(Number(e.target.value) || 1)
+                            }}
                           />
                         </form>
                         <div className="flex gap-x-2">
