@@ -15,6 +15,7 @@ const schema = z
     sku: z.string().min(2),
     description: z.string().optional(),
     price: z.coerce.number(),
+    cost: z.coerce.number(),
     code: z.coerce.number(),
     category_id: z.coerce.number()
   })
@@ -73,7 +74,15 @@ export default function Detail(): React.JSX.Element {
     queryKey: ['product', { id }],
     queryFn: async () => {
       if (Number(id)) {
-        return window.apiProduct.getProductById(Number(id))
+        const { data } = await window.apiProduct.getProductById(Number(id))
+
+        console.log('data', data)
+
+        return {
+          ...data,
+          price: data?.price / 100,
+          cost: data?.cost / 100
+        }
       }
 
       return {
@@ -146,13 +155,20 @@ export default function Detail(): React.JSX.Element {
         <FormInput label="SKU" name="sku" fieldWatch="name" />
         <FormInput label="Code" name="code" />
         <FormInput label="Description" name="description" />
-        <FormInput label="Price" name="price" />
-        <FormDatalist
+        <div className="flex gap-x-3">
+          <div className="flex-1">
+            <FormInput label="Price" name="price" />
+          </div>
+          <div className="flex-1">
+            <FormInput label="Cost" name="cost" />
+          </div>
+        </div>
+        {/* <FormDatalist
           label="Category"
           name="category_id"
           options={categoryOptions}
           target="categories"
-        />
+        /> */}
         {mutation.error?.message && (
           <Alert variant="danger" className="mt-3">
             {mutation.error?.message}
