@@ -1,16 +1,23 @@
-import { InputHTMLAttributes, ReactNode, useState } from 'react'
+import { ChangeEvent, InputHTMLAttributes, ReactNode, useState } from 'react'
 import { useFloating, useFocus, useInteractions } from '@floating-ui/react'
 import Input from './Input'
 import useComboboxContext, { ComboboxContext } from '@renderer/context/useComboboxContext'
 import { twMerge } from 'tailwind-merge'
 
-export default function Combobox({ children }: { children: ReactNode }): React.ReactElement {
+type ComboboxProps = {
+  options: Record<string, string>[]
+  children: ReactNode
+}
+
+export default function Combobox({ options, children }: ComboboxProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false)
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen
   })
+
+  const [opt, setOpt] = useState(options)
 
   const focus = useFocus(context)
 
@@ -20,6 +27,9 @@ export default function Combobox({ children }: { children: ReactNode }): React.R
       value={{
         isOpen,
         setIsOpen,
+        options,
+        opt,
+        setOpt,
         refs,
         floatingStyles,
         getReferenceProps,
@@ -32,23 +42,38 @@ export default function Combobox({ children }: { children: ReactNode }): React.R
 }
 
 function Search({ ...props }: InputHTMLAttributes<HTMLInputElement>): ReactNode {
-  const { refs, getReferenceProps, isOpen } = useComboboxContext()
+  const { refs, getReferenceProps, isOpen, options, setOpt } = useComboboxContext()
+
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>): void => {
+    const { value } = e.target
+
+    if (!value.trim()) {
+      setOpt(options)
+
+      return
+    }
+
+    const filterOpt = options.filter((o) => o.label.toLowerCase().includes(value.toLowerCase()))
+    setOpt(filterOpt)
+  }
+
   return (
     <Input
       ref={refs.setReference}
       {...props}
       {...getReferenceProps()}
       className={twMerge(props.className, `${isOpen ? 'rounded-b-none' : ''}`)}
+      onChange={handleSearch}
     />
   )
 }
 
-function Empty({ children }: { children: ReactNode }): ReactNode {
+function Empty({ children }: { children?: ReactNode }): ReactNode {
   return <p>{children || 'No Content'}</p>
 }
 
-function List({ children }: { children: ReactNode }): React.ReactElement {
-  const { isOpen, refs, floatingStyles, getFloatingProps } = useComboboxContext()
+function List({ onSelect }: { onSelect: (v: string) => void }): React.ReactElement {
+  const { isOpen, setIsOpen, refs, floatingStyles, getFloatingProps, opt } = useComboboxContext()
   return (
     <>
       {isOpen && (
@@ -58,7 +83,19 @@ function List({ children }: { children: ReactNode }): React.ReactElement {
           {...getFloatingProps()}
           className="w-full p-1 bg-white border rounded-b-md"
         >
-          {children ? <ul className="flex flex-col">{children}</ul> : <p>No content</p>}
+          <ul>
+            {opt?.map((o) => (
+              <li
+                key={o.value}
+                onClick={() => {
+                  onSelect(o.value)
+                  setIsOpen(!isOpen)
+                }}
+              >
+                {o.label}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </>

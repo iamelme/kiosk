@@ -5,6 +5,9 @@ type ContetType = {
   isOpen: boolean
   setIsOpen: (v: boolean) => void
   floatingStyles: React.CSSProperties
+  options: Record<string, string>[]
+  opt: Record<string, string>[]
+  setOpt: (v: ContetType['opt']) => void
   refs: {
     reference: MutableRefObject<ReferenceType | null>
     floating: React.MutableRefObject<HTMLElement | null>
