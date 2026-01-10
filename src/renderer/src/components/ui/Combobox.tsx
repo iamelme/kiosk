@@ -47,17 +47,13 @@ function Search({ ...props }: InputHTMLAttributes<HTMLInputElement>): ReactNode 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>): void => {
     const { value } = e.target
 
-    console.log('search value', value)
-    setOpt(options)
-
     if (!value.trim()) {
-      console.log('empty')
+      setOpt(options)
 
       return
     }
 
     const filterOpt = options.filter((o) => o.label.toLowerCase().includes(value.toLowerCase()))
-    console.log('filterOpt', filterOpt)
     setOpt(filterOpt)
   }
 
