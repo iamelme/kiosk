@@ -1,5 +1,5 @@
-import { IProductRepository } from '@renderer/interfaces/IProductRepository'
-import { ProductType } from '@renderer/utils/types'
+import { IProductRepository, ReturnType } from '@renderer/interfaces/IProductRepository'
+import { Direction, ProductType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 import { SqliteError } from 'better-sqlite3'
 
@@ -8,7 +8,11 @@ export class ProductRepository implements IProductRepository {
 
   constructor(database) {
     this._database = database
-    ipcMain.handle('product:getAll', () => this.getAll())
+    ipcMain.handle(
+      'product:getAll',
+      (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
+        this.getAll(params)
+    )
     ipcMain.handle('product:getById', (_, id: number) => this.getById(id))
     ipcMain.handle('product:getByCode', (_, code: number) => this.getByCode(code))
     ipcMain.handle('product:getByName', (_, name: string) => this.getByName(name))
@@ -19,42 +23,101 @@ export class ProductRepository implements IProductRepository {
     ipcMain.handle('product:delete', (_, id: number) => this.delete(id))
   }
 
-  getAll(): {
+  getAll(params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
     data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | ''
   } {
+    const { cursorId, direction = 'next', pageSize } = params
+    console.log(params)
+
     try {
-      const products = this._database
-        .prepare(
-          `SELECT p.*, i.quantity, c.name as category_name
+      const db = this._database
+
+      let stmt = `
+      SELECT p.*, i.quantity, c.name as category_name
         FROM products AS p 
         LEFT JOIN categories as c ON p.category_id = c.id
         LEFT JOIN inventory as i ON p.id = i.product_id
-        WHERE p.is_active = 1
-        LIMIT 20
-        `
-        )
-        .all()
+        WHERE p.is_active = 1 AND p.id > ?
+        LIMIT ?`
+
+      if (direction === 'prev') {
+        stmt = `
+         SELECT p.*, i.quantity, c.name as category_name
+        FROM products AS p 
+        LEFT JOIN categories as c ON p.category_id = c.id
+        LEFT JOIN inventory as i ON p.id = i.product_id
+        WHERE p.is_active = 1 AND p.id < ?
+        ORDER BY id DESC
+        LIMIT ? `
+      }
+
+      const products = db.prepare(stmt).all(cursorId, pageSize + 1)
+
+      console.log('products', products)
+
+      // const products = this._database
+      //   .prepare(
+      //     `SELECT p.*, i.quantity, c.name as category_name
+      //   FROM products AS p
+      //   LEFT JOIN categories as c ON p.category_id = c.id
+      //   LEFT JOIN inventory as i ON p.id = i.product_id
+      //   WHERE p.is_active = 1
+      //   LIMIT 20
+      //   `
+      //   )
+      //   .all()
+
+      if (!products) {
+        throw new Error('Sorry no products')
+      }
+
       return {
         data: products,
         error: ''
       }
     } catch (error) {
+      console.log(error)
+
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error('Something went wrong while searching the product')
+          error: new Error('Something went wrong while retrieving products')
         }
       }
       return {
         data: null,
-        error: new Error('Something went wrong while searching the product')
+        error: new Error('Something went wrong while retrieving products')
       }
     }
   }
 
-  getById(id: number): { data: ProductType | null; error: string } {
-    return this._database.prepare('SELECT * FROM products WHERE id = ?').get(id)
+  getById(id: number): ReturnType {
+    try {
+      const product = this._database.prepare('SELECT * FROM products WHERE id = ?').get(id)
+
+      if (!product) {
+        throw new Error("Sorry can't retrieve this product")
+      }
+
+      return {
+        data: product,
+        error: ''
+      }
+    } catch (error) {
+      console.log(error)
+
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error('Something went wrong while retrieving products')
+        }
+      }
+      return {
+        data: null,
+        error: new Error('Something went wrong while retrieving products')
+      }
+    }
   }
 
   getByName(name: string): { data: ProductType | null; error: Error | string } {
@@ -256,15 +319,16 @@ export class ProductRepository implements IProductRepository {
   }
 
   update(params: ProductType): { data: ProductType | null; error: Error | string } {
-    const { id, name, sku, description, price, code, category_id } = params
+    const { id, name, sku, description, price, cost, code, category_id } = params
     console.log('params', params)
 
     const normalizePrice = (price ?? 0) * 100
-    const normalizeSKU = sku?.trim()?.toLowerCase()?.replace(/ /g, '-')
+    const normalizeCost = (cost ?? 0) * 100
+    const normalizeSKU = sku?.trim()?.toUpperCase()?.replace(/ /g, '-')
 
     try {
       const stmt = this._database.prepare(
-        'UPDATE products  SET name = ?, sku = ?,  description = ? ,  price = ?,  code = ?,  category_id = ? WHERE id = ? RETURNING *'
+        'UPDATE products  SET name = ?, sku = ?,  description = ? ,  price = ?, cost = ?,  code = ?,  category_id = ? WHERE id = ? RETURNING *'
       )
 
       const product = stmt.all(
@@ -272,6 +336,7 @@ export class ProductRepository implements IProductRepository {
         normalizeSKU,
         description,
         normalizePrice,
+        normalizeCost,
         code,
         category_id,
         id

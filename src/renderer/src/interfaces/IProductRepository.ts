@@ -1,11 +1,11 @@
-import { ProductType } from '@renderer/utils/types'
+import { Direction, ProductType } from '@renderer/utils/types'
 
 type CreateProduct = Omit<ProductType, 'id'>
 
-type ReturnType = { data: ProductType | null; error: Error | string }
+export type ReturnType = { data: ProductType | null; error: Error | string }
 
 export interface IProductRepository {
-  getAll(): {
+  getAll(params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
     data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | string
   }

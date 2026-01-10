@@ -115,11 +115,17 @@ export const apiCategory = {
 }
 
 export const apiProduct = {
-  getAllProducts: (): Promise<{
+  getAllProducts: (params: {
+    pageSize: number
+    cursorId: number
+    userId: number
+    direction?: 'prev' | 'next'
+  }): Promise<{
     data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: ErrorType
-  }> => ipcRenderer.invoke('product:getAll'),
-  getProductById: (id: number): Promise<ProductType> => ipcRenderer.invoke('product:getById', id),
+  }> => ipcRenderer.invoke('product:getAll', params),
+  getProductById: (id: number): Promise<{ data: ProductType; error: ErrorType }> =>
+    ipcRenderer.invoke('product:getById', id),
   getProductByCode: (code: number): Promise<{ data: ProductType | null; error: ErrorType }> =>
     ipcRenderer.invoke('product:getByCode', code),
   getProductBySku: (sku: string): Promise<{ data: ProductType | null; error: ErrorType }> =>

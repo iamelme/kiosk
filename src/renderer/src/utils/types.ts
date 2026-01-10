@@ -1,3 +1,5 @@
+export type Direction = 'prev' | 'next'
+
 export type UserType = {
   id: number
   user_name: string
@@ -15,6 +17,7 @@ export type ProductType = {
   sku: string
   description?: string
   price: number
+  cost: number
   code: number
   category_id: number
 }
