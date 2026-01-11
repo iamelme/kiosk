@@ -20,7 +20,7 @@ export default function Summary({
   onChangeDiscount: (v: number) => void
   children: ReactNode
 }): ReactNode {
-  console.log('ctx data', data)
+  // console.log('ctx data', data)
 
   // const handleDiscount = (v: number): void => setDiscount(v)
   const handleDiscount = (v: number): void => onChangeDiscount(v)
@@ -82,7 +82,7 @@ function SubTotal(): ReactNode {
 function Discount(): ReactNode {
   const ctx = useSummaryContext()
 
-  console.log('discount ctx', ctx)
+  // console.log('discount ctx', ctx)
 
   return (
     <dl className="flex justify-between gap-x-2">
