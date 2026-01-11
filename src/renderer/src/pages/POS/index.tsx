@@ -310,17 +310,19 @@ export default function POS(): ReactNode {
                         size="icon"
                         variant="outline"
                       >
-                        <Edit size={14} />
+                        <Edit size={12} />
                       </Dialog.Trigger>
-                      <Dialog.Content>
-                        <div className="py-2 px-3">
-                          {item.name} - <strong>Stock: {item.product_quantity}</strong>
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault()
-                              mutationUpdateItemQty.mutate(item.id)
-                            }}
-                          >
+                      <Dialog.Content className="max-w-[300px]">
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            mutationUpdateItemQty.mutate(item.id)
+                          }}
+                        >
+                          <Dialog.Header>
+                            <h3>{item.name}</h3> <strong>Stock(s): {item.product_quantity}</strong>
+                          </Dialog.Header>
+                          <Dialog.Body>
                             <NumericFormat
                               value={item.quantity}
                               customInput={Input}
@@ -341,20 +343,20 @@ export default function POS(): ReactNode {
                               thousandSeparator
                               className="text-right"
                             />
-                            <div className="flex gap-x-2 mt-2">
-                              <Button type="submit" className="sm">
-                                Update
-                              </Button>
-                              <Dialog.Close type="button" variant="outline" size="icon">
-                                Close
-                              </Dialog.Close>
-                            </div>
-                          </form>
-                        </div>
+                          </Dialog.Body>
+                          <Dialog.Footer>
+                            <Dialog.Close type="button" variant="outline" size="sm">
+                              Close
+                            </Dialog.Close>
+                            <Button type="submit" className="sm" size="sm">
+                              Update
+                            </Button>
+                          </Dialog.Footer>
+                        </form>
                       </Dialog.Content>
                     </Dialog>
                     <Button variant="outline" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                      <X size={14} />
+                      <X size={12} />
                     </Button>
                   </div>
                 </td>
