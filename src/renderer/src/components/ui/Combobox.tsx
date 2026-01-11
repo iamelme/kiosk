@@ -1,4 +1,4 @@
-import { ChangeEvent, InputHTMLAttributes, ReactNode, useState } from 'react'
+import { ChangeEvent, InputHTMLAttributes, ReactNode, useEffect, useState } from 'react'
 import { useFloating, useFocus, useInteractions } from '@floating-ui/react'
 import Input from './Input'
 import useComboboxContext, { ComboboxContext } from '@renderer/context/useComboboxContext'
@@ -18,6 +18,10 @@ export default function Combobox({ options, children }: ComboboxProps): React.Re
   })
 
   const [opt, setOpt] = useState(options)
+
+  useEffect(() => {
+    setOpt(options)
+  }, [options])
 
   const focus = useFocus(context)
 

@@ -1,12 +1,14 @@
 import {
   ButtonHTMLAttributes,
   createContext,
+  HTMLAttributes,
   ReactNode,
   RefObject,
   useContext,
   useRef
 } from 'react'
 import Button, { type ButtonProps } from './Button'
+import { twMerge } from 'tailwind-merge'
 
 type DialogContextType = {
   dialogRef: RefObject<HTMLDialogElement | null>
@@ -63,22 +65,63 @@ function Close(
   }
 
   return (
-    <Button onClick={handleClick} {...props}>
+    <Button onClick={handleClick} type="button" {...props}>
       {props.children}
     </Button>
   )
 }
 
-function Content({ children }: { children: ReactNode }): ReactNode {
+function Header({ children }: { children: ReactNode }): ReactNode {
+  return (
+    <header className="flex justify-between py-4 px-3 border-b-1 border-slate-300">
+      {children}
+    </header>
+  )
+}
+
+function Body({ children }: { children: ReactNode }): ReactNode {
+  return <footer className="py-4 px-3">{children}</footer>
+}
+
+function Footer({ children }: { children: ReactNode }): ReactNode {
+  return (
+    <footer className="flex justify-end gap-x-2 p-3 border-t-1 border-slate-300">{children}</footer>
+  )
+}
+
+type ContentProps = HTMLAttributes<HTMLDialogElement>
+
+function Content({
+  children,
+  className,
+  ...props
+}: ContentProps & { children: ReactNode }): ReactNode {
   const { dialogRef } = useDialogContext()
 
+  const handleClose = (e: React.MouseEvent<HTMLDialogElement>): void => {
+    if (e.target === dialogRef.current) {
+      dialogRef.current?.close()
+    }
+  }
+
   return (
-    <dialog ref={dialogRef} className="left-[50%] translate-x-[-50%]">
+    <dialog
+      ref={dialogRef}
+      {...props}
+      onClick={handleClose}
+      className={twMerge(
+        'w-full backdrop:bg-slate-600 backdrop:opacity-50 backdrop:backdrop-blur-md m-auto rounded-md',
+        className
+      )}
+    >
       {children}
     </dialog>
   )
 }
 
 Dialog.Trigger = Trigger
+Dialog.Header = Header
+Dialog.Body = Body
+Dialog.Footer = Footer
 Dialog.Content = Content
 Dialog.Close = Close
