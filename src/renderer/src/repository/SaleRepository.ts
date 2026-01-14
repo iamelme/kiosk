@@ -277,8 +277,8 @@ export class SaleRepository implements ISaleRepository {
 
         try {
           const saleItemsStmt = this._database.prepare(`
-            INSERT INTO sale_items ( quantity, unit_price, unit_cost, line_total, sale_id, product_id, user_id)
-            VALUES(?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO sale_items (created_at, quantity, unit_price, unit_cost, line_total, sale_id, product_id, user_id)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
             `)
 
           const invStmt = this._database.prepare(
@@ -298,6 +298,7 @@ export class SaleRepository implements ISaleRepository {
             const line_total = item.quantity * item.price
 
             saleItemsStmt.run(
+              createdAt,
               item.quantity,
               item.price,
               item.cost,

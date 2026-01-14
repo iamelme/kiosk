@@ -78,6 +78,7 @@ export class AppDatabase {
 
             CREATE TABLE IF NOT EXISTS sale_items(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME,
               quantity INTEGER,
               unit_price INTEGER DEFAULT 0,
               unit_cost INTEGER DEFAULT 0,
