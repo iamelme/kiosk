@@ -35,19 +35,19 @@ export default function Sales(): ReactNode {
     isPending,
     error
   } = useQuery({
-    queryKey: ['sales', user.id, searchParams.get('currentId'), dir],
+    queryKey: ['sales', user.id, searchParams.get('cursorId'), dir],
     queryFn: async (): Promise<SaleType[] | null> => {
       if (!user.id) {
         throw new Error('User not found')
       }
 
-      const currentId = searchParams.get('currentId') ? Number(searchParams.get('currentId')) : 0
+      const cursorId = searchParams.get('cursorId') ? Number(searchParams.get('cursorId')) : 0
 
       dir = dir ?? 'next'
 
       const { data, error } = await window.apiSale.getAll({
         pageSize,
-        cursorId: currentId,
+        cursorId: cursorId,
         userId: user.id,
         direction: dir as 'prev' | 'next'
       })
