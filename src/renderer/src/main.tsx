@@ -24,6 +24,8 @@ import POS from './pages/POS'
 import SalesPage from './pages/Sales'
 import SalesDetail from './pages/Sales/Detail'
 
+import TopProductsPage from './pages/Reports/Top'
+
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
@@ -60,9 +62,14 @@ createRoot(document.getElementById('root')!).render(
               <Route path=":id" element={<InventoryDetail />} />
             </Route>
 
-            <Route path="Sales">
+            <Route path="sales">
               <Route index element={<SalesPage />} />
               <Route path=":id" element={<SalesDetail />} />
+            </Route>
+
+            <Route path="reports">
+              {/* <Route index element={<SalesPage />} /> */}
+              <Route path="sales" element={<TopProductsPage />} />
             </Route>
           </Route>
         </Routes>

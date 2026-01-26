@@ -2,7 +2,8 @@ import {
   SaleItem,
   ISaleRepository,
   ReturnType,
-  Direction
+  Direction,
+  TopItemsType
 } from '@renderer/interfaces/ISaleRepository'
 import { ErrorType, PlaceOrderType, SaleType } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
@@ -18,6 +19,20 @@ export class SaleRepository implements ISaleRepository {
     )
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle('sale:getById', (_, id: number) => this.getById(id))
+    ipcMain.handle(
+      'sale:getTopItems',
+      (
+        _,
+        params: {
+          pageSize: number
+          cursorId: number
+          lastTotal: number
+          direction?: Direction
+          startDate: string
+          endDate: string
+        }
+      ) => this.getTopItems(params)
+    )
     ipcMain.handle('sale:insertItem', (_, params: SaleItem) => this.insertItem(params))
     ipcMain.handle('sale:placeOrder', (_, params: PlaceOrderType) => this.placeOrder(params))
     ipcMain.handle('sale:updateStatus', (_, params: { id: number; status: string }) =>
@@ -196,6 +211,98 @@ export class SaleRepository implements ISaleRepository {
       }
     } catch (error) {
       if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error('Something went wrong while retrieving the product')
+        }
+      }
+      return {
+        data: null,
+        error: new Error('Something went wrong while  retrieving the product')
+      }
+    }
+  }
+
+  getTopItems(params: {
+    pageSize: number
+    cursorId: number
+    lastTotal: number
+    startDate: string
+    endDate: string
+    direction?: Direction
+  }): {
+    data: TopItemsType[] | null
+    error: ErrorType
+  } {
+    const { pageSize, cursorId, lastTotal, startDate, endDate } = params
+    try {
+      console.log('params', params)
+
+      const stmt = `
+      SELECT 
+        p.id, si.id AS si_id, p.name, si.created_at, SUM(si.quantity) AS total_sales 
+      FROM 
+        sale_items AS si
+      LEFT JOIN 
+        products AS p ON p.id = si.product_id
+      LEFT JOIN 
+        sales AS s on s.id = si.sale_id
+      WHERE 
+        (? IS FALSE OR si.created_at  >= ?) 
+        AND (? IS FALSE OR si.created_at <= ?)
+        AND (? IS FALSE OR p.id <= ?) 
+        AND s.status = 'complete'
+      GROUP BY 
+        si.product_id
+      HAVING 
+        (? IS FALSE OR SUM(si.quantity) < ?)
+      ORDER BY 
+        total_sales DESC,
+        p.id DESC
+      LIMIT ?; 
+      `
+
+      //       if (direction === 'prev') {
+      //         stmt = `
+      //         SELECT p.id, p.name, si.created_at, SUM(si.quantity) AS total_sales
+      // FROM sale_items AS si
+      // LEFT JOIN products AS p ON p.id = si.product_id
+      // LEFT JOIN sales AS s on s.id = si.sale_id
+      // WHERE (? IS FALSE OR si.created_at  >= ?) AND (? IS FALSE OR p.id < ?) AND s.status = 'complete'
+      // GROUP BY si.product_id
+      // ORDER BY total_sales ASC, p.id ASC
+      // LIMIT ?;
+      //           `
+      //       }
+      // const products = stmt.all({ 1: startDate }, { endDate })
+      const products = this._database
+        .prepare(stmt)
+        .all(
+          startDate,
+          startDate,
+          endDate,
+          endDate,
+          cursorId,
+          cursorId,
+          lastTotal,
+          lastTotal,
+          pageSize
+        )
+
+      console.log(products)
+
+      if (!products) {
+        throw new Error('')
+      }
+
+      return {
+        data: products,
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error)
+
         return {
           data: null,
           error: new Error('Something went wrong while retrieving the product')
