@@ -85,6 +85,17 @@ export const apiSale = {
     ipcRenderer.invoke('sale:getAll', params),
   getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
   getById: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getById', id),
+  getTopItems: (params: {
+    pageSize: number
+    cursorId: number
+    lastTotal: number
+    direction?: 'prev' | 'next'
+    startDate: string
+    endDate: string
+  }): Promise<{
+    data: Array<Pick<ProductType, 'id' | 'name'> & { total_sales: number }> | null
+    error: ErrorType
+  }> => ipcRenderer.invoke('sale:getTopItems', params),
   placeOrder: (params: PlaceOrderType): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('sale:placeOrder', params),
   insertItem: (params: SaleItem): Promise<SaleReturnType> =>

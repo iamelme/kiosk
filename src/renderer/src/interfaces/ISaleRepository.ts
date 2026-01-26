@@ -12,6 +12,13 @@ export type SaleItem = {
   user_id: number
 }
 
+export type TopItemsType = {
+  id: number
+  created_at: string
+  name: string
+  total_sales: number
+}
+
 export type Direction = 'prev' | 'next'
 
 export interface ISaleRepository {
@@ -21,6 +28,24 @@ export interface ISaleRepository {
   }
   getByUserId(id: number): ReturnType
   getById(id: number): ReturnType
+  getTopItems({
+    pageSize,
+    cursorId,
+    lastTotal,
+    startDate,
+    endDate,
+    direction
+  }: {
+    pageSize: number
+    cursorId: number
+    lastTotal: number
+    startDate: string
+    endDate: string
+    direction?: Direction
+  }): {
+    data: TopItemsType[] | null
+    error: ErrorType
+  }
   create(userId: number): ReturnType
   placeOrder(params: PlaceOrderType): { success: boolean; error: ErrorType }
   insertItem(params: SaleItem): ReturnType
