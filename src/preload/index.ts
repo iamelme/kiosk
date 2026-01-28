@@ -12,6 +12,12 @@ import {
   SaleType
 } from '../renderer/src/utils/types'
 
+type SettingsType = {
+  locale: string
+  logo: string
+  tax: number
+}
+
 type ProdInventoryType = {
   id: number
   quantity: number
@@ -170,8 +176,18 @@ export const apiInventory = {
     ipcRenderer.invoke('inventory:delete', id)
 }
 
+export const apiSettings = {
+  getSettings: (): Promise<{ data: SettingsType; error: ErrorType }> =>
+    ipcRenderer.invoke('settings:get'),
+  updateLocale: (locale: string): Promise<{ success: boolean; error: ErrorType }> =>
+    ipcRenderer.invoke('settings:updateLocale', locale),
+  uploadLogo: (logo: string): Promise<{ data: string; error: ErrorType }> =>
+    ipcRenderer.invoke('settings:uploadLogo', logo)
+}
+
 export const apiElectron = {
-  getLocale: (): Promise<string> => ipcRenderer.invoke('get-locale')
+  getLocale: (): Promise<string> => ipcRenderer.invoke('get-locale'),
+  uploadLogo: (): Promise<string | null> => ipcRenderer.invoke('upload-logo')
 }
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -185,6 +201,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('apiCategory', apiCategory)
     contextBridge.exposeInMainWorld('apiProduct', apiProduct)
     contextBridge.exposeInMainWorld('apiInventory', apiInventory)
+    contextBridge.exposeInMainWorld('apiSettings', apiSettings)
     contextBridge.exposeInMainWorld('apiElectron', apiElectron)
   } catch (error) {
     console.error(error)

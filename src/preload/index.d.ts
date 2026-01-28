@@ -6,6 +6,7 @@ import {
   apiCategory,
   apiElectron,
   apiInventory,
+  apiSettings,
   apiProduct
 } from './index'
 
@@ -18,6 +19,7 @@ declare global {
     apiCategory: typeof apiCategory
     apiProduct: typeof apiProduct
     apiInventory: typeof apiInventory
+    apiSettings: typeof apiSettings
     apiElectron: typeof apiElectron
   }
 }

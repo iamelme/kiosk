@@ -17,6 +17,9 @@ function App(): React.JSX.Element {
     ipcHandle()
   }, [updateLocale])
 
+  const store = useBoundStore((state) => state)
+  console.log('store ', store)
+
   return (
     <div className="flex min-h-svh text-slate-700 text-sm">
       <Sidebar />
