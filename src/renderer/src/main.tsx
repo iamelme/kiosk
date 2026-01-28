@@ -25,6 +25,7 @@ import SalesPage from './pages/Sales'
 import SalesDetail from './pages/Sales/Detail'
 
 import TopProductsPage from './pages/Reports/Top'
+import SettingsPage from './pages/Settings'
 
 const queryClient = new QueryClient()
 
@@ -43,7 +44,16 @@ createRoot(document.getElementById('root')!).render(
               </ProtectedRoutes>
             }
           >
-            <Route index element={<>Home Dashboard</>} />
+            <Route
+              index
+              element={
+                <>
+                  <button type="button" onClick={async () => await window.apiElectron.uploadLogo()}>
+                    Upload
+                  </button>
+                </>
+              }
+            />
             <Route path="categories">
               <Route index element={<CategoryPage />} />
               <Route path=":id" element={<CategoryDetail />} />
@@ -70,6 +80,10 @@ createRoot(document.getElementById('root')!).render(
             <Route path="reports">
               {/* <Route index element={<SalesPage />} /> */}
               <Route path="sales" element={<TopProductsPage />} />
+            </Route>
+
+            <Route path="settings">
+              <Route index element={<SettingsPage />} />
             </Route>
           </Route>
         </Routes>

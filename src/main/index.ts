@@ -1,5 +1,8 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import fs from 'fs'
+import { app, shell, BrowserWindow, ipcMain, dialog, protocol, net } from 'electron'
 import { join } from 'path'
+import path from 'path'
+import url from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { AppDatabase } from '../renderer/src/database/db'
@@ -9,6 +12,7 @@ import { InventoryRepository } from '../renderer/src/repository/InventoryReposit
 import { UserRepository } from '../renderer/src/repository/UserRepository'
 import { CartRepository } from '../renderer/src/repository/CartRepository'
 import { SaleRepository } from '../renderer/src/repository/SaleRepository'
+import { SettingsRepository } from '../renderer/src/repository/SettingsRepository'
 
 export let db
 
@@ -44,11 +48,27 @@ function createWindow(): void {
   }
 }
 
+const protocolName = 'elme-cute'
+protocol.registerSchemesAsPrivileged([{ scheme: protocolName, privileges: { bypassCSP: true } }])
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
+  // protocol.handle(protocolName, (request: Request) => {
+  protocol.handle(protocolName, (request: Request) => {
+    // const userDataPath = app.getPath('userData')
+    // return net.fetch(`${protocolName}://${userDataPath}`)
+
+    const url = request.url.replace(`${protocolName}://`, 'file://')
+    return net.fetch(url)
+
+    // const filePath = request.url.slice(`${protocolName}://`.length)
+    // Serve a file from your application directory
+    // return net.fetch(url.pathToFileURL(path.resolve(__dirname, filePath)).toString())
+  })
+
   electronApp.setAppUserModelId('com.electron')
 
   db = new AppDatabase()
@@ -59,6 +79,7 @@ app.whenReady().then(() => {
   new UserRepository(db.db)
   new CartRepository(db.db)
   new SaleRepository(db.db)
+  new SettingsRepository(db.db)
 
   // console.log('db from main', db)
 
@@ -67,6 +88,37 @@ app.whenReady().then(() => {
 
   ipcMain.handle('get-locale', () => {
     return app.getLocale()
+  })
+
+  ipcMain.handle('upload-logo', async () => {
+    const userDataPath = app.getPath('userData')
+    const imagePath = join(userDataPath, './assets/images')
+    if (!fs.existsSync(imagePath)) {
+      fs.mkdirSync(imagePath, { recursive: true })
+    }
+
+    const res = await dialog.showOpenDialog({
+      properties: ['openFile']
+    })
+
+    if (!res.canceled && res.filePaths.length > 0) {
+      const filePath = res.filePaths[0]
+      const stats = fs.statSync(filePath)
+      // const fileContent = fs.readFileSync(filePath)
+      console.log('stats', stats)
+
+      const destPath = join(userDataPath, `./assets/images/logo.webp`)
+      fs.copyFile(filePath, destPath, (err) => {
+        if (err) {
+          console.error('Save failed:', err)
+          throw new Error(err.message)
+        }
+        console.log('File saved successfully at:', destPath)
+      })
+
+      return destPath
+    }
+    throw new Error('Something went wrong while uploading the logo')
   })
 
   // Default open or close DevTools by F12 in development

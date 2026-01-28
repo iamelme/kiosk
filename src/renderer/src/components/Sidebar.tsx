@@ -5,12 +5,15 @@ import {
   Grid,
   Home,
   PieChart,
+  Settings,
   ShoppingCart,
   TrendingUp
 } from 'react-feather'
 import Menu from './Menu'
 import Button from './ui/Button'
 import useBoundStore from '@renderer/stores/boundStore'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 
 const menu = [
   {
@@ -64,15 +67,42 @@ const menu = [
         icon: <TrendingUp size={14} />
       }
     ]
+  },
+  {
+    label: 'Settings',
+    to: '/settings',
+    icon: <Settings size={14} />
   }
 ]
 
 export default function Sidebar(): React.JSX.Element {
   const updateUser = useBoundStore((state) => state.updateUser)
 
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const res = await window.apiSettings.getSettings()
+
+      if (res.error && res.error instanceof Error) {
+        throw new Error(res.error.message)
+      }
+
+      return res.data
+    }
+  })
+
   return (
     <aside className="flex flex-col justify-between w-[200px] border-r border-slate-200">
-      <Menu items={menu} />
+      <div>
+        <h1 className="py-2 px-3">
+          {settings?.logo && (
+            <Link to="/">
+              <img src={`elme-cute://${settings.logo}?v=${Date.now()}`} alt="logo" />
+            </Link>
+          )}
+        </h1>
+        <Menu items={menu} />
+      </div>
 
       <div className="py-2 px-4">
         <Button
