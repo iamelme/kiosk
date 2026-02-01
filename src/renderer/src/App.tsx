@@ -1,21 +1,40 @@
 import { Outlet } from 'react-router-dom'
 import { ErrorBoundary } from 'react-error-boundary'
 import Sidebar from './components/Sidebar'
-import { useEffect } from 'react'
+// import { useEffect } from 'react'
 import useBoundStore from './stores/boundStore'
+import { useQuery } from '@tanstack/react-query'
 
 function App(): React.JSX.Element {
   const updateLocale = useBoundStore((state) => state.updateLocale)
+  const updateLogo = useBoundStore((state) => state.updateLogo)
 
-  useEffect(() => {
-    const ipcHandle = async (): Promise<void> => {
-      const locale = await window.apiElectron.getLocale()
+  useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const res = await window.apiSettings.getSettings()
 
-      updateLocale(locale)
+      console.log('logo', res)
+      if (res.error && res.error instanceof Error) {
+        throw new Error(res.error.message)
+      }
+
+      updateLocale(res.data.locale)
+      updateLogo(res.data.logo)
+
+      return res.data
     }
+  })
 
-    ipcHandle()
-  }, [updateLocale])
+  // useEffect(() => {
+  //   const ipcHandle = async (): Promise<void> => {
+  //     const locale = await window.apiElectron.getLocale()
+
+  //     updateLocale(locale)
+  //   }
+
+  //   ipcHandle()
+  // }, [updateLocale])
 
   const store = useBoundStore((state) => state)
   console.log('store ', store)

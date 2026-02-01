@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 import { getCurrency } from 'locale-currency'
 
 export default function Price({ value }: { value: number }): ReactNode {
-  const locale = useBoundStore((state) => state.locale)
+  const locale = useBoundStore((state) => state.settings.general.locale)
 
   if (isNaN(value)) {
     return null
