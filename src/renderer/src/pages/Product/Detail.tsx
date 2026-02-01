@@ -26,6 +26,14 @@ const schema = z
 
     const normalizeCode = Number(data?.code)
 
+    if (data.category_id === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'There must be a category.',
+        path: ['category_id']
+      })
+    }
+
     if (normalizeCode) {
       const product = await window.apiProduct.getProductByCode(normalizeCode)
 
