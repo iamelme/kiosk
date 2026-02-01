@@ -24,11 +24,11 @@ export default function FormCombobox({ label, name, options }: FormComboboxProps
       setValue(name, options.find((opt) => opt.value === name)?.value)
     }
   }, [name, setValue, options])
-  console.log('options', options)
+  // console.log('options', options)
 
   const defaultValue = options?.find((opt) => Number(opt.value) === Number(watch(name)))?.label
 
-  console.log('defaultValue', defaultValue, 'name', name, 'watch', watch(name))
+  // console.log('defaultValue', defaultValue, 'name', name, 'watch', watch(name))
 
   return (
     <div className="mb-4">
@@ -42,7 +42,11 @@ export default function FormCombobox({ label, name, options }: FormComboboxProps
       )}
       <Combobox {...register(name)} options={options}>
         {!options && <Combobox.Empty />}
-        <Combobox.Input defaultValue={defaultValue} key={defaultValue} />
+        <Combobox.Input
+          defaultValue={defaultValue}
+          key={defaultValue}
+          className={`${errors[name] ? 'border-red-400' : ''}`}
+        />
         <Combobox.List onSelect={(value) => setValue(name, value)} />
       </Combobox>
       {errors[name] && (
