@@ -162,10 +162,14 @@ export const apiProduct = {
 }
 
 export const apiInventory = {
-  getAllInventory: (): Promise<{
+  getAllInventory: (params: {
+    pageSize: number
+    cursorId: number
+    direction?: 'prev' | 'next'
+  }): Promise<{
     data: Array<ProductType & InventoryType>
     error: ErrorType
-  }> => ipcRenderer.invoke('inventory:getAll'),
+  }> => ipcRenderer.invoke('inventory:getAll', params),
   getInventoryById: (id: number): Promise<{ data: ProdInventoryType | null; error: ErrorType }> =>
     ipcRenderer.invoke('inventory:getById', id),
   createInventory: (params: InventoryType): Promise<{ data: InventoryType; error: ErrorType }> =>
