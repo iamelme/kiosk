@@ -13,7 +13,6 @@ type FormWrapperProps<TFormValues extends FieldValues = FieldValues> = {
 const FormWrapper = <TFormValues extends FieldValues = FieldValues>({
   children,
   defaultValues,
-
   schema,
   onSubmit
 }: FormWrapperProps<TFormValues>): React.JSX.Element => {
