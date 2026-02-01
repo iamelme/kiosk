@@ -23,6 +23,8 @@ export default function Pagination({
   return (
     <div className="flex gap-x-2">
       <Button
+        size="sm"
+        variant="outline"
         disabled={(direction === 'prev' && !hasLastItem) || !direction}
         onClick={() => {
           onSearchParams({
@@ -36,6 +38,8 @@ export default function Pagination({
         Prev
       </Button>
       <Button
+        size="sm"
+        variant="outline"
         disabled={direction !== 'prev' && !hasLastItem}
         onClick={() => {
           onSearchParams({
