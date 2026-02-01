@@ -43,10 +43,9 @@ export default function Login(): ReactNode {
   })
 
   const handleSubmit = async (data): Promise<void> => {
-    console.log('submit', data)
-    const test = await mutation.mutate(data)
-    console.log('test', test)
+    await mutation.mutate(data)
   }
+
   return (
     <div className="max-w-[300px] mx-auto text-slate-700 text-sm">
       <FormWrapper<ValuesType>

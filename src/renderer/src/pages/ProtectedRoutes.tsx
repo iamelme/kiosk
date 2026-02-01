@@ -11,7 +11,7 @@ export default function ProtectedRoutes({ children }: { children: ReactNode }): 
   console.log('user protected routes', user)
 
   useEffect(() => {
-    if (!user.id) {
+    if (!user?.id) {
       const auth = localStorage.getItem('auth')
       if (auth) {
         const state = JSON.parse(auth)
