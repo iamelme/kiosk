@@ -3,7 +3,7 @@ import {
   ProductInventoryType,
   ProdInventoryType
 } from '@renderer/interfaces/IInventoryRepository'
-import { InventoryType, ErrorType } from '@renderer/utils/types'
+import { InventoryType, ErrorType, Direction } from '@renderer/utils/types'
 import { ipcMain } from 'electron'
 
 export class InventoryRepository implements IInventoryRepository {
@@ -11,27 +11,49 @@ export class InventoryRepository implements IInventoryRepository {
 
   constructor(database) {
     this._database = database
-    ipcMain.handle('inventory:getAll', () => this.getAll())
+    ipcMain.handle(
+      'inventory:getAll',
+      (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
+        this.getAll(params)
+    )
     ipcMain.handle('inventory:getById', (_, id: number) => this.getById(id))
     ipcMain.handle('inventory:create', (_, params: InventoryType) => this.create(params))
     ipcMain.handle('inventory:update', (_, params: InventoryType) => this.update(params))
     ipcMain.handle('inventory:delete', (_, id: number) => this.delete(id))
   }
 
-  getAll(): { data: Array<ProductInventoryType> | null; error: ErrorType } {
+  getAll(params: { pageSize: number; cursorId: number; direction?: Direction }): {
+    data: Array<ProductInventoryType> | null
+    error: ErrorType
+  } {
     try {
-      const products = this._database
-        .prepare(
-          `
-        SELECT  i.id, i.quantity, p.name, p.id AS product_id
-        FROM inventory i
-        LEFT JOIN products p ON i.product_id = p.id
-        LIMIT 20
-        `
-        )
-        .all()
+      const { cursorId, direction = 'next', pageSize } = params
+      const db = this._database
 
-      console.log({ products })
+      let stmt = `
+         SELECT  i.id, i.quantity, p.name, p.id AS product_id
+         FROM inventory i
+         LEFT JOIN products p ON i.product_id = p.id
+          WHERE  i.id > ?
+         LIMIT ?
+      `
+
+      if (direction === 'prev') {
+        stmt = `
+         SELECT  i.id, i.quantity, p.name, p.id AS product_id
+         FROM inventory i
+         LEFT JOIN products p ON i.product_id = p.id
+          WHERE  i.id < ?
+          ORDER BY i.id DESC
+         LIMIT ?
+      `
+      }
+
+      const products = db.prepare(stmt).all(cursorId, pageSize + 1)
+
+      if (!products) {
+        throw new Error('Something went wrong while retreiving the products')
+      }
 
       return {
         data: products,
