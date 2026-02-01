@@ -63,7 +63,7 @@ export class AppDatabase {
                 cost INTEGER DEFAULT 0,
                 is_active INTEGER DEFAULT 1,
                 category_id INTEGER,
-                FOREIGN KEY (category_id) REFERENCES categories(id)           
+                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL           
             );
 
             CREATE TABLE IF NOT EXISTS sales(
