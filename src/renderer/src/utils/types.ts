@@ -27,6 +27,8 @@ export type InventoryType = {
   quantity: number
   product_id: number
   user_id: number
+  movement_type?: number
+  reference_type?: 'purchase' | 'sale' | 'return' | 'transfer' | 'adjustment' | 'void'
 }
 
 export type CartType = {

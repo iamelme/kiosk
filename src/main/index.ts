@@ -75,10 +75,10 @@ app.whenReady().then(() => {
 
   new CategoryRepository(db.db)
   new ProductRepository(db.db)
-  new InventoryRepository(db.db)
+  const inventory = new InventoryRepository(db.db)
   new UserRepository(db.db)
   new CartRepository(db.db)
-  new SaleRepository(db.db)
+  new SaleRepository(db.db, inventory)
   new SettingsRepository(db.db)
 
   // console.log('db from main', db)

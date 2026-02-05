@@ -1,3 +1,4 @@
+import { IInventoryRepository } from '@renderer/interfaces/IInventoryRepository'
 import {
   SaleItem,
   ISaleRepository,
@@ -10,8 +11,10 @@ import { ipcMain } from 'electron'
 
 export class SaleRepository implements ISaleRepository {
   private _database
-  constructor(database) {
+  private _inventory: IInventoryRepository
+  constructor(database, inventory: IInventoryRepository) {
     this._database = database
+    this._inventory = inventory
     ipcMain.handle(
       'sale:getAll',
       (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
@@ -166,33 +169,29 @@ export class SaleRepository implements ISaleRepository {
     const db = this._database
     try {
       const transaction = db.transaction(() => {
-        try {
-          const sales = db
-            .prepare(
-              `
+        const sales = db
+          .prepare(
+            `
           SELECT  s.*, p.amount, p.method
           FROM sales AS s
           LEFT JOIN payments AS p ON p.sale_id = s.id
           WHERE s.id = ?
           `
-            )
-            .get(id)
+          )
+          .get(id)
 
-          const saleItems = db
-            .prepare(
-              `SELECT si.*, p.name, p.code
+        const saleItems = db
+          .prepare(
+            `SELECT si.*, p.name, p.code
             FROM sale_items AS si
           LEFT JOIN products AS p ON p.id = si.product_id
           WHERE sale_id = ?`
-            )
-            .all(id)
+          )
+          .all(id)
 
-          return {
-            sales,
-            saleItems
-          }
-        } catch (error) {
-          console.log(error)
+        return {
+          sales,
+          saleItems
         }
       })
 
@@ -616,20 +615,53 @@ export class SaleRepository implements ISaleRepository {
     try {
       const db = this._database
 
-      const sales = db
-        .prepare(
-          `
+      const transaction = db.transaction(() => {
+        const stmt = `
         UPDATE sales
         SET status = ?
         WHERE id = ?
         RETURNING id
-        `
-        )
-        .run(status, id)
+      `
+        const sales = db.prepare(stmt).run(status, id)
 
-      if (!sales) {
-        throw new Error('Something went wrong while updating the sale')
-      }
+        const items = db
+          .prepare(
+            `
+            SELECT si.id, si.product_id, si.quantity, i.id AS inventory_id, i.quantity AS old_quantity 
+            FROM sale_items si
+            LEFT JOIN inventory i ON si.product_id = i.product_id
+            WHERE si.sale_id = ?
+            `
+          )
+          .all(id)
+
+        const isVoid = status === 'void'
+
+        if (status !== 'in-progress') {
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+
+            const resItem = this._inventory.update({
+              quantity: isVoid ? item.old_quantity + item.quantity : item.quantity,
+              id: item.inventory_id,
+              product_id: item.product_id,
+              user_id: item.user_id,
+              movement_type: isVoid ? 0 : 1,
+              reference_type: isVoid ? 'void' : 'adjustment'
+            })
+
+            if (!resItem) {
+              throw new Error('Something went wrong while updating the sale')
+            }
+          }
+        }
+
+        if (!sales) {
+          throw new Error('Something went wrong while updating the sale')
+        }
+        return true
+      })
+      transaction()
 
       return {
         success: true,
