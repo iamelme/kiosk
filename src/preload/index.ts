@@ -191,7 +191,9 @@ export const apiSettings = {
 
 export const apiElectron = {
   getLocale: (): Promise<string> => ipcRenderer.invoke('get-locale'),
-  uploadLogo: (): Promise<string | null> => ipcRenderer.invoke('upload-logo')
+  createPDF: (params: ReturnSaleType & { logo: string }): Promise<ArrayBuffer> =>
+    ipcRenderer.invoke('create-pdf', params),
+  uploadLogo: (): Promise<string | null> => ipcRenderer.invoke('upload-logo'),
 }
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
