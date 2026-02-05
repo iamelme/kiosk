@@ -144,7 +144,14 @@ export class InventoryRepository implements IInventoryRepository {
     }
   }
   update(params: InventoryType): { success: boolean; error: ErrorType } {
-    const { quantity, id, product_id, user_id } = params
+    const {
+      quantity,
+      id,
+      product_id,
+      user_id,
+      movement_type = 0,
+      reference_type = 'adjustment'
+    } = params
 
     console.log('params', params)
     const errorMessage = new Error('Something went wrong while updating an inventory.')
@@ -161,13 +168,21 @@ export class InventoryRepository implements IInventoryRepository {
           )
           .run(quantity, id)
 
-        console.log({ inventory })
+        if (!inventory.changes) {
+          throw new Error(errorMessage.message)
+        }
 
-        db.prepare(
-          `INSERT INTO inventory_movement (movement_type, reference_type, quantity, reference_id, product_id, user_id)
+        const insertInvMv = db
+          .prepare(
+            `INSERT INTO inventory_movement (movement_type, reference_type, quantity, reference_id, product_id, user_id)
           VALUES(?, ?, ?, ?, ?, ?)
         `
-        ).run(0, 'adjustment', quantity, id, product_id, user_id)
+          )
+          .run(movement_type, reference_type, quantity, id, product_id, user_id)
+
+        if (!insertInvMv.changes) {
+          throw new Error(errorMessage.message)
+        }
 
         return true
       })
