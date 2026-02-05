@@ -80,6 +80,7 @@ export type SaleItemType = {
   price: number
   unit_price: number
   unit_cost: number
+  line_total: number
   sale_id: number
   user_id: number
 }
@@ -95,6 +96,7 @@ export type ReturnSaleType = {
   total: number
   amount: number
   method: string
+  customer_name?: string
 }
 
 export type PlaceOrderType = {

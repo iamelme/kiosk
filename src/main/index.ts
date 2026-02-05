@@ -1,8 +1,6 @@
 import fs from 'fs'
 import { app, shell, BrowserWindow, ipcMain, dialog, protocol, net } from 'electron'
 import { join } from 'path'
-import path from 'path'
-import url from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { AppDatabase } from '../renderer/src/database/db'
@@ -13,6 +11,8 @@ import { UserRepository } from '../renderer/src/repository/UserRepository'
 import { CartRepository } from '../renderer/src/repository/CartRepository'
 import { SaleRepository } from '../renderer/src/repository/SaleRepository'
 import { SettingsRepository } from '../renderer/src/repository/SettingsRepository'
+import createPDF from './createInvoicePDF'
+import { ReturnSaleType } from '../renderer/src/utils/types'
 
 export let db
 
@@ -88,6 +88,10 @@ app.whenReady().then(() => {
 
   ipcMain.handle('get-locale', () => {
     return app.getLocale()
+  })
+
+  ipcMain.handle('create-pdf', (_, params: ReturnSaleType & { logo: string }) => {
+    return createPDF(params)
   })
 
   ipcMain.handle('upload-logo', async () => {
