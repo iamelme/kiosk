@@ -1,4 +1,4 @@
-import { Direction, ErrorType, InventoryType, ProductType } from '@renderer/utils/types'
+import { Direction, ErrorType, InventoryType, ProductType } from '../utils/types'
 
 export type ProductInventoryType = ProductType & InventoryType
 

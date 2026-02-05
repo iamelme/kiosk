@@ -1,4 +1,4 @@
-import { ReturnCartType } from '@renderer/utils/types'
+import { ReturnCartType } from '../utils/types'
 
 export type ReturnType = {
   data: ReturnCartType | null

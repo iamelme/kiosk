@@ -1,6 +1,6 @@
 import { SqliteError } from 'better-sqlite3'
-import { IUserRepository, ReturnType } from '@renderer/interfaces/IUserInterRepository'
-import { UserType } from '@renderer/utils/types'
+import { IUserRepository, ReturnType } from '../interfaces/IUserInterRepository'
+import { UserType } from '../utils/types'
 import { ipcMain } from 'electron'
 import argon2 from 'argon2'
 

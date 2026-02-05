@@ -1,4 +1,4 @@
-import { CartItem, ICartRepository, ReturnType } from '@renderer/interfaces/ICartRepository'
+import { CartItem, ICartRepository, ReturnType } from '../interfaces/ICartRepository'
 import { ipcMain } from 'electron'
 
 export class CartRepository implements ICartRepository {

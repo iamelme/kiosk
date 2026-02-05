@@ -2,8 +2,8 @@ import {
   IInventoryRepository,
   ProductInventoryType,
   ProdInventoryType
-} from '@renderer/interfaces/IInventoryRepository'
-import { InventoryType, ErrorType, Direction } from '@renderer/utils/types'
+} from '../interfaces/IInventoryRepository'
+import { InventoryType, ErrorType, Direction } from '../utils/types'
 import { ipcMain } from 'electron'
 
 export class InventoryRepository implements IInventoryRepository {

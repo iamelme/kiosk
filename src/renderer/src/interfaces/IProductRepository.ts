@@ -1,4 +1,4 @@
-import { Direction, ProductType } from '@renderer/utils/types'
+import { Direction, ProductType } from '../utils/types'
 
 type CreateProduct = Omit<ProductType, 'id'>
 

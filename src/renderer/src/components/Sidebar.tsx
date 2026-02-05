@@ -11,7 +11,7 @@ import {
 } from 'react-feather'
 import Menu from './Menu'
 import Button from './ui/Button'
-import useBoundStore from '@renderer/stores/boundStore'
+import useBoundStore from '../stores/boundStore'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 

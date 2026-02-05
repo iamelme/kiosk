@@ -1,4 +1,4 @@
-import { ISettingRepository } from '@renderer/interfaces/ISettingRepository'
+import { ISettingRepository } from '../interfaces/ISettingRepository'
 import { ipcMain } from 'electron'
 
 export class SettingsRepository implements ISettingRepository {

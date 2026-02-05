@@ -1,7 +1,7 @@
 import { ChangeEvent, InputHTMLAttributes, ReactNode, useEffect, useState } from 'react'
 import { useFloating, useFocus, useInteractions } from '@floating-ui/react'
 import Input from './Input'
-import useComboboxContext, { ComboboxContext } from '@renderer/context/useComboboxContext'
+import useComboboxContext, { ComboboxContext } from '../../context/useComboboxContext'
 import { twMerge } from 'tailwind-merge'
 
 type ComboboxProps = {

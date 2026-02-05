@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext } from 'react'
 import { NumericFormat } from 'react-number-format'
 
 import Price from './ui/Price'
-import { ReturnCartType } from '@renderer/utils/types'
+import { ReturnCartType } from '../utils/types'
 import Input from './ui/Input'
 
 type Summary = ReturnCartType & {

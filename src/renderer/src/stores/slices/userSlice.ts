@@ -1,4 +1,4 @@
-import { UserType } from '@renderer/utils/types'
+import { UserType } from '../../utils/types'
 import { StateCreator } from 'zustand'
 
 type User = Partial<Omit<UserType, 'password'>>

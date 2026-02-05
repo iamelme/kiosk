@@ -1,5 +1,5 @@
-import { IProductRepository, ReturnType } from '@renderer/interfaces/IProductRepository'
-import { Direction, ProductType } from '@renderer/utils/types'
+import { IProductRepository, ReturnType } from '../interfaces/IProductRepository'
+import { Direction, ProductType } from '../utils/types'
 import { ipcMain } from 'electron'
 import { SqliteError } from 'better-sqlite3'
 

@@ -1,5 +1,5 @@
-// import Combobox from '@renderer/components/ui/Combobox'
-import Input from '@renderer/components/ui/Input'
+// import Combobox from '../../components/ui/Combobox'
+import Input from '../../components/ui/Input'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 

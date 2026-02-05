@@ -1,4 +1,4 @@
-import { CategoryType } from '@renderer/utils/types'
+import { CategoryType } from '../utils/types'
 
 export type ReturnType = {
   data: CategoryType | null

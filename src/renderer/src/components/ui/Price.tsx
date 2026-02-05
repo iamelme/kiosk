@@ -1,4 +1,4 @@
-import useBoundStore from '@renderer/stores/boundStore'
+import useBoundStore from '../../stores/boundStore'
 import { ReactNode } from 'react'
 import { getCurrency } from 'locale-currency'
 

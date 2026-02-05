@@ -1,12 +1,12 @@
-import { IInventoryRepository } from '@renderer/interfaces/IInventoryRepository'
+import { IInventoryRepository } from '../interfaces/IInventoryRepository'
 import {
   SaleItem,
   ISaleRepository,
   ReturnType,
   Direction,
   TopItemsType
-} from '@renderer/interfaces/ISaleRepository'
-import { ErrorType, PlaceOrderType, SaleType } from '@renderer/utils/types'
+} from '../interfaces/ISaleRepository'
+import { ErrorType, PlaceOrderType, SaleType } from '../utils/types'
 import { ipcMain } from 'electron'
 
 export class SaleRepository implements ISaleRepository {

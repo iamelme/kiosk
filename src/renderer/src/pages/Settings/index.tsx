@@ -1,5 +1,5 @@
-import Alert from '@renderer/components/ui/Alert'
-import Button from '@renderer/components/ui/Button'
+import Alert from '../../components/ui/Alert'
+import Button from '../../components/ui/Button'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 

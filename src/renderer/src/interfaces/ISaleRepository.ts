@@ -1,4 +1,4 @@
-import { ErrorType, PlaceOrderType, ReturnSaleType, SaleType } from '@renderer/utils/types'
+import { ErrorType, PlaceOrderType, ReturnSaleType, SaleType } from '../utils/types'
 
 export type ReturnType = {
   data: ReturnSaleType | null

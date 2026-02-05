@@ -1,4 +1,4 @@
-import Alert from '@renderer/components/ui/Alert'
+import Alert from '../../components/ui/Alert'
 import { useQuery } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
