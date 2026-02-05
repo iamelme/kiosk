@@ -107,3 +107,8 @@ export type PlaceOrderType = {
   sale_id: number
   user_id: number
 }
+
+export type SettingsType = {
+  logo: string
+  locale: string
+}

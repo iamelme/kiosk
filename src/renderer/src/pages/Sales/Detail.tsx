@@ -1,7 +1,9 @@
 import Items from '@renderer/components/Items'
 import Alert from '@renderer/components/ui/Alert'
+import Button from '@renderer/components/ui/Button'
 import Price from '@renderer/components/ui/Price'
 import { humanize, saleStatuses } from '@renderer/utils'
+import { SettingsType } from '@renderer/utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -16,7 +18,7 @@ const headers = [
 export default function Detail(): ReactNode {
   const { id } = useParams()
 
-  const { data, error } = useQuery({
+  const { data, isPending, error } = useQuery({
     queryKey: [id],
     queryFn: async () => {
       if (!Number(id)) {
@@ -50,6 +52,11 @@ export default function Detail(): ReactNode {
       queryClient.invalidateQueries({ queryKey: [id] })
     }
   })
+
+  if (isPending) {
+    return <>Loading...</>
+  }
+
   if (error) {
     return <Alert variant="danger">{error.message}</Alert>
   }
@@ -59,10 +66,45 @@ export default function Detail(): ReactNode {
   }
   console.log('data', data)
 
+  const handleDownloadPDF = async (): Promise<void> => {
+    try {
+      const settings: SettingsType | undefined = queryClient.getQueryData(['settings'])
+      console.log('Cached user data:', settings, settings?.logo)
+
+      const res = await window.apiElectron.createPDF({
+        ...data,
+        logo: settings?.logo as string
+      })
+
+      const pdf = new Blob([res], { type: 'application/pdf' })
+
+      console.log(pdf)
+
+      const url = URL.createObjectURL(pdf)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${data.invoice_number}`
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // console.log('convert blob', new Blob([res], { type: 'application/pdf' }))
+
+      // console.log('res', res)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return (
     <>
       <div className="flex justify-end">
         <div className="text-right">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+            Download PDF
+          </Button>
           <h2 className="font-bold">Invoice No.</h2>
           <p className="text-xl">{data?.invoice_number}</p>
           <p>{new Date(data.created_at).toLocaleString()}</p>
