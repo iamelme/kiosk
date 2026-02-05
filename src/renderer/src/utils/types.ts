@@ -105,6 +105,7 @@ export type PlaceOrderType = {
   reference_number: string
   method: string
   sale_id: number
+  customer_name?: string
   user_id: number
 }
 

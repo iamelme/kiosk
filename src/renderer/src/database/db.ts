@@ -74,6 +74,7 @@ export class AppDatabase {
               discount INTEGER DEFAULT 0,
               tax INTEGER DEFAULT 0,
               total INTEGER DEFAULT 0,
+              customer_name TEXT,
               status TEXT, -- in-progress, completed, refunded, voided
               user_id INTEGER,
               FOREIGN KEY (user_id) REFERENCES users(id),
