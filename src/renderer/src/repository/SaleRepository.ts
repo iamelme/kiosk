@@ -352,7 +352,7 @@ export class SaleRepository implements ISaleRepository {
   }
 
   placeOrder(params: PlaceOrderType): { success: boolean; error: Error | string } {
-    const { cart, amount, reference_number, method, user_id } = params
+    const { cart, amount, reference_number, method, user_id, customer_name } = params
     const createdAt = new Date().toISOString()
     try {
       const transaction = this._database.transaction(() => {
@@ -374,13 +374,22 @@ export class SaleRepository implements ISaleRepository {
           invoice_number = ?,
           sub_total = ?,
           discount = ?,
-          total = ?
+          total = ?,
+          customer_name = ?
           WHERE id = ?
           `
           )
-          .run('complete', invoiceNo, cart.sub_total, cart.discount, cart.total, saleId)
+          .run(
+            'complete',
+            invoiceNo,
+            cart.sub_total,
+            cart.discount,
+            cart.total,
+            customer_name,
+            saleId
+          )
 
-        console.log('cart items', cart.items)
+        // console.log('cart items', cart.items)
 
         try {
           const saleItemsStmt = this._database.prepare(`

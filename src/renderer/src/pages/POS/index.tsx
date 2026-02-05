@@ -25,6 +25,7 @@ export default function POS(): ReactNode {
   const inputRef = useRef<HTMLInputElement>(null)
   const inputAmountRef = useRef<HTMLInputElement>(null)
   const inputRefNoRef = useRef<HTMLInputElement>(null)
+  const inputRefCustName = useRef<HTMLInputElement>(null)
   const btnUpdateQtyRef = useRef({})
 
   const setBtnRef = (item, el: HTMLElement | null): void => {
@@ -123,6 +124,9 @@ export default function POS(): ReactNode {
       if (inputRefNoRef.current) {
         inputRefNoRef.current.value = ''
       }
+      if (inputRefCustName.current) {
+        inputRefCustName.current.value = ''
+      }
     }
   })
 
@@ -193,6 +197,7 @@ export default function POS(): ReactNode {
         },
         amount: amount ?? 0,
         reference_number: inputRefNoRef.current ? inputRefNoRef.current.value : '',
+        customer_name: inputRefCustName.current ? inputRefCustName.current.value : '',
         method: paymentMethod,
         sale_id: data.id,
         user_id: user.id
@@ -396,6 +401,14 @@ export default function POS(): ReactNode {
             <Summary.Tax />
             <Summary.Total />
           </Summary>
+        </div>
+
+        <div className="mb-3">
+          <h3 className="mb-2 text-lg font-medium">Customer</h3>
+          <div className="my-3">
+            <label htmlFor="customerNameRef">Name</label>
+            <Input ref={inputRefCustName} id="customerNameRef" />
+          </div>
         </div>
 
         <div className="mb-3">
