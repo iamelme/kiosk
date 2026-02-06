@@ -370,9 +370,9 @@ export default function POS(): ReactNode {
           />
         </div>
       </div>
-      <aside className="w-[250px] px-4">
+      <aside className="w-[250px] ms-3 p-4 bg-white rounded-md border border-slate-300">
         <div className="flex justify-between gap-x-2">
-          <h2 className="font-medium text-lg mb-3">Order Summary</h2>
+          <h2 className="font-bold mb-3">Order Summary</h2>
           <div>
             <Button
               disabled={!data?.items?.length}
@@ -404,7 +404,7 @@ export default function POS(): ReactNode {
         </div>
 
         <div className="mb-3">
-          <h3 className="mb-2 text-lg font-medium">Customer</h3>
+          <h3 className="mb-2 font-bold">Customer</h3>
           <div className="my-3">
             <label htmlFor="customerNameRef">Name</label>
             <Input ref={inputRefCustName} id="customerNameRef" />
@@ -412,7 +412,7 @@ export default function POS(): ReactNode {
         </div>
 
         <div className="mb-3">
-          <h3 className="mb-2 text-lg font-medium">Payment</h3>
+          <h3 className="mb-2 font-bold">Payment</h3>
 
           <div className="mb-3">
             <label htmlFor="method">Method</label>

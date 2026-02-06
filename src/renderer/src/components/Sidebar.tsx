@@ -67,7 +67,10 @@ const menu = [
         icon: <TrendingUp size={14} />
       }
     ]
-  },
+  }
+]
+
+const menu2 = [
   {
     label: 'Settings',
     to: '/settings',
@@ -92,7 +95,7 @@ export default function Sidebar(): React.JSX.Element {
   })
 
   return (
-    <aside className="flex flex-col justify-between w-[200px] border-r border-slate-200">
+    <aside className="flex flex-col justify-between w-[200px] bg-gray-900 border-r border-slate-200 text-slate-300">
       <div>
         <h1 className="py-2 px-3">
           {settings?.logo && (
@@ -102,6 +105,7 @@ export default function Sidebar(): React.JSX.Element {
           )}
         </h1>
         <Menu items={menu} />
+        <Menu items={menu2} />
       </div>
 
       <div className="py-2 px-4">
