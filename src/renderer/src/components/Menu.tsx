@@ -10,8 +10,8 @@ type MenuProps = {
   }[]
 }
 
-const Active = ({ isActive }): string =>
-  `flex items-center gap-x-1 py-1 px-2 ${isActive ? 'bg-indigo-50 rounded-sm font-medium' : ''}`
+const navItem = ({ isActive }): string =>
+  `flex items-center gap-x-2 p-2 ${isActive ? 'bg-indigo-600 rounded-sm font-medium text-white' : ''}`
 
 export default function Menu({ items }: MenuProps): ReactNode {
   return (
@@ -20,15 +20,15 @@ export default function Menu({ items }: MenuProps): ReactNode {
         <li key={idx}>
           {item?.children ? (
             <details open>
-              <summary className="flex items-center gap-x-2 pl-2 text-slate-400 cursor-pointer">
+              <summary className="flex items-center gap-x-2 pl-2 text-slate-500 cursor-pointer">
                 {item?.icon}
                 {item.label}
               </summary>
-              <ul className="flex flex-col gap-2 mt-2 ps-2 ms-2 border-s-1 border-slate-200 &_li:me-none">
+              <ul className="flex flex-col gap-y-3 gap-x-2 mt-2 ps-2 ms-2 border-s-1 border-slate-300 &_li:me-none">
                 {item.children?.map((child, innerIdx) => (
                   <li key={innerIdx}>
                     {child?.to ? (
-                      <NavLink to={child.to} className={Active}>
+                      <NavLink to={child.to} className={navItem}>
                         {child.icon} {child.label}
                       </NavLink>
                     ) : (
@@ -41,7 +41,7 @@ export default function Menu({ items }: MenuProps): ReactNode {
               </ul>
             </details>
           ) : item?.to ? (
-            <NavLink to={item.to} className={Active}>
+            <NavLink to={item.to} className={navItem}>
               {item.icon} {item.label}
             </NavLink>
           ) : (
