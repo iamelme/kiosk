@@ -111,6 +111,25 @@ export type PlaceOrderType = {
   user_id: number
 }
 
+export type ReturnType = {
+  id: number
+  created_at: string
+  refund_amount: number
+  items: ReturnItemType[]
+  sale_id: number
+  user_id: number
+}
+
+export type ReturnItemType = {
+  id: number
+  created_at: string
+  refund_price: number
+  quantity: number
+  return_id: number
+  sale_id: number
+  product_id: number
+}
+
 export type SettingsType = {
   logo: string
   locale: string

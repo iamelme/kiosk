@@ -69,7 +69,7 @@ export class AppDatabase {
             CREATE TABLE IF NOT EXISTS sales(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-              invoice_number INTEGER DEFAULT 0,
+              invoice_number TEXT,
               sub_total INTEGER DEFAULT 0,
               discount INTEGER DEFAULT 0,
               tax INTEGER DEFAULT 0,
@@ -99,6 +99,28 @@ export class AppDatabase {
               user_id INTEGER,
               FOREIGN KEY (user_id) REFERENCES users(id),
               FOREIGN KEY (sale_id) REFERENCES sales(id),
+              FOREIGN KEY (product_id) REFERENCES products(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS return(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME,
+              refund_amount INTEGER,
+              method TEXT,
+              user_id INTEGER,
+              sale_id INTEGER,
+              FOREIGN KEY (user_id) REFERENCES users(id)
+              FOREIGN KEY (sale_id) REFERENCES sale(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS return_items(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              created_at DATETIME,
+              quantity INTEGER,
+              refund_price INTEGER,
+              return_id INTEGER,
+              product_id INTEGER,
+              FOREIGN KEY (return_id) REFERENCES return(id),
               FOREIGN KEY (product_id) REFERENCES products(id)
             );
 
