@@ -158,6 +158,8 @@ export class InventoryRepository implements IInventoryRepository {
 
     const db = this._database
 
+    const createdAt = new Date().toISOString()
+
     try {
       const transaction = db.transaction(() => {
         const inventory = db
@@ -174,11 +176,11 @@ export class InventoryRepository implements IInventoryRepository {
 
         const insertInvMv = db
           .prepare(
-            `INSERT INTO inventory_movement (movement_type, reference_type, quantity, reference_id, product_id, user_id)
-          VALUES(?, ?, ?, ?, ?, ?)
+            `INSERT INTO inventory_movement (created_at, movement_type, reference_type, quantity, reference_id, product_id, user_id)
+          VALUES(?, ?, ?, ?, ?, ?, ?)
         `
           )
-          .run(movement_type, reference_type, quantity, id, product_id, user_id)
+          .run(createdAt, movement_type, reference_type, quantity, id, product_id, user_id)
 
         if (!insertInvMv.changes) {
           throw new Error(errorMessage.message)
