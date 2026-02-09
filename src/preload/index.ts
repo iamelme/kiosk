@@ -9,7 +9,8 @@ import {
   UserType,
   ReturnSaleType,
   PlaceOrderType,
-  SaleType
+  SaleType,
+  ReturnType
 } from '../renderer/src/utils/types'
 
 type SettingsType = {
@@ -115,6 +116,11 @@ export const apiSale = {
     ipcRenderer.invoke('sale:deleteAllItems', saleId)
 }
 
+export const apiReturn = {
+  create: (params: ReturnType): Promise<{ data: null; error: ErrorType }> =>
+    ipcRenderer.invoke('return:create', params)
+}
+
 // Custom APIs for renderer
 export const apiCategory = {
   getAllCategories: (): Promise<{ data: CategoryType[]; error: ErrorType }> =>
@@ -193,7 +199,7 @@ export const apiElectron = {
   getLocale: (): Promise<string> => ipcRenderer.invoke('get-locale'),
   createPDF: (params: ReturnSaleType & { logo: string }): Promise<ArrayBuffer> =>
     ipcRenderer.invoke('create-pdf', params),
-  uploadLogo: (): Promise<string | null> => ipcRenderer.invoke('upload-logo'),
+  uploadLogo: (): Promise<string | null> => ipcRenderer.invoke('upload-logo')
 }
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
