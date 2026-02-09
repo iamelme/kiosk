@@ -42,9 +42,17 @@ export default function Detail(): ReactNode {
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: async (data: ProdInventoryType) => {
+    mutationFn: async (formData: ProdInventoryType) => {
       if (!user?.id) return
-      const { error } = await window.apiInventory.updateInventory({ ...data, user_id: user.id })
+      if (data?.quantity === formData.quantity) {
+        navigate(-1)
+        return
+      }
+      const { error } = await window.apiInventory.updateInventory({
+        ...formData,
+        user_id: user.id,
+        movement_type: 2
+      })
       if (error instanceof Error) {
         throw new Error(error.message)
       }
