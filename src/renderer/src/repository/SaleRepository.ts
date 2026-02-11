@@ -255,28 +255,75 @@ export class SaleRepository implements ISaleRepository {
     try {
       console.log('params', params)
 
+      // `
+      // SELECT
+      //   p.id, si.id AS si_id, p.name, si.created_at, SUM(si.quantity) - SUM(ri.quantity) AS total_sales, ri.quantity AS ri_total
+      // FROM
+      //   sale_items AS si
+      // LEFT JOIN
+      //   products p ON p.id = si.product_id
+      // LEFT JOIN
+      //   sales s ON s.id = si.sale_id
+      // LEFT JOIN
+      //   return_items ri ON ri.product_id = p.id
+      // WHERE
+      //   (? IS FALSE OR si.created_at  >= ?)
+      //   AND (? IS FALSE OR si.created_at <= ?)
+      //   AND (? IS FALSE OR p.id <= ?)
+      //   AND s.status = 'complete'
+      // GROUP BY
+      //   si.product_id
+      // HAVING
+      //   SUM(si.quantity) - SUM(ri.quantity) AND
+      //   (? IS FALSE OR SUM(si.quantity) < ?)
+      // ORDER BY
+      //   total_sales DESC,
+      //   p.id DESC
+      // LIMIT ?;
+      // `
+
       const stmt = `
       SELECT 
-        p.id, si.id AS si_id, p.name, si.created_at, SUM(si.quantity) AS total_sales 
-      FROM 
-        sale_items AS si
+        si.id,
+        p.name,
+        s.id AS sale_id,
+        si.product_id,
+        SUM(si.quantity) - ri.total_returns AS total_sales,
+        ri.total_returns
+      FROM
+        sale_items si
       LEFT JOIN 
-        products AS p ON p.id = si.product_id
-      LEFT JOIN 
-        sales AS s on s.id = si.sale_id
+        sales AS s ON s.id = si.sale_id
+      LEFT JOIN (
+        SELECT 
+          *
+        FROM
+          products
+      ) AS p ON p.id = si.product_id
+      LEFT JOIN (
+        SELECT 
+          created_at,
+          product_id,
+          SUM(return_items.quantity) as total_returns
+        FROM
+          return_items
+        GROUP BY
+          product_id
+      ) AS ri ON ri.product_id = si.product_id
       WHERE 
-        (? IS FALSE OR si.created_at  >= ?) 
-        AND (? IS FALSE OR si.created_at <= ?)
+        (? IS FALSE OR (si.created_at  >= ? AND ri.created_at >= ?)) 
+        AND (? IS FALSE OR (si.created_at <= ? AND ri.created_at <= ?))
         AND (? IS FALSE OR p.id <= ?) 
         AND s.status = 'complete'
-      GROUP BY 
-        si.product_id
+      GROUP BY
+        p.id
       HAVING 
+        SUM(si.quantity) - SUM(ri.total_returns) > 0 AND
         (? IS FALSE OR SUM(si.quantity) < ?)
       ORDER BY 
         total_sales DESC,
         p.id DESC
-      LIMIT ?; 
+      LIMIT ?;
       `
 
       //       if (direction === 'prev') {
@@ -297,6 +344,8 @@ export class SaleRepository implements ISaleRepository {
         .all(
           startDate,
           startDate,
+          startDate,
+          endDate,
           endDate,
           endDate,
           cursorId,
