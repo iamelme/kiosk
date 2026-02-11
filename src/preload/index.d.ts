@@ -2,6 +2,7 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 import {
   apiCart,
   apiSale,
+  apiReturn,
   apiUser,
   apiCategory,
   apiElectron,
@@ -15,6 +16,7 @@ declare global {
     electron: ElectronAPI
     apiCart: typeof apiCart
     apiSale: typeof apiSale
+    apiReturn: typeof apiReturn
     apiUser: typeof apiUser
     apiCategory: typeof apiCategory
     apiProduct: typeof apiProduct

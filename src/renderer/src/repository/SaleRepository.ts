@@ -182,10 +182,28 @@ export class SaleRepository implements ISaleRepository {
 
         const saleItems = db
           .prepare(
-            `SELECT si.*, p.name, p.code
-            FROM sale_items AS si
-          LEFT JOIN products AS p ON p.id = si.product_id
-          WHERE sale_id = ?`
+            `
+            SELECT 
+              si.*, 
+              p.name, 
+              p.code, 
+              i.id AS inventory_id, 
+              i.quantity AS inventory_qty, 
+              SUM(COALESCE(ri.quantity, 0)) AS return_qty,
+              (si.quantity - SUM(COALESCE(ri.quantity, 0))) AS available_qty
+            FROM 
+              sale_items si
+            LEFT JOIN 
+              products p ON p.id = si.product_id
+            LEFT JOIN 
+              inventory i ON i.product_id = si.product_id
+            LEFT JOIN
+              return_items ri ON ri.sale_item_id = si.id
+            WHERE 
+              si.sale_id = ?
+            GROUP BY
+              si.product_id;
+            `
           )
           .all(id)
 
@@ -614,26 +632,26 @@ export class SaleRepository implements ISaleRepository {
     const { id, status } = params
     try {
       const db = this._database
-
-      const transaction = db.transaction(() => {
-        const stmt = `
+      const stmt = db.prepare(`
         UPDATE sales
         SET status = ?
         WHERE id = ?
         RETURNING id
-      `
-        const sales = db.prepare(stmt).run(status, id)
+      `)
 
-        const items = db
-          .prepare(
-            `
+      const itemStmt = db.prepare(
+        `
             SELECT si.id, si.product_id, si.quantity, i.id AS inventory_id, i.quantity AS old_quantity 
             FROM sale_items si
             LEFT JOIN inventory i ON si.product_id = i.product_id
             WHERE si.sale_id = ?
             `
-          )
-          .all(id)
+      )
+
+      const transaction = db.transaction(() => {
+        const sales = stmt.run(status, id)
+
+        const items = itemStmt.all(id)
 
         const isVoid = status === 'void'
 

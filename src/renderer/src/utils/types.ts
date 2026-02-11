@@ -83,6 +83,10 @@ export type SaleItemType = {
   unit_price: number
   unit_cost: number
   line_total: number
+  inventory_id: number
+  inventory_qty: number
+  return_qty: number
+  available_qty: number
   sale_id: number
   user_id: number
 }
@@ -125,8 +129,13 @@ export type ReturnItemType = {
   created_at: string
   refund_price: number
   quantity: number
+  old_quantity: number
+  available_qty: number
   return_id: number
+  inventory_id: number
+  user_id: number
   sale_id: number
+  sale_item_id: number
   product_id: number
 }
 

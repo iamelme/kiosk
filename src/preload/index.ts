@@ -10,7 +10,8 @@ import {
   ReturnSaleType,
   PlaceOrderType,
   SaleType,
-  ReturnType
+  ReturnType,
+  ReturnItemType
 } from '../renderer/src/utils/types'
 
 type SettingsType = {
@@ -117,8 +118,11 @@ export const apiSale = {
 }
 
 export const apiReturn = {
-  create: (params: ReturnType): Promise<{ data: null; error: ErrorType }> =>
-    ipcRenderer.invoke('return:create', params)
+  create: (
+    params: Omit<ReturnType, 'id' | 'created_at' | 'items'> & {
+      items: Array<Omit<ReturnItemType, 'id' | 'created_at' | 'return_id'>>
+    }
+  ): Promise<{ data: null; error: ErrorType }> => ipcRenderer.invoke('return:create', params)
 }
 
 // Custom APIs for renderer
@@ -209,6 +213,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('apiCart', apiCart)
     contextBridge.exposeInMainWorld('apiSale', apiSale)
+    contextBridge.exposeInMainWorld('apiReturn', apiReturn)
     contextBridge.exposeInMainWorld('apiUser', apiUser)
     contextBridge.exposeInMainWorld('apiCategory', apiCategory)
     contextBridge.exposeInMainWorld('apiProduct', apiProduct)

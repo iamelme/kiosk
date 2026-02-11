@@ -3,10 +3,12 @@ import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import Price from '../../components/ui/Price'
 import { humanize, saleStatuses } from '../../utils'
-import { SettingsType } from '../../utils/types'
+import { ReturnItemType, SettingsType } from '../../utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ReactNode } from 'react'
+import { ReactNode, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import useBoundStore from '../../stores/boundStore'
+import Return from './components/Return'
 const headers = [
   { label: 'Name', className: '' },
   { label: 'Quantity', className: 'text-right' },
@@ -18,8 +20,16 @@ const headers = [
 export default function Detail(): ReactNode {
   const { id } = useParams()
 
+  const user = useBoundStore((state) => state.user)
+
+  const refReturnBtn = useRef<HTMLButtonElement | null>(null)
+
+  const [selectedItems, setSelectedItems] = useState<
+    Map<string, { isChecked: boolean; price: number; newQty: number }>
+  >(new Map())
+
   const { data, isPending, error } = useQuery({
-    queryKey: [id],
+    queryKey: [id, 'sales-detail'],
     queryFn: async () => {
       if (!Number(id)) {
         throw new Error('No invoice found')
@@ -38,7 +48,7 @@ export default function Detail(): ReactNode {
 
   const mutationUpdateStatus = useMutation({
     mutationFn: async (status: string) => {
-      if (!Number(id)) {
+      if (!Number(id) && status === 'void') {
         return
       }
       const { success, error } = await window.apiSale.updateSaleStatus({ id: Number(id), status })
@@ -52,6 +62,117 @@ export default function Detail(): ReactNode {
       queryClient.invalidateQueries({ queryKey: [id] })
     }
   })
+
+  const mutationReturn = useMutation({
+    mutationFn: async () => {
+      if (!id || !user.id || !data || !data?.items) {
+        throw new Error('Something went wrong!')
+      }
+      const items: Array<Omit<ReturnItemType, 'id' | 'created_at' | 'return_id'>> = []
+      for (const [key, value] of selectedItems) {
+        const found = data.items.find((i) => i.id === Number(key))
+        console.log({ found })
+
+        if (!found || found.available_qty < 1 || found.return_qty >= found.quantity) {
+          throw new Error('Something went wrong while trying to process a return')
+        }
+
+        items.push({
+          product_id: found?.product_id,
+          quantity: value.newQty,
+          old_quantity: found.inventory_qty,
+          refund_price: value.price,
+          inventory_id: found.inventory_id,
+          available_qty: found.available_qty,
+          user_id: user.id,
+          sale_id: Number(id),
+          sale_item_id: Number(key)
+        })
+      }
+      console.log('submitted items', items)
+
+      const payload = {
+        sale_id: Number(id),
+        user_id: user.id,
+        items,
+        refund_amount: items.reduce(
+          (acc, cur) => (acc += cur.refund_price * (cur.quantity ?? 0)),
+          0
+        )
+      }
+      const { error } = await window.apiReturn.create(payload)
+
+      if (error instanceof Error) {
+        throw new Error(error.message)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [id, 'sales-detail'] })
+      if (refReturnBtn?.current) {
+        refReturnBtn?.current.click()
+      }
+    }
+  })
+
+  const handleToggleAll = (e): void => {
+    console.log({ checked: e.target.checked })
+
+    const { checked } = e.target
+
+    if (data) {
+      if (checked) {
+        const ids = data?.items.reduce((acc, cur) => {
+          acc[cur.id] = {
+            isChecked: e.target.checked,
+            price: data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
+            newQty: data?.items?.find((item) => item.id === cur.id)?.quantity ?? 0
+          }
+
+          return acc
+        }, {})
+        setSelectedItems(new Map(Object.entries(ids)))
+        return
+      }
+
+      setSelectedItems(new Map())
+    }
+  }
+
+  const handleToggleSelect = (id) => (e) => {
+    console.log({ id, checked: e.target.checked })
+    const { checked } = e.target
+
+    const items = new Map(selectedItems)
+
+    checked
+      ? items.set(`${id}`, {
+          isChecked: true,
+          price: data?.items?.find((item) => item.id === id)?.unit_price ?? 0,
+          newQty: data?.items?.find((item) => item.id === id)?.quantity ?? 0
+        })
+      : items.delete(`${id}`)
+    console.log(items.size)
+
+    if (items.size === data?.items.length && data?.items.length > 0) {
+      if (!checked) {
+        setSelectedItems(new Map())
+        return
+      }
+      const ids = data?.items.reduce((acc, cur) => {
+        acc[cur.id] = {
+          isChecked: true,
+          price: data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
+          newQty: items.get(`${cur.id}`)?.newQty || cur.quantity
+        }
+
+        return acc
+      }, {})
+      setSelectedItems(new Map(Object.entries(ids)))
+      return
+    }
+
+    setSelectedItems(items)
+  }
 
   if (isPending) {
     return <>Loading...</>
@@ -98,13 +219,30 @@ export default function Detail(): ReactNode {
     }
   }
 
+  console.log('selectedItems', selectedItems)
+
   return (
     <>
       <div className="flex justify-end">
         <div className="text-right">
-          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-            Download PDF
-          </Button>
+          <div className="flex gap-x-2">
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+              Download PDF
+            </Button>
+            {data?.status !== 'void' && (
+              <Return
+                ref={refReturnBtn}
+                items={data.items}
+                onToggleAll={handleToggleAll}
+                onToggleSelect={handleToggleSelect}
+                selectedItems={selectedItems}
+                onSelectedItems={setSelectedItems}
+                errorMessage={mutationReturn.error?.message}
+                onReturn={mutationReturn.mutate}
+              />
+            )}
+          </div>
+
           <h2 className="font-bold">Invoice No.</h2>
           <p className="text-xl">{data?.invoice_number}</p>
           <p>{new Date(data.created_at).toLocaleString()}</p>
@@ -116,6 +254,7 @@ export default function Detail(): ReactNode {
               </Alert>
             )}
             <select
+              disabled={data.status === 'void'}
               defaultValue={data.status}
               onChange={(e) => mutationUpdateStatus.mutate(e.target.value)}
             >
