@@ -161,28 +161,34 @@ export class InventoryRepository implements IInventoryRepository {
     const createdAt = new Date().toISOString()
 
     try {
-      const transaction = db.transaction(() => {
-        const inventory = db
-          .prepare(
-            `UPDATE inventory 
+      const inventory = db.prepare(
+        `UPDATE inventory 
           SET quantity = ?
           WHERE id = ?`
-          )
-          .run(quantity, id)
+      )
+      const insertInvMv = db.prepare(
+        `INSERT INTO inventory_movement (created_at, movement_type, reference_type, quantity, reference_id, product_id, user_id)
+          VALUES(?, ?, ?, ?, ?, ?, ?)
+        `
+      )
+      const transaction = db.transaction(() => {
+        const res = inventory.run(quantity, id)
 
-        if (!inventory.changes) {
+        if (!res.changes) {
           throw new Error(errorMessage.message)
         }
 
-        const insertInvMv = db
-          .prepare(
-            `INSERT INTO inventory_movement (created_at, movement_type, reference_type, quantity, reference_id, product_id, user_id)
-          VALUES(?, ?, ?, ?, ?, ?, ?)
-        `
-          )
-          .run(createdAt, movement_type, reference_type, quantity, id, product_id, user_id)
+        const resInvMv = insertInvMv.run(
+          createdAt,
+          movement_type,
+          reference_type,
+          quantity,
+          id,
+          product_id,
+          user_id
+        )
 
-        if (!insertInvMv.changes) {
+        if (!resInvMv.changes) {
           throw new Error(errorMessage.message)
         }
 

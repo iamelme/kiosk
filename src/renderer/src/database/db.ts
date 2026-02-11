@@ -69,6 +69,7 @@ export class AppDatabase {
             CREATE TABLE IF NOT EXISTS sales(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              voided_at DATETIME,
               invoice_number TEXT,
               sub_total INTEGER DEFAULT 0,
               discount INTEGER DEFAULT 0,
@@ -102,15 +103,15 @@ export class AppDatabase {
               FOREIGN KEY (product_id) REFERENCES products(id)
             );
 
-            CREATE TABLE IF NOT EXISTS return(
+            CREATE TABLE IF NOT EXISTS returns(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               created_at DATETIME,
               refund_amount INTEGER,
               method TEXT,
               user_id INTEGER,
               sale_id INTEGER,
-              FOREIGN KEY (user_id) REFERENCES users(id)
-              FOREIGN KEY (sale_id) REFERENCES sale(id)
+              FOREIGN KEY (user_id) REFERENCES users(id),
+              FOREIGN KEY (sale_id) REFERENCES sales(id)
             );
 
             CREATE TABLE IF NOT EXISTS return_items(
@@ -119,8 +120,10 @@ export class AppDatabase {
               quantity INTEGER,
               refund_price INTEGER,
               return_id INTEGER,
+              sale_item_id INTEGER,
               product_id INTEGER,
-              FOREIGN KEY (return_id) REFERENCES return(id),
+              FOREIGN KEY (return_id) REFERENCES returns(id),
+              FOREIGN KEY (sale_item_id) REFERENCES sale_items(id),
               FOREIGN KEY (product_id) REFERENCES products(id)
             );
 
@@ -193,6 +196,16 @@ export class AppDatabase {
               FOREIGN KEY (product_id) REFERENCES products(id),
               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
+
+            CREATE TRIGGER IF NOT EXISTS sales_status_update
+            BEFORE UPDATE ON sales
+            BEGIN
+
+              UPDATE sales
+              SET voided_at = (date('now') || 'T' || time('now') || 'Z')
+              WHERE id = OLD.id AND NEW.status = 'void';
+
+            END;
 
             CREATE TRIGGER IF NOT EXISTS products_after_insert 
             AFTER INSERT ON products

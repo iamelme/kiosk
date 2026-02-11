@@ -10,6 +10,7 @@ import { InventoryRepository } from '../renderer/src/repository/InventoryReposit
 import { UserRepository } from '../renderer/src/repository/UserRepository'
 import { CartRepository } from '../renderer/src/repository/CartRepository'
 import { SaleRepository } from '../renderer/src/repository/SaleRepository'
+import { ReturnRepository } from '../renderer/src/repository/ReturnRepository'
 import { SettingsRepository } from '../renderer/src/repository/SettingsRepository'
 import createPDF from './createInvoicePDF'
 import { ReturnSaleType } from '../renderer/src/utils/types'
@@ -80,6 +81,7 @@ app.whenReady().then(() => {
   new CartRepository(db.db)
   new SaleRepository(db.db, inventory)
   new SettingsRepository(db.db)
+  new ReturnRepository(db.db, inventory)
 
   // console.log('db from main', db)
 
