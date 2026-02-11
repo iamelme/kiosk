@@ -48,3 +48,13 @@ export function csvDownload<T>({
   link.click()
   document.body.removeChild(link)
 }
+
+export const numericFormatLimit =
+  (maxValue: number) =>
+  (value): boolean => {
+    const { floatValue } = value
+    if (floatValue === undefined || floatValue <= maxValue) {
+      return true
+    }
+    return false
+  }
