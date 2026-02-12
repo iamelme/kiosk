@@ -110,6 +110,7 @@ export default function Detail(): ReactNode {
       queryClient.invalidateQueries({ queryKey: [id, 'sales-detail'] })
       if (refReturnBtn?.current) {
         refReturnBtn?.current.click()
+        setSelectedItems(new Map())
       }
     }
   })
