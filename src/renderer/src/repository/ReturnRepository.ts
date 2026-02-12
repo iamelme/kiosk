@@ -17,90 +17,92 @@ export class ReturnRepository implements IReturnRepository {
     const { sale_id, user_id, items, refund_amount } = params
 
     console.log({ params })
+    const db = this._database
 
-    try {
-      const db = this._database
-      const createdAt = new Date().toISOString()
+    const begin = db.prepare('BEGIN IMMEDIATE')
+    const commit = db.prepare('COMMIT')
+    const rollback = db.prepare('ROLLBACK')
 
-      const insertReturn = db.prepare(
-        `
+    const createdAt = new Date().toISOString()
+
+    const insertReturn = db.prepare(
+      `
                 INSERT INTO returns
                 (created_at, refund_amount, sale_id, user_id)
                 VALUES(?, ?, ?, ?)
                 `
-      )
+    )
 
-      const insertReturnItem = db.prepare(
-        `
+    const insertReturnItem = db.prepare(
+      `
                 INSERT INTO return_items
                 (created_at, return_id, quantity, refund_price, product_id, sale_item_id) 
                 VALUES(?, ?, ?, ?, ?, ?);
                 `
-      )
+    )
 
-      const transaction = db.transaction(() => {
-        console.log('trans start')
+    begin.run()
 
-        const res = insertReturn.run(createdAt, refund_amount, sale_id, user_id)
+    try {
+      //   console.log('trans start')
 
-        console.log({ res })
-        console.log({ items })
+      const res = insertReturn.run(createdAt, refund_amount, sale_id, user_id)
 
-        if (!res.changes) {
-          throw new Error('Something went wrong while creating a return order')
+      console.log({ res })
+      console.log({ items })
+
+      if (!res.changes) {
+        throw new Error('Something went wrong while creating a return order')
+      }
+
+      //   console.log('start items')
+
+      for (const item of items) {
+        const resInv = this._inventory.update({
+          quantity: item.quantity + item.old_quantity,
+          id: item.inventory_id,
+          product_id: item.product_id,
+          user_id: item.user_id,
+          movement_type: 0,
+          reference_type: 'return'
+        })
+
+        console.log({ resInv })
+
+        if (!resInv.success && resInv.error instanceof Error) {
+          throw new Error(resInv.error.message)
         }
 
-        console.log('start items')
-
-        try {
-          for (const item of items) {
-            const resInv = this._inventory.update({
-              quantity: item.quantity + item.old_quantity,
-              id: res.lastInsertRowid,
-              product_id: item.product_id,
-              user_id: item.user_id,
-              movement_type: 0,
-              reference_type: 'return'
-            })
-
-            console.log({ resInv })
-
-            if (!resInv.success && resInv.error instanceof Error) {
-              throw new Error(resInv.error.message)
-            }
-
-            if (item.available_qty < 1) {
-              throw new Error("You can't return this item")
-            }
-
-            const resItem = insertReturnItem.run(
-              createdAt,
-              res.lastInsertRowid,
-              item.quantity,
-              item.refund_price,
-              item.product_id,
-              item.sale_item_id
-            )
-
-            console.log({ resItem })
-
-            if (!resItem.changes) {
-              throw new Error('Something went wrong while creating a return item')
-            }
-          }
-        } catch (error) {
-          console.log('item error', error)
+        if (item.available_qty < 1) {
+          throw new Error("You can't return this item")
         }
-      })
 
-      transaction()
+        const resItem = insertReturnItem.run(
+          createdAt,
+          res.lastInsertRowid,
+          item.quantity,
+          item.refund_price,
+          item.product_id,
+          item.sale_item_id
+        )
+
+        console.log({ resItem })
+
+        if (!resItem.changes) {
+          throw new Error('Something went wrong while creating a return item')
+        }
+      }
+      commit.run()
 
       return {
         data: null,
         error: ''
       }
     } catch (error) {
-      console.error('error', error)
+      if (db.inTransaction) {
+        rollback.run()
+      }
+      //   console.error('error', error)
 
       if (error instanceof Error) {
         return {
