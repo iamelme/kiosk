@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { IReturnRepository, Return } from '../interfaces/IReturnRepository'
 import { ReturnType } from '../utils/types'
-import { IInventoryRepository } from '@renderer/interfaces/IInventoryRepository'
+import { IInventoryRepository } from '../interfaces/IInventoryRepository'
 
 export class ReturnRepository implements IReturnRepository {
   private _database
