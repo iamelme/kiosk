@@ -93,6 +93,13 @@ export const apiSale = {
     ipcRenderer.invoke('sale:getAll', params),
   getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
   getById: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getById', id),
+  getRevenue: (params: {
+    startDate: string
+    endDate: string
+  }): Promise<{
+    data: { gross_revenue: number; total_return: number; net_revenue: number } | null
+    error: ErrorType
+  }> => ipcRenderer.invoke('sale:getRevenue', params),
   getTopItems: (params: {
     pageSize: number
     cursorId: number

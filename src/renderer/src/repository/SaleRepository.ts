@@ -22,6 +22,9 @@ export class SaleRepository implements ISaleRepository {
     )
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle('sale:getById', (_, id: number) => this.getById(id))
+    ipcMain.handle('sale:getRevenue', (_, params: { startDate: string; endDate: string }) =>
+      this.getRevenue(params)
+    )
     ipcMain.handle(
       'sale:getTopItems',
       (
@@ -236,6 +239,77 @@ export class SaleRepository implements ISaleRepository {
       return {
         data: null,
         error: new Error('Something went wrong while  retrieving the product')
+      }
+    }
+  }
+
+  getRevenue(params: { startDate: string; endDate: string }): {
+    data: {
+      gross_revenue: number
+      total_return: number
+      net_revenue: number
+    } | null
+    error: ErrorType
+  } {
+    const { startDate, endDate } = params
+    const db = this._database
+    try {
+      const res = db
+        .prepare(
+          `
+        SELECT 
+          s.gross_revenue,
+          r.total_return,
+          s.gross_revenue - r.total_return AS net_revenue
+        FROM (
+          SELECT 
+            SUM(COALESCE(total, 0)) AS gross_revenue
+          FROM
+            sales
+          WHERE
+              created_at 
+              BETWEEN ?
+              AND ?
+              AND status = 'complete'
+        ) AS s,
+        (
+          SELECT
+            SUM(COALESCE(refund_amount, 0))  AS total_return
+          FROM
+            returns
+          WHERE
+              created_at 
+              BETWEEN ?
+              AND ?
+        ) AS r
+        `
+        )
+        .get(startDate, endDate, startDate, endDate)
+
+      console.log(res)
+
+      if (!res) {
+        throw new Error('Something went wrong while  retrieving')
+      }
+
+      return {
+        data: {
+          gross_revenue: res.gross_revenue,
+          total_return: res.total_return,
+          net_revenue: res.net_revenue
+        },
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error('Something went wrong while retrieving ')
+        }
+      }
+      return {
+        data: null,
+        error: new Error('Something went wrong while retrieving')
       }
     }
   }
