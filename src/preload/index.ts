@@ -93,6 +93,13 @@ export const apiSale = {
     ipcRenderer.invoke('sale:getAll', params),
   getByUserId: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getByUserId', id),
   getById: (id: number): Promise<SaleReturnType> => ipcRenderer.invoke('sale:getById', id),
+  getRevenue: (params: {
+    startDate: string
+    endDate: string
+  }): Promise<{
+    data: { gross_revenue: number; total_return: number; net_revenue: number } | null
+    error: ErrorType
+  }> => ipcRenderer.invoke('sale:getRevenue', params),
   getTopItems: (params: {
     pageSize: number
     cursorId: number
@@ -101,7 +108,7 @@ export const apiSale = {
     startDate: string
     endDate: string
   }): Promise<{
-    data: Array<Pick<ProductType, 'id' | 'name'> & { total_sales: number }> | null
+    data: Array<Pick<ProductType, 'id' | 'name'> & { net_quantity_sold: number }> | null
     error: ErrorType
   }> => ipcRenderer.invoke('sale:getTopItems', params),
   placeOrder: (params: PlaceOrderType): Promise<{ success: boolean; error: ErrorType }> =>

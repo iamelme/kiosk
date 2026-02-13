@@ -22,6 +22,9 @@ export class SaleRepository implements ISaleRepository {
     )
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle('sale:getById', (_, id: number) => this.getById(id))
+    ipcMain.handle('sale:getRevenue', (_, params: { startDate: string; endDate: string }) =>
+      this.getRevenue(params)
+    )
     ipcMain.handle(
       'sale:getTopItems',
       (
@@ -240,6 +243,77 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
+  getRevenue(params: { startDate: string; endDate: string }): {
+    data: {
+      gross_revenue: number
+      total_return: number
+      net_revenue: number
+    } | null
+    error: ErrorType
+  } {
+    const { startDate, endDate } = params
+    const db = this._database
+    try {
+      const res = db
+        .prepare(
+          `
+        SELECT 
+          s.gross_revenue,
+          r.total_return,
+          s.gross_revenue - r.total_return AS net_revenue
+        FROM (
+          SELECT 
+            SUM(COALESCE(total, 0)) AS gross_revenue
+          FROM
+            sales
+          WHERE
+              created_at 
+              BETWEEN ?
+              AND ?
+              AND status = 'complete'
+        ) AS s,
+        (
+          SELECT
+            SUM(COALESCE(refund_amount, 0))  AS total_return
+          FROM
+            returns
+          WHERE
+              created_at 
+              BETWEEN ?
+              AND ?
+        ) AS r
+        `
+        )
+        .get(startDate, endDate, startDate, endDate)
+
+      console.log(res)
+
+      if (!res) {
+        throw new Error('Something went wrong while  retrieving')
+      }
+
+      return {
+        data: {
+          gross_revenue: res.gross_revenue,
+          total_return: res.total_return,
+          net_revenue: res.net_revenue
+        },
+        error: ''
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error: new Error('Something went wrong while retrieving ')
+        }
+      }
+      return {
+        data: null,
+        error: new Error('Something went wrong while retrieving')
+      }
+    }
+  }
+
   getTopItems(params: {
     pageSize: number
     cursorId: number
@@ -251,109 +325,49 @@ export class SaleRepository implements ISaleRepository {
     data: TopItemsType[] | null
     error: ErrorType
   } {
-    const { pageSize, cursorId, lastTotal, startDate, endDate } = params
+    const {
+      pageSize,
+      //  cursorId,
+      //   lastTotal,
+      startDate,
+      endDate
+    } = params
     try {
       console.log('params', params)
 
-      // `
-      // SELECT
-      //   p.id, si.id AS si_id, p.name, si.created_at, SUM(si.quantity) - SUM(ri.quantity) AS total_sales, ri.quantity AS ri_total
-      // FROM
-      //   sale_items AS si
-      // LEFT JOIN
-      //   products p ON p.id = si.product_id
-      // LEFT JOIN
-      //   sales s ON s.id = si.sale_id
-      // LEFT JOIN
-      //   return_items ri ON ri.product_id = p.id
-      // WHERE
-      //   (? IS FALSE OR si.created_at  >= ?)
-      //   AND (? IS FALSE OR si.created_at <= ?)
-      //   AND (? IS FALSE OR p.id <= ?)
-      //   AND s.status = 'complete'
-      // GROUP BY
-      //   si.product_id
-      // HAVING
-      //   SUM(si.quantity) - SUM(ri.quantity) AND
-      //   (? IS FALSE OR SUM(si.quantity) < ?)
-      // ORDER BY
-      //   total_sales DESC,
-      //   p.id DESC
-      // LIMIT ?;
-      // `
-
       const stmt = `
-      SELECT 
-        si.id,
+      SELECT
+        p.id,
         p.name,
-        s.id AS sale_id,
-        si.product_id,
-        SUM(si.quantity) - ri.total_returns AS total_sales,
-        ri.total_returns
-      FROM
-        sale_items si
-      LEFT JOIN 
-        sales AS s ON s.id = si.sale_id
+        SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) AS net_quantity_sold
+      FROM sale_items si
+      JOIN sales s 
+        ON s.id = si.sale_id
+      JOIN products p 
+        ON p.id = si.product_id
       LEFT JOIN (
         SELECT 
-          *
-        FROM
-          products
-      ) AS p ON p.id = si.product_id
-      LEFT JOIN (
-        SELECT 
-          created_at,
-          product_id,
-          SUM(return_items.quantity) as total_returns
-        FROM
-          return_items
-        GROUP BY
-          product_id
-      ) AS ri ON ri.product_id = si.product_id
+            ri.sale_item_id,
+            SUM(ri.quantity) AS return_qty
+        FROM return_items ri
+        WHERE
+          (? IS FALSE OR ri.created_at BETWEEN ? AND ? )
+        GROUP BY ri.sale_item_id
+      ) ri 
+          ON ri.sale_item_id = si.id
       WHERE 
-        (? IS FALSE OR (si.created_at  >= ? AND ri.created_at >= ?)) 
-        AND (? IS FALSE OR (si.created_at <= ? AND ri.created_at <= ?))
-        AND (? IS FALSE OR p.id <= ?) 
-        AND s.status = 'complete'
-      GROUP BY
-        p.id
+        s.status = 'complete'
+        AND 
+        (? IS FALSE OR si.created_at BETWEEN ? AND ? )
+      GROUP BY p.id, p.name
       HAVING 
-        SUM(si.quantity) - SUM(ri.total_returns) > 0 AND
-        (? IS FALSE OR SUM(si.quantity) < ?)
-      ORDER BY 
-        total_sales DESC,
-        p.id DESC
+        SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) > 0       
+      ORDER BY net_quantity_sold DESC
       LIMIT ?;
       `
-
-      //       if (direction === 'prev') {
-      //         stmt = `
-      //         SELECT p.id, p.name, si.created_at, SUM(si.quantity) AS total_sales
-      // FROM sale_items AS si
-      // LEFT JOIN products AS p ON p.id = si.product_id
-      // LEFT JOIN sales AS s on s.id = si.sale_id
-      // WHERE (? IS FALSE OR si.created_at  >= ?) AND (? IS FALSE OR p.id < ?) AND s.status = 'complete'
-      // GROUP BY si.product_id
-      // ORDER BY total_sales ASC, p.id ASC
-      // LIMIT ?;
-      //           `
-      //       }
-      // const products = stmt.all({ 1: startDate }, { endDate })
       const products = this._database
         .prepare(stmt)
-        .all(
-          startDate,
-          startDate,
-          startDate,
-          endDate,
-          endDate,
-          endDate,
-          cursorId,
-          cursorId,
-          lastTotal,
-          lastTotal,
-          pageSize
-        )
+        .all(startDate, startDate, endDate, startDate, startDate, endDate, pageSize)
 
       console.log(products)
 

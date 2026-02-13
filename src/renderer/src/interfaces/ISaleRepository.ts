@@ -16,7 +16,7 @@ export type TopItemsType = {
   id: number
   created_at: string
   name: string
-  total_sales: number
+  net_quantity_sold: number
 }
 
 export type Direction = 'prev' | 'next'
@@ -28,6 +28,10 @@ export interface ISaleRepository {
   }
   getByUserId(id: number): ReturnType
   getById(id: number): ReturnType
+  getRevenue(params: { startDate: string; endDate: string }): {
+    data: { gross_revenue: number; total_return: number; net_revenue: number } | null
+    error: ErrorType
+  }
   getTopItems({
     pageSize,
     cursorId,
