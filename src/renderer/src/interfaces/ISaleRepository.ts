@@ -16,7 +16,7 @@ export type TopItemsType = {
   id: number
   created_at: string
   name: string
-  total_sales: number
+  net_quantity_sold: number
 }
 
 export type Direction = 'prev' | 'next'

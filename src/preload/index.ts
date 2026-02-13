@@ -101,7 +101,7 @@ export const apiSale = {
     startDate: string
     endDate: string
   }): Promise<{
-    data: Array<Pick<ProductType, 'id' | 'name'> & { total_sales: number }> | null
+    data: Array<Pick<ProductType, 'id' | 'name'> & { net_quantity_sold: number }> | null
     error: ErrorType
   }> => ipcRenderer.invoke('sale:getTopItems', params),
   placeOrder: (params: PlaceOrderType): Promise<{ success: boolean; error: ErrorType }> =>

@@ -106,7 +106,7 @@ export default function Top(): ReactNode {
                   onClick={() =>
                     csvDownload({
                       header: ['Product', 'Total'],
-                      data: data?.map((d) => ({ name: d.name, total: d.total_sales })),
+                      data: data?.map((d) => ({ name: d.name, total: d.net_quantity_sold })),
                       title: `${startDate} ${endDate}`
                     })
                   }
@@ -133,7 +133,7 @@ export default function Top(): ReactNode {
                         {item.name}
                       </Link>
                     </td>
-                    <td className="text-right">{item.total_sales}</td>
+                    <td className="text-right">{item.net_quantity_sold}</td>
                   </>
                 )}
               />
