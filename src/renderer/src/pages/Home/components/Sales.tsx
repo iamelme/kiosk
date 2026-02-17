@@ -42,7 +42,7 @@ export default function Sales(): ReactNode {
           header={
             <div className="flex justify-between">
               <div>
-                <h2 className="text-md font-medium">Gross Revenue</h2>
+                <h2 className="text-md font-bold">Gross Revenue</h2>
                 <p className="text-xs opacity-70">This month</p>
               </div>
             </div>
@@ -61,7 +61,7 @@ export default function Sales(): ReactNode {
           header={
             <div className="flex justify-between">
               <div>
-                <h2 className="text-md font-medium">Total Returns</h2>
+                <h2 className="text-md font-bold">Total Returns</h2>
                 <p className="text-xs opacity-70">This month</p>
               </div>
             </div>
@@ -78,7 +78,7 @@ export default function Sales(): ReactNode {
           header={
             <div className="flex justify-between">
               <div>
-                <h2 className="text-md font-medium">Net Sales</h2>
+                <h2 className="text-md font-bold">Net Sales</h2>
                 <p className="text-xs opacity-70">This month</p>
               </div>
             </div>
