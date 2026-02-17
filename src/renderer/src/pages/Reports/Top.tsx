@@ -73,6 +73,7 @@ export default function Top(): ReactNode {
   //   }
   // })
   const { data, isPending, error } = useTopItems({
+    pageSize,
     startDate,
     endDate: endDate ? addDays(new Date(endDate), 1) : ''
   })
