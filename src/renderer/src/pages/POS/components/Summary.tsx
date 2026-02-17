@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useContext } from 'react'
 import { NumericFormat } from 'react-number-format'
 
-import Price from './ui/Price'
-import { ReturnCartType } from '../utils/types'
-import Input from './ui/Input'
+import Price from '../../../components/ui/Price'
+import { ReturnCartType } from '../../../utils/types'
+import Input from '../../../components/ui/Input'
 
 type Summary = ReturnCartType & {
   handleDiscount: (v: number) => void
@@ -59,7 +59,7 @@ function NoOfItems(): ReactNode {
   return (
     <dl className="flex justify-between">
       <dt>No. of Items:</dt>
-      <dd>{num ?? 0}</dd>
+      <dd data-testid="noOfItems">{num ?? 0}</dd>
     </dl>
   )
 }
@@ -72,7 +72,7 @@ function SubTotal(): ReactNode {
   return (
     <dl className="flex justify-between">
       <dt>Sub Total:</dt>
-      <dd>
+      <dd data-testid="subTotal">
         <Price value={ctx.sub_total} />
       </dd>
     </dl>
@@ -87,14 +87,14 @@ function Discount(): ReactNode {
   return (
     <dl className="flex justify-between gap-x-2">
       <dt>Discount:</dt>
-      <dd>
+      <dd data-testid="discount">
         <NumericFormat
           value={ctx.discount / 100}
           customInput={Input}
           onValueChange={(values) => {
             const { floatValue } = values
 
-            if (floatValue) {
+            if (floatValue != undefined && floatValue > -1) {
               ctx.handleDiscount(floatValue)
             }
           }}
@@ -125,7 +125,7 @@ function Total(): ReactNode {
   return (
     <dl className="flex justify-between font-bold">
       <dt className="">Total:</dt>
-      <dd>
+      <dd data-testid="total">
         <Price value={ctx.total} />
       </dd>
     </dl>

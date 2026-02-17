@@ -1,25 +1,21 @@
-import Items from '../../components/Items'
-import Summary from '../../components/Summary'
+import Summary from './components/Summary'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
-import Dialog from '../../components/ui/Dialog'
 import Input from '../../components/ui/Input'
 import Price from '../../components/ui/Price'
 import useBoundStore from '../../stores/boundStore'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ReactNode, useRef, useState } from 'react'
-import { Edit, Trash2, X } from 'react-feather'
+import { ReactNode, useEffect, useRef, useState } from 'react'
+import { Trash2 } from 'react-feather'
 import { NumericFormat } from 'react-number-format'
-import { Link } from 'react-router-dom'
-
-const headers = [
-  { label: 'Name', className: '' },
-  { label: 'SKU', className: '' },
-  { label: 'Code', className: '' },
-  { label: 'Qty', className: '' },
-  { label: 'Price', className: 'text-right' },
-  { label: '', className: 'text-right' }
-]
+import CartItems from './components/CartItems'
+import useCart from '../../hooks/useCart'
+import useInsertCartItem from '../../hooks/useInsertCartItem'
+import useRemoveCart from '../../hooks/useRemoveCart'
+import useDebounce from '../../hooks/useDebounce'
+import useDiscount from '../../hooks/useDiscount'
+import useRemoveItem from '../../hooks/useRemoveItem'
+import useUpdateItemQty from '../../hooks/useUpdateItemQty'
+import usePlaceOrder from '../../hooks/usePlaceOrder'
 
 export default function POS(): ReactNode {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -27,6 +23,12 @@ export default function POS(): ReactNode {
   const inputRefNoRef = useRef<HTMLInputElement>(null)
   const inputRefCustName = useRef<HTMLInputElement>(null)
   const btnUpdateQtyRef = useRef({})
+
+  const [discount, setDiscount] = useState(0)
+
+  const debounceValue = useDebounce(String(discount))
+
+  console.log({ debounceValue })
 
   const setBtnRef = (item, el: HTMLElement | null): void => {
     if (el) {
@@ -42,193 +44,33 @@ export default function POS(): ReactNode {
 
   const user = useBoundStore((state) => state.user)
 
-  const { isPending, data, error } = useQuery({
-    queryKey: ['cart', user.id],
-    queryFn: async () => {
-      if (!user.id) {
-        throw new Error('User not found')
-        // return undefined
-      }
+  const { data, isPending, error } = useCart(user?.id)
 
-      const { error, data } = await window.apiCart.getByUserId(user.id)
+  const mutationInsert = useInsertCartItem({ id: data?.id, userId: user.id, inputRef })
 
-      if (error instanceof Error) {
-        throw new Error(error.message)
-      }
-
-      return (
-        data ?? {
-          id: 0,
-          items: [],
-          sub_total: 0,
-          discount: 0,
-          tax: 0,
-          total: 0
-        }
-      )
-    }
+  const mutationRemoveCart = useRemoveCart({
+    id: data?.id,
+    onAmount: setAmount,
+    onPaymentMethod: setPaymentMethod,
+    inputRefNoRef,
+    inputRefCustName
   })
 
-  const queryClient = useQueryClient()
+  const mutationUpdateDiscount = useDiscount({ id: data?.id, total: data?.total || 0 })
 
-  const mutationInsert = useMutation({
-    mutationFn: async (code: number): Promise<void> => {
-      const { error, data: product } = await window.apiProduct.getProductByCode(code)
-      console.log({ error, product })
+  useEffect(() => {
+    mutationUpdateDiscount.mutate(Number(debounceValue))
+  }, [debounceValue])
 
-      if (product) {
-        if (inputRef.current && data?.id && user?.id) {
-          const payload = {
-            cart_id: data.id,
-            user_id: user.id,
-            product_id: product.id
-          }
-          const { error } = await window.apiCart.insertItem(payload)
-          if (error instanceof Error) {
-            console.error(error.message)
-            throw new Error(error.message)
-          }
-        }
-      }
+  const mutationUpdateItemQty = useUpdateItemQty({ id: data?.id, btnUpdateQtyRef })
 
-      if (error instanceof Error) {
-        throw new Error(error.message)
-      }
-    },
-    onError: (error) => {
-      // An error happened!
-      console.error(`insert item failed: ${error.message}`)
-      // You can also show a toast notification here
-      // toast.error('Uh oh! Something went wrong.');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
-    }
+  const mutationPlaceOrder = usePlaceOrder({
+    onRemoveCart: () => mutationRemoveCart.mutate()
   })
 
-  const mutationRemoveCart = useMutation({
-    mutationFn: async () => {
-      if (data) {
-        await window.apiCart.deleteAllItems(data.id)
-      }
-    },
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-      mutationInsert.reset()
-      setAmount(0)
-      setPaymentMethod('cash')
-      if (inputRefNoRef.current) {
-        inputRefNoRef.current.value = ''
-      }
-      if (inputRefCustName.current) {
-        inputRefCustName.current.value = ''
-      }
-    }
-  })
-
-  const mutationUpdateDiscount = useMutation({
-    mutationFn: async (discount: number) => {
-      if (!data?.id) {
-        return
-      }
-
-      await window.apiCart.updateDiscount({ discount, total: data?.total, cart_id: data?.id })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-    }
-  })
-
-  const mutationUpdateItemQty = useMutation({
-    mutationFn: async (id: number) => {
-      if (!data?.id) {
-        return
-      }
-
-      const quantity = btnUpdateQtyRef.current[id].quantity
-      console.log({ quantity })
-
-      await window.apiCart.updateItemQty({ id, cart_id: data.id, quantity })
-    },
-
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-      // setQuantity(0)
-
-      if (btnUpdateQtyRef.current) {
-        btnUpdateQtyRef.current[variables].click()
-        btnUpdateQtyRef.current[variables].quantity = 0
-      }
-    }
-  })
-
-  const mutationPlaceOrder = useMutation({
-    mutationFn: async () => {
-      // amount: number
-      // reference_number: string
-      // method: string
-      // sale_id: number
-
-      // movement_type INTEGER, --- IN, OUT, ADJUST
-      // reference_type TEXT, --- SALES, PURCHASE, RETURN, TRANSFER, ADJUSTMENT
-      // quantity INTEGER,
-      // reference_id INTEGER, --- id from SALES, PURCHASE, RETURN, TRANSFER, ADJUSTMENT              user_id INTEGER,
-      // product_id INTEGER,
-      // user_id INTEGER,
-
-      if (!data?.id || !user.id || !data?.items?.length) {
-        throw new Error('Something went wrong')
-      }
-
-      // TODO:
-      // user input for discount
-      // remove specific cart item
-
-      const payload = {
-        cart: {
-          items: data.items,
-          sub_total: data.sub_total,
-          discount: data.discount,
-          total: data.total
-        },
-        amount: amount ?? 0,
-        reference_number: inputRefNoRef.current ? inputRefNoRef.current.value : '',
-        customer_name: inputRefCustName.current ? inputRefCustName.current.value : '',
-        method: paymentMethod,
-        sale_id: data.id,
-        user_id: user.id
-      }
-
-      const { success, error } = await window.apiSale.placeOrder(payload)
-
-      if (error instanceof Error) {
-        throw new Error(error.message)
-      }
-
-      return success
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-      // mutationInsert.reset()
-      mutationRemoveCart.mutate()
-    }
-  })
-
-  const mutationRemoveItem = useMutation({
-    mutationFn: async (id: number) => {
-      if (data?.id) await window.apiCart.removeItem(id, data?.id)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-
-      if (data?.items?.length === 1) {
-        mutationRemoveCart.mutate()
-      }
-    }
+  const mutationRemoveItem = useRemoveItem({
+    id: data?.id,
+    onRemoveCart: data?.items?.length === 1 ? () => mutationRemoveCart.mutate() : undefined
   })
 
   const handleSubmit = async (e): Promise<void> => {
@@ -243,7 +85,23 @@ export default function POS(): ReactNode {
   }
 
   const handlePlaceOrder = async (): Promise<void> => {
-    mutationPlaceOrder.mutate()
+    if (!data?.id || !user.id || !data?.items?.length) {
+      throw new Error('Cannot place an order')
+    }
+    mutationPlaceOrder.mutate({
+      cart: {
+        items: data.items,
+        sub_total: data.sub_total,
+        discount: data.discount,
+        total: data.total
+      },
+      amount: amount ?? 0,
+      reference_number: inputRefNoRef.current ? inputRefNoRef.current.value : '',
+      customer_name: inputRefCustName.current ? inputRefCustName.current.value : '',
+      method: paymentMethod,
+      sale_id: data.id,
+      user_id: user.id
+    })
   }
 
   const handleRemoveItem = async (id: number): Promise<void> => {
@@ -254,28 +112,8 @@ export default function POS(): ReactNode {
     return <>Loading...</>
   }
 
-  //   useEffect(() => {
-  //     function keydown(e): void {
-  //       if (e.key === '/') {
-  //         e.preventDefault()
-  //         if (inputRef.current) {
-  //           inputRef.current.focus()
-  //         }
-  //       }
-  //     }
-  //     window.addEventListener('keydown', keydown)
-
-  //     return () => {
-  //       window.removeEventListener('keydown', keydown)
-  //     }
-  //   }, [])
-
-  // console.log({ mutationRemoveCart })
-
-  console.log(btnUpdateQtyRef)
-
   if (error) {
-    return <>Error</>
+    return <Alert variant="danger">{error.message}</Alert>
   }
 
   return (
@@ -289,87 +127,17 @@ export default function POS(): ReactNode {
             </Alert>
           )}
         </form>
-
-        <div className="mb-3">
-          <Items
-            items={data?.items}
-            headers={headers}
-            renderItems={(item) => (
-              <>
-                <td>
-                  <Link to={`/products/${item.product_id}`} tabIndex={-1}>
-                    {item.name}
-                  </Link>
-                </td>
-                <td>{item.sku}</td>
-                <td>{item.code}</td>
-                <td className="">{item.quantity}</td>
-                <td className="text-right">
-                  <Price value={item.price} />
-                </td>
-                <td>
-                  <div className="flex gap-x-2 justify-end">
-                    <Dialog>
-                      <Dialog.Trigger
-                        ref={(el) => setBtnRef(item, el)}
-                        size="icon"
-                        variant="outline"
-                      >
-                        <Edit size={12} />
-                      </Dialog.Trigger>
-                      <Dialog.Content className="max-w-[300px]">
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault()
-                            mutationUpdateItemQty.mutate(item.id)
-                          }}
-                        >
-                          <Dialog.Header>
-                            <h3>{item.name}</h3> <strong>Stock(s): {item.product_quantity}</strong>
-                          </Dialog.Header>
-                          <Dialog.Body>
-                            <NumericFormat
-                              value={item.quantity}
-                              customInput={Input}
-                              onValueChange={(values) => {
-                                const { floatValue } = values
-
-                                if (floatValue && btnUpdateQtyRef.current) {
-                                  if (Number(floatValue) > item.product_quantity) {
-                                    btnUpdateQtyRef.current[item.id].quantity =
-                                      item.product_quantity
-                                    return
-                                  }
-                                  btnUpdateQtyRef.current[item.id].quantity = Number(
-                                    floatValue || 1
-                                  )
-                                }
-                              }}
-                              thousandSeparator
-                              className="text-right"
-                            />
-                          </Dialog.Body>
-                          <Dialog.Footer>
-                            <Dialog.Close type="button" variant="outline" size="sm">
-                              Close
-                            </Dialog.Close>
-                            <Button type="submit" className="sm" size="sm">
-                              Update
-                            </Button>
-                          </Dialog.Footer>
-                        </form>
-                      </Dialog.Content>
-                    </Dialog>
-                    <Button variant="outline" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                      <X size={12} />
-                    </Button>
-                  </div>
-                </td>
-              </>
-            )}
+        {data?.items && (
+          <CartItems
+            items={data.items}
+            btnUpdateQtyRef={btnUpdateQtyRef}
+            onBtnRef={setBtnRef}
+            onUpdateItemQty={mutationUpdateItemQty.mutate}
+            onRemoveItem={handleRemoveItem}
           />
-        </div>
+        )}
       </div>
+
       <aside className="w-[250px] ms-3 p-4 bg-white rounded-md border border-slate-300">
         <div className="flex justify-between gap-x-2">
           <h2 className="font-bold mb-3">Order Summary</h2>
@@ -389,10 +157,8 @@ export default function POS(): ReactNode {
           <Summary
             data={data}
             onChangeDiscount={(v) => {
-              console.log('on change summary', v)
-
-              mutationUpdateDiscount.mutate(v)
-              // setDiscount(v)
+              // console.log('on change summary', v)
+              setDiscount(v)
             }}
           >
             <Summary.NoOfItems />
@@ -441,7 +207,13 @@ export default function POS(): ReactNode {
               getInputRef={inputAmountRef}
               onValueChange={(values) => {
                 const { floatValue } = values
-                if (floatValue && floatValue > -1) {
+
+                if (floatValue === undefined) {
+                  setAmount(0)
+                  return
+                }
+
+                if (floatValue > -1) {
                   setAmount(floatValue)
                 }
               }}
@@ -468,7 +240,11 @@ export default function POS(): ReactNode {
               {mutationPlaceOrder.error.message}
             </Alert>
           )}
-          <Button full onClick={handlePlaceOrder} disabled={!data?.items?.length}>
+          <Button
+            full
+            onClick={handlePlaceOrder}
+            disabled={!data?.items?.length || amount * 100 - data?.total < 0}
+          >
             Place an Order
           </Button>
         </div>
