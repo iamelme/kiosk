@@ -12,6 +12,7 @@
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
+     "types": ["node", "@testing-library/jest-dom"],
     "paths": {
 
     }
