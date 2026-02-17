@@ -15,7 +15,7 @@ export default function useTopItems({
   endDate
 }: Props): UseQueryResult<Res, Error> {
   return useQuery({
-    queryKey: ['top-items', startDate, endDate],
+    queryKey: ['top-items', startDate, endDate, pageSize],
     queryFn: async () => {
       const { data, error } = await window.apiSale.getTopItems({
         pageSize,

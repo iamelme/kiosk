@@ -351,14 +351,16 @@ export class SaleRepository implements ISaleRepository {
             SUM(ri.quantity) AS return_qty
         FROM return_items ri
         WHERE
-          (? IS FALSE OR ri.created_at BETWEEN ? AND ? )
+          (? IS FALSE OR ri.created_at >= ? )
+          AND (? IS FALSE OR ri.created_at <= ?)
         GROUP BY ri.sale_item_id
       ) ri 
           ON ri.sale_item_id = si.id
       WHERE 
         s.status = 'complete'
         AND 
-        (? IS FALSE OR si.created_at BETWEEN ? AND ? )
+          (? IS FALSE OR si.created_at >= ?  )
+          AND (? IS FALSE OR si.created_at <= ?)
       GROUP BY p.id, p.name
       HAVING 
         SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) > 0       
@@ -367,7 +369,17 @@ export class SaleRepository implements ISaleRepository {
       `
       const products = this._database
         .prepare(stmt)
-        .all(startDate, startDate, endDate, startDate, startDate, endDate, pageSize)
+        .all(
+          startDate,
+          startDate,
+          endDate,
+          endDate,
+          startDate,
+          startDate,
+          endDate,
+          endDate,
+          pageSize
+        )
 
       console.log(products)
 
