@@ -1,16 +1,16 @@
 import Items from '../../components/Items'
 import ListPage from '../../components/ListPage'
-import Pagination from '../../components/Pagination'
+// import Pagination from '../../components/Pagination'
 import Alert from '../../components/ui/Alert'
 import Input from '../../components/ui/Input'
 import { addDays, csvDownload } from '../../utils'
-import { useQuery } from '@tanstack/react-query'
 import { ReactNode, useState } from 'react'
 import { NumericFormat } from 'react-number-format'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import DateFilter from './Common'
 import Button from '../../components/ui/Button'
 import { Download } from 'react-feather'
+import useTopItems from '../../hooks/useTopItems'
 
 const headers = [
   { label: 'Name', className: '' },
@@ -18,59 +18,63 @@ const headers = [
 ]
 
 export default function Top(): ReactNode {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [hasLastItem, setHasLastItem] = useState(false)
+  // const [searchParams, setSearchParams] = useSearchParams()
+  // const [hasLastItem, setHasLastItem] = useState(false)
   //   const [lastTotal, setLastTotal] = useState(0)
 
   // filter
   const [startDate, setStartDate] = useState<Date | string>('')
-  const [endDate, setEndDate] = useState('')
+  const [endDate, setEndDate] = useState<Date | string>('')
 
   const [pageSize, setPageSize] = useState(10)
 
-  let dir = searchParams.get('dir')
+  // let dir = searchParams.get('dir')
 
-  const { isPending, data, error } = useQuery({
-    queryKey: ['top', pageSize, startDate, endDate, searchParams.get('cursorId'), dir],
-    queryFn: async () => {
-      dir = dir ?? 'next'
-      const cursorId = searchParams.get('cursorId') ? Number(searchParams.get('cursorId')) : 0
-      const lastTotal = searchParams.get('lastTotal') ? Number(searchParams.get('lastTotal')) : 0
+  // const { isPending, data, error } = useQuery({
+  //   queryKey: ['top', pageSize, startDate, endDate, searchParams.get('cursorId'), dir],
+  //   queryFn: async () => {
+  //     dir = dir ?? 'next'
+  //     const cursorId = searchParams.get('cursorId') ? Number(searchParams.get('cursorId')) : 0
+  //     const lastTotal = searchParams.get('lastTotal') ? Number(searchParams.get('lastTotal')) : 0
 
-      const { data, error } = await window.apiSale.getTopItems({
-        pageSize,
-        cursorId,
-        lastTotal,
-        startDate: startDate.toString(),
-        endDate: endDate ? addDays(new Date(endDate), 1) : '',
-        direction: dir as 'prev' | 'next'
-      })
+  //     const { data, error } = await window.apiSale.getTopItems({
+  //       pageSize,
+  //       cursorId,
+  //       lastTotal,
+  //       startDate: startDate.toString(),
+  //       endDate: endDate ? addDays(new Date(endDate), 1) : '',
+  //       direction: dir as 'prev' | 'next'
+  //     })
 
-      console.log('data', data)
-      console.log('error', error)
+  //     console.log('data', data)
+  //     console.log('error', error)
 
-      if (error instanceof Error) {
-        throw new Error(error.message)
-      }
+  //     if (error instanceof Error) {
+  //       throw new Error(error.message)
+  //     }
 
-      if (!data) {
-        return null
-      }
+  //     if (!data) {
+  //       return null
+  //     }
 
-      setHasLastItem(false)
+  //     setHasLastItem(false)
 
-      //   setSearchParams({
-      //     ...searchParams,
-      //     lastTotal: String(data[data.length - 1].total_sales)
-      //   })
-      if (data.length > pageSize) {
-        setHasLastItem(true)
-        //   setLastTotal(data[data.length - 1].total_sales)
-        // data.pop()
-      }
+  //     //   setSearchParams({
+  //     //     ...searchParams,
+  //     //     lastTotal: String(data[data.length - 1].total_sales)
+  //     //   })
+  //     if (data.length > pageSize) {
+  //       setHasLastItem(true)
+  //       //   setLastTotal(data[data.length - 1].total_sales)
+  //       // data.pop()
+  //     }
 
-      return dir == 'next' ? data : data?.toReversed()
-    }
+  //     return dir == 'next' ? data : data?.toReversed()
+  //   }
+  // })
+  const { data, isPending, error } = useTopItems({
+    startDate,
+    endDate: endDate ? addDays(new Date(endDate), 1) : ''
   })
 
   if (isPending) {
@@ -81,7 +85,7 @@ export default function Top(): ReactNode {
     return <Alert variant="danger">{error.message}</Alert>
   }
 
-  console.log({ startDate, endDate })
+  // console.log({ startDate, endDate })
 
   return (
     <>
@@ -138,7 +142,7 @@ export default function Top(): ReactNode {
                 )}
               />
 
-              <div className="hidden">
+              {/* <div className="hidden">
                 <Pagination
                   direction={dir}
                   firstId={data[0]?.id}
@@ -147,7 +151,7 @@ export default function Top(): ReactNode {
                   searchParams={searchParams}
                   onSearchParams={setSearchParams}
                 />
-              </div>
+              </div> */}
             </>
           )}
         </>
