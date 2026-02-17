@@ -1,35 +1,15 @@
 import Card from '../../../components/ui/Card'
 import Alert from '../../../components/ui/Alert'
-import { useQuery } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import useTopItems from '../../../hooks/useTopItems'
 
 export default function TopItems(): ReactNode {
   const date = new Date()
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
-  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+  const startDate = new Date(date.getFullYear(), date.getMonth(), 1)
+  const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0)
 
-  const { data, isPending, error } = useQuery({
-    queryKey: ['home'],
-    queryFn: async () => {
-      const { data, error } = await window.apiSale.getTopItems({
-        pageSize: 5,
-        cursorId: 0,
-        lastTotal: 0,
-        startDate: firstDay.toISOString(),
-        endDate: lastDay.toISOString()
-      })
-
-      if (error instanceof Error) {
-        throw new Error(error.message)
-      }
-
-      console.log('top data', data)
-
-      return data
-    }
-  })
-
+  const { data, isPending, error } = useTopItems({ startDate, endDate })
   if (isPending) {
     return <>Loading...</>
   }
@@ -41,9 +21,9 @@ export default function TopItems(): ReactNode {
   return (
     <Card
       header={
-        <div className="flex justify-between pb-3 border-b border-slate-300">
+        <div className="flex justify-between ">
           <div>
-            <h2 className="text-lg font-medium">Top Selling Products</h2>
+            <h2 className="text-md font-bold">Top Selling Products</h2>
             <p className="text-xs opacity-70">This month</p>
           </div>
           <Link to="/reports/sales">See more</Link>
