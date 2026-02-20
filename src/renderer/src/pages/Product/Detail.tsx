@@ -9,6 +9,7 @@ import { ProductType } from '../../utils/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import z from 'zod'
+import useBoundStore from '../../stores/boundStore'
 
 const schema = z
   .object({
@@ -19,7 +20,9 @@ const schema = z
     price: z.coerce.number(),
     cost: z.coerce.number(),
     code: z.coerce.number(),
-    category_id: z.coerce.number()
+    quantity: z.coerce.number(),
+    category_id: z.coerce.number(),
+    inventory_id: z.coerce.number()
   })
   .superRefine(async (data, ctx) => {
     console.log({ data }, { ctx })
@@ -72,6 +75,8 @@ export default function Detail(): React.JSX.Element {
   const { id } = useParams()
   const navigate = useNavigate()
 
+  const user = useBoundStore(state => state.user)
+
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -113,10 +118,13 @@ export default function Detail(): React.JSX.Element {
     mutationFn: async (newData: ProductType): Promise<void> => {
       console.log('submit', newData)
 
+      if (!user?.id) return;
+
       if (id !== 'new') {
         const { error } = await window.apiProduct.updateProduct({
           ...newData,
-          id: Number(id)
+          id: Number(id),
+          user_id: user?.id
         })
         if (error) {
           throw new Error(error.message)
@@ -137,7 +145,7 @@ export default function Detail(): React.JSX.Element {
     }
   })
 
-  const handleSubmit = async (data: ProductType): Promise<void> => {
+  const handleSubmit = async (data: ProductType & { quantity: number }): Promise<void> => {
     console.log('submit', data)
 
     mutation.mutate(data)
@@ -161,6 +169,7 @@ export default function Detail(): React.JSX.Element {
         onSubmit={handleSubmit}
         key={id}
       >
+        <FormInput type="hidden" label="" name="inventory_id" />
         <FormInput label="Name" name="name" />
         <FormInput label="SKU" name="sku" fieldWatch="name" />
         <FormInput label="Code" name="code" />
@@ -173,6 +182,7 @@ export default function Detail(): React.JSX.Element {
             <FormInput label="Cost" name="cost" />
           </div>
         </div>
+        <FormInput label="Quantity" name="quantity" />
         <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} />
         {/* <FormDatalist
           label="Category"

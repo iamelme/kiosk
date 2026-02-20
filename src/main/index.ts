@@ -74,9 +74,10 @@ app.whenReady().then(() => {
 
   db = new AppDatabase()
 
-  new CategoryRepository(db.db)
-  new ProductRepository(db.db)
   const inventory = new InventoryRepository(db.db)
+
+  new CategoryRepository(db.db)
+  new ProductRepository(db.db, inventory)
   new UserRepository(db.db)
   new CartRepository(db.db)
   new SaleRepository(db.db, inventory)

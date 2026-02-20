@@ -2,12 +2,15 @@ import { IProductRepository, ReturnType } from '../interfaces/IProductRepository
 import { Direction, ProductType } from '../utils/types'
 import { ipcMain } from 'electron'
 import { SqliteError } from 'better-sqlite3'
+import { IInventoryRepository } from '../interfaces/IInventoryRepository'
 
 export class ProductRepository implements IProductRepository {
   private _database
+  private _inventory: IInventoryRepository
 
-  constructor(database) {
+  constructor(database, inventory: IInventoryRepository) {
     this._database = database
+    this._inventory = inventory
     ipcMain.handle(
       'product:getAll',
       (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
@@ -19,7 +22,7 @@ export class ProductRepository implements IProductRepository {
     ipcMain.handle('product:getBySku', (_, sku: string) => this.getBySku(sku))
     ipcMain.handle('product:search', (_, term: string) => this.search(term))
     ipcMain.handle('product:create', (_, params: Omit<ProductType, 'id'>) => this.create(params))
-    ipcMain.handle('product:update', (_, params: ProductType) => this.update(params))
+    ipcMain.handle('product:update', (_, params: ProductType & { user_id: number }) => this.update(params))
     ipcMain.handle('product:delete', (_, id: number) => this.delete(id))
   }
 
@@ -35,7 +38,7 @@ export class ProductRepository implements IProductRepository {
 
       let stmt = `
       SELECT p.*, i.quantity, c.name as category_name
-        FROM products AS p 
+        FROM products AS p
         LEFT JOIN categories as c ON p.category_id = c.id
         LEFT JOIN inventory as i ON p.id = i.product_id
         WHERE p.is_active = 1 AND p.id > ?
@@ -44,7 +47,7 @@ export class ProductRepository implements IProductRepository {
       if (direction === 'prev') {
         stmt = `
          SELECT p.*, i.quantity, c.name as category_name
-        FROM products AS p 
+        FROM products AS p
         LEFT JOIN categories as c ON p.category_id = c.id
         LEFT JOIN inventory as i ON p.id = i.product_id
         WHERE p.is_active = 1 AND p.id < ?
@@ -93,8 +96,33 @@ export class ProductRepository implements IProductRepository {
   }
 
   getById(id: number): ReturnType {
+
+    const db = this._database
+    const prodStmt = db.prepare('SELECT * FROM products WHERE id = ?')
+    const invStmt = db.prepare(`
+                                 SELECT
+                                   *
+                                  FROM
+                                   inventory
+                                  WHERE
+                                    product_id = ?
+                                 `)
+
     try {
-      const product = this._database.prepare('SELECT * FROM products WHERE id = ?').get(id)
+      const transaction = db.transaction(() => {
+
+        const product = prodStmt.get(id)
+        const inventory = invStmt.get(id)
+
+        return {
+          ...product,
+          inventory_id: inventory.id,
+          quantity: inventory.quantity ?? 0
+        }
+      })
+
+      const product = transaction()
+
 
       if (!product) {
         throw new Error("Sorry can't retrieve this product")
@@ -226,7 +254,7 @@ export class ProductRepository implements IProductRepository {
           LEFT JOIN categories as c ON p.category_id = c.id
           LEFT JOIN inventory as i ON p.id = i.product_id
         WHERE
-          products_fts MATCH ? 
+          products_fts MATCH ?
         ORDER BY rank
         LIMIT 10`
         )
@@ -318,35 +346,48 @@ export class ProductRepository implements IProductRepository {
     }
   }
 
-  update(params: ProductType): { data: ProductType | null; error: Error | string } {
-    const { id, name, sku, description, price, cost, code, category_id } = params
-    console.log('params', params)
+  update(params: ProductType & { user_id: number }): { data: ProductType | null; error: Error | string } {
+    const { id, name, sku, description, price, cost, code, quantity, category_id, user_id, inventory_id } = params
+    // console.log('params', params)
 
     const normalizePrice = (price ?? 0) * 100
     const normalizeCost = (cost ?? 0) * 100
     const normalizeSKU = sku?.trim()?.toUpperCase()?.replace(/ /g, '-')
 
+    const db = this._database
+
     try {
-      const stmt = this._database.prepare(
+      const stmt = db.prepare(
         'UPDATE products  SET name = ?, sku = ?,  description = ? ,  price = ?, cost = ?,  code = ?,  category_id = ? WHERE id = ? RETURNING *'
       )
 
-      const product = stmt.all(
-        name,
-        normalizeSKU,
-        description,
-        normalizePrice,
-        normalizeCost,
-        code,
-        category_id,
-        id
-      )
+      const transaction = db.transaction(() => {
 
-      console.log('product returning', product)
+        stmt.all(
+          name,
+          normalizeSKU,
+          description,
+          normalizePrice,
+          normalizeCost,
+          code,
+          category_id,
+          id
+        )
 
-      if (product) {
+        this._inventory.update({
+          quantity,
+          id: inventory_id,
+          product_id: id,
+          user_id,
+        })
+
+      })
+
+      transaction()
+
+      if (transaction) {
         return {
-          data: product,
+          data: null,
           error: ''
         }
       }
