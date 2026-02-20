@@ -19,7 +19,9 @@ export type ProductType = {
   price: number
   cost: number
   code: number
+  quantity: number
   category_id: number
+  inventory_id: number
 }
 
 export type InventoryType = {

@@ -173,7 +173,7 @@ export const apiProduct = {
     error: ErrorType
   }> => ipcRenderer.invoke('product:search', term),
   createProduct: (params: Omit<ProductType, 'id'>) => ipcRenderer.invoke('product:create', params),
-  updateProduct: (params: ProductType) => ipcRenderer.invoke('product:update', params),
+  updateProduct: (params: ProductType & { user_id: number }) => ipcRenderer.invoke('product:update', params),
   deleteProduct: (id: number): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('product:delete', id)
 }

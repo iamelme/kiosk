@@ -21,6 +21,6 @@ export interface IProductRepository {
     data: ProductType | null
     error: Error | string
   }
-  update(params: ProductType): ReturnType
+  update(params: ProductType & { quantity: number, user_id: number }): ReturnType
   delete(id: number): { success: boolean; error: Error | string }
 }
