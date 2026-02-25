@@ -4,7 +4,7 @@ import { autoTable } from 'jspdf-autotable'
 
 import { imageSize } from 'image-size'
 
-import { ReturnSaleType } from '../renderer/src/utils/types'
+import { ReturnSaleType } from '../renderer/src/shared/utils/types'
 import { join } from 'path'
 import fs from 'fs'
 

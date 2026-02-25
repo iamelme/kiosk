@@ -1,4 +1,4 @@
-import { CategoryType } from '../utils/types'
+import { CategoryType } from '../shared/utils/types'
 
 export type ReturnType = {
   data: CategoryType | null

@@ -1,4 +1,4 @@
-import { ReturnCartType } from '../utils/types'
+import { ReturnCartType } from '../shared/utils/types'
 
 export type ReturnType = {
   data: ReturnCartType | null

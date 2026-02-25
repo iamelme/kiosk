@@ -1,4 +1,4 @@
-import { Direction, ProductType } from '../utils/types'
+import { Direction, ProductType } from '../shared/utils/types'
 
 type CreateProduct = Omit<ProductType, 'id'>
 

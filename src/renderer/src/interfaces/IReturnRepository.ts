@@ -1,4 +1,4 @@
-import { ErrorType, ReturnType } from '../utils/types'
+import { ErrorType, ReturnType } from '../shared/utils/types'
 
 export type Return = {
   data: null

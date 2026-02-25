@@ -12,7 +12,8 @@ import {
   SaleType,
   ReturnType,
   ReturnItemType
-} from '../renderer/src/utils/types'
+} from '../renderer/src/shared/utils/types'
+import { InventoryMovementParams, InventoryMovementReturn } from '../renderer/src/features/inventory/utils/types'
 
 type SettingsType = {
   locale: string
@@ -20,14 +21,14 @@ type SettingsType = {
   tax: number
 }
 
-type ProdInventoryType = {
-  id: number
-  quantity: number
-  product_id: number
-  product_name: string
-  product_sku: string
-}
-
+// type ProdInventoryType = {
+//   id: number
+//   quantity: number
+//   product_id: number
+//   product_name: string
+//   product_sku: string
+// }
+//
 type CategoryReturnType = {
   data: CategoryType | null
   error: ErrorType
@@ -187,8 +188,13 @@ export const apiInventory = {
     data: Array<ProductType & InventoryType>
     error: ErrorType
   }> => ipcRenderer.invoke('inventory:getAll', params),
-  getInventoryById: (id: number): Promise<{ data: ProdInventoryType | null; error: ErrorType }> =>
-    ipcRenderer.invoke('inventory:getById', id),
+  getInventoryById: (params: InventoryMovementParams): Promise<{
+    data: {
+      productName: string,
+      movements: InventoryMovementReturn[] | null
+    } | null; error: ErrorType
+  }> =>
+    ipcRenderer.invoke('inventory:getById', params),
   createInventory: (params: InventoryType): Promise<{ data: InventoryType; error: ErrorType }> =>
     ipcRenderer.invoke('inventory:create', params),
   updateInventory: (params: InventoryType): Promise<{ success: boolean; error: ErrorType }> =>

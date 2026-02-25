@@ -6,7 +6,7 @@ import {
   Direction,
   TopItemsType
 } from '../interfaces/ISaleRepository'
-import { ErrorType, PlaceOrderType, SaleType } from '../utils/types'
+import { ErrorType, PlaceOrderType, SaleType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 
 export class SaleRepository implements ISaleRepository {
@@ -57,13 +57,13 @@ export class SaleRepository implements ISaleRepository {
       const db = this._database
 
       let stmt = `
-     SELECT * 
+     SELECT *
         FROM sales
         WHERE user_id = ? AND id > ?
         LIMIT ?`
 
       if (direction === 'prev') {
-        stmt = `SELECT * 
+        stmt = `SELECT *
         FROM sales
         WHERE user_id = ? AND id < ?
         ORDER BY id DESC
@@ -119,7 +119,7 @@ export class SaleRepository implements ISaleRepository {
         sale = this._database
           .prepare(
             `
-            SELECT s.id, s.sub_total, s.discount, s.total 
+            SELECT s.id, s.sub_total, s.discount, s.total
             FROM sales AS s
             WHERE user_id = ?
             `
@@ -186,23 +186,23 @@ export class SaleRepository implements ISaleRepository {
         const saleItems = db
           .prepare(
             `
-            SELECT 
-              si.*, 
-              p.name, 
-              p.code, 
-              i.id AS inventory_id, 
-              i.quantity AS inventory_qty, 
+            SELECT
+              si.*,
+              p.name,
+              p.code,
+              i.id AS inventory_id,
+              i.quantity AS inventory_qty,
               SUM(COALESCE(ri.quantity, 0)) AS return_qty,
               (si.quantity - SUM(COALESCE(ri.quantity, 0))) AS available_qty
-            FROM 
+            FROM
               sale_items si
-            LEFT JOIN 
+            LEFT JOIN
               products p ON p.id = si.product_id
-            LEFT JOIN 
+            LEFT JOIN
               inventory i ON i.product_id = si.product_id
             LEFT JOIN
               return_items ri ON ri.sale_item_id = si.id
-            WHERE 
+            WHERE
               si.sale_id = ?
             GROUP BY
               si.product_id;
@@ -257,17 +257,17 @@ export class SaleRepository implements ISaleRepository {
       const res = db
         .prepare(
           `
-        SELECT 
+        SELECT
           s.gross_revenue,
           r.total_return,
           s.gross_revenue - r.total_return AS net_revenue
         FROM (
-          SELECT 
+          SELECT
             SUM(COALESCE(total, 0)) AS gross_revenue
           FROM
             sales
           WHERE
-              created_at 
+              created_at
               BETWEEN ?
               AND ?
               AND status = 'complete'
@@ -278,7 +278,7 @@ export class SaleRepository implements ISaleRepository {
           FROM
             returns
           WHERE
-              created_at 
+              created_at
               BETWEEN ?
               AND ?
         ) AS r
@@ -341,12 +341,12 @@ export class SaleRepository implements ISaleRepository {
         p.name,
         SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) AS net_quantity_sold
       FROM sale_items si
-      JOIN sales s 
+      JOIN sales s
         ON s.id = si.sale_id
-      JOIN products p 
+      JOIN products p
         ON p.id = si.product_id
       LEFT JOIN (
-        SELECT 
+        SELECT
             ri.sale_item_id,
             SUM(ri.quantity) AS return_qty
         FROM return_items ri
@@ -354,16 +354,16 @@ export class SaleRepository implements ISaleRepository {
           (? IS FALSE OR ri.created_at >= ? )
           AND (? IS FALSE OR ri.created_at <= ?)
         GROUP BY ri.sale_item_id
-      ) ri 
+      ) ri
           ON ri.sale_item_id = si.id
-      WHERE 
+      WHERE
         s.status = 'complete'
-        AND 
+        AND
           (? IS FALSE OR si.created_at >= ?  )
           AND (? IS FALSE OR si.created_at <= ?)
       GROUP BY p.id, p.name
-      HAVING 
-        SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) > 0       
+      HAVING
+        SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) > 0
       ORDER BY net_quantity_sold DESC
       LIMIT ?;
       `
@@ -589,7 +589,7 @@ export class SaleRepository implements ISaleRepository {
         const foundItem = this._database
           .prepare(
             `
-          SELECT si.*, i.quantity AS product_quantity 
+          SELECT si.*, i.quantity AS product_quantity
           FROM sale_items AS si
           LEFT JOIN inventory AS i ON si.product_id = i.product_id
           WHERE si.product_id = ?;
@@ -632,7 +632,7 @@ export class SaleRepository implements ISaleRepository {
 
         items = this._database
           .prepare(
-            `SELECT * 
+            `SELECT *
             FROM sale_items AS si
             LEFT JOIN products AS p ON p.id = si.product_id
             WHERE sale_id = ?`
@@ -645,7 +645,7 @@ export class SaleRepository implements ISaleRepository {
 
         const saleDiscount = this._database
           .prepare(
-            `SELECT discount 
+            `SELECT discount
           FROM sales
           WHERE id = ?
           `
@@ -716,7 +716,7 @@ export class SaleRepository implements ISaleRepository {
 
       const itemStmt = db.prepare(
         `
-            SELECT si.id, si.product_id, si.quantity, i.id AS inventory_id, i.quantity AS old_quantity 
+            SELECT si.id, si.product_id, si.quantity, i.id AS inventory_id, i.quantity AS old_quantity
             FROM sale_items si
             LEFT JOIN inventory i ON si.product_id = i.product_id
             WHERE si.sale_id = ?

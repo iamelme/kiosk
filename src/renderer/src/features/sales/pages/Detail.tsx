@@ -1,0 +1,352 @@
+import Items from '../../../shared/components/Items'
+import Alert from '../../../shared/components/ui/Alert'
+import Button from '../../../shared/components/ui/Button'
+import Price from '../../../shared/components/ui/Price'
+import { humanize, saleStatuses } from '../../../shared/utils'
+import { ReturnItemType, SettingsType } from '../../../shared/utils/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ReactNode, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import useBoundStore from '../../../shared/stores//boundStore'
+import Return from '../components/Return'
+const headers = [
+  { label: 'Name', className: '' },
+  { label: 'Quantity', className: 'text-right' },
+  { label: 'Unit Cost', className: 'text-right' },
+  { label: 'Unit Price', className: 'text-right' },
+  { label: 'Total', className: 'text-right' }
+]
+
+export default function Detail(): ReactNode {
+  const { id } = useParams()
+
+  const user = useBoundStore((state) => state.user)
+
+  const navigate = useNavigate()
+
+  const refReturnBtn = useRef<HTMLButtonElement | null>(null)
+
+  const [selectedItems, setSelectedItems] = useState<
+    Map<string, { isChecked: boolean; price: number; newQty: number }>
+  >(new Map())
+
+  const { data, isPending, error } = useQuery({
+    queryKey: [id, 'sales-detail'],
+    queryFn: async () => {
+      if (!Number(id)) {
+        throw new Error('No invoice found')
+      }
+      const { data, error } = await window.apiSale.getById(Number(id))
+
+      if (error instanceof Error) {
+        throw new Error(error.message)
+      }
+
+      return data
+    }
+  })
+
+  const queryClient = useQueryClient()
+
+  const mutationUpdateStatus = useMutation({
+    mutationFn: async (status: string) => {
+      if (!Number(id) && status === 'void') {
+        return
+      }
+      const { success, error } = await window.apiSale.updateSaleStatus({ id: Number(id), status })
+      if (error instanceof Error) {
+        throw new Error(error.message)
+      }
+
+      return success
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [id] })
+    }
+  })
+
+  const mutationReturn = useMutation({
+    mutationFn: async () => {
+      if (!id || !user.id || !data || !data?.items) {
+        throw new Error('Something went wrong!')
+      }
+      const items: Array<Omit<ReturnItemType, 'id' | 'created_at' | 'return_id'>> = []
+      for (const [key, value] of selectedItems) {
+        const found = data.items.find((i) => i.id === Number(key))
+        console.log({ found })
+
+        if (!found || found.available_qty < 1 || found.return_qty >= found.quantity) {
+          throw new Error('Something went wrong while trying to process a return')
+        }
+
+        items.push({
+          product_id: found?.product_id,
+          quantity: value.newQty,
+          old_quantity: found.inventory_qty,
+          refund_price: value.price,
+          inventory_id: found.inventory_id,
+          available_qty: found.available_qty,
+          user_id: user.id,
+          sale_id: Number(id),
+          sale_item_id: Number(key)
+        })
+      }
+      console.log('submitted items', items)
+
+      const payload = {
+        sale_id: Number(id),
+        user_id: user.id,
+        items,
+        refund_amount: items.reduce(
+          (acc, cur) => (acc += cur.refund_price * (cur.quantity ?? 0)),
+          0
+        )
+      }
+      const { error } = await window.apiReturn.create(payload)
+
+      if (error instanceof Error) {
+        throw new Error(error.message)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [id, 'sales-detail'] })
+      if (refReturnBtn?.current) {
+        refReturnBtn?.current.click()
+        setSelectedItems(new Map())
+      }
+    }
+  })
+
+  const handleToggleAll = (e): void => {
+    console.log({ checked: e.target.checked })
+
+    const { checked } = e.target
+
+    if (data) {
+      if (checked) {
+        const ids = data?.items.reduce((acc, cur) => {
+          acc[cur.id] = {
+            isChecked: e.target.checked,
+            price: data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
+            newQty: data?.items?.find((item) => item.id === cur.id)?.quantity ?? 0
+          }
+
+          return acc
+        }, {})
+        setSelectedItems(new Map(Object.entries(ids)))
+        return
+      }
+
+      setSelectedItems(new Map())
+    }
+  }
+
+  const handleToggleSelect = (id) => (e) => {
+    console.log({ id, checked: e.target.checked })
+    const { checked } = e.target
+
+    const items = new Map(selectedItems)
+
+    checked
+      ? items.set(`${id}`, {
+        isChecked: true,
+        price: data?.items?.find((item) => item.id === id)?.unit_price ?? 0,
+        newQty: data?.items?.find((item) => item.id === id)?.quantity ?? 0
+      })
+      : items.delete(`${id}`)
+    console.log(items.size)
+
+    if (items.size === data?.items.length && data?.items.length > 0) {
+      if (!checked) {
+        setSelectedItems(new Map())
+        return
+      }
+      const ids = data?.items.reduce((acc, cur) => {
+        acc[cur.id] = {
+          isChecked: true,
+          price: data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
+          newQty: items.get(`${cur.id}`)?.newQty || cur.quantity
+        }
+
+        return acc
+      }, {})
+      setSelectedItems(new Map(Object.entries(ids)))
+      return
+    }
+
+    setSelectedItems(items)
+  }
+
+  if (isPending) {
+    return <>Loading...</>
+  }
+
+  if (error) {
+    return <Alert variant="danger">{error.message}</Alert>
+  }
+
+  if (!data) {
+    return <Alert variant="danger">No Details for this Sales Invoice</Alert>
+  }
+  console.log('data', data)
+
+  const handleDownloadPDF = async (): Promise<void> => {
+    try {
+      const settings: SettingsType | undefined = queryClient.getQueryData(['settings'])
+      console.log('Cached user data:', settings, settings?.logo)
+
+      const res = await window.apiElectron.createPDF({
+        ...data,
+        logo: settings?.logo as string
+      })
+
+      const pdf = new Blob([res], { type: 'application/pdf' })
+
+      console.log(pdf)
+
+      const url = URL.createObjectURL(pdf)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${data.invoice_number}`
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // console.log('convert blob', new Blob([res], { type: 'application/pdf' }))
+
+      // console.log('res', res)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  console.log('selectedItems', selectedItems)
+
+  return (
+    <>
+      <div className="flex justify-between">
+        <div>
+          <Button variant='outline' size="sm" onClick={() => navigate(-1)}>Go Back</Button>
+        </div>
+        <div className="text-right">
+          <div className="flex justify-end gap-x-2">
+            <div>
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+                Download PDF
+              </Button>
+            </div>
+            {data?.status !== 'void' && (
+              <Return
+                ref={refReturnBtn}
+                items={data.items}
+                onToggleAll={handleToggleAll}
+                onToggleSelect={handleToggleSelect}
+                selectedItems={selectedItems}
+                onSelectedItems={setSelectedItems}
+                errorMessage={mutationReturn.error?.message}
+                onReturn={mutationReturn.mutate}
+              />
+            )}
+          </div>
+
+          <h2 className="font-bold">Invoice No.</h2>
+          <p className="text-xl">{data?.invoice_number}</p>
+          <p>{new Date(data.created_at).toLocaleString()}</p>
+
+          <p>
+            {mutationUpdateStatus.error && (
+              <Alert className="my-3" variant="danger">
+                {mutationUpdateStatus.error?.message}
+              </Alert>
+            )}
+            <select
+              disabled={data.status === 'void'}
+              defaultValue={data.status}
+              onChange={(e) => mutationUpdateStatus.mutate(e.target.value)}
+            >
+              {saleStatuses.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </p>
+        </div>
+      </div>
+      {data?.items && (
+        <>
+          <h3 className="font-medium mb-2">Line Items</h3>
+          <div className="mb-3 border border-slate-300 rounded-md">
+            <Items
+              items={data.items}
+              headers={headers}
+              renderItems={(item) => (
+                <>
+                  <td>
+                    <Link to={`/products/${item.product_id}`}>
+                      {item.name}
+                      {item.code}
+                    </Link>
+                  </td>
+                  <td className="text-right">{item.quantity}</td>
+                  <td className="text-right">
+                    <Price value={item.unit_cost} />
+                  </td>
+                  <td className="text-right">
+                    <Price value={item.unit_price} />
+                  </td>
+                  <td className="text-right">
+                    <Price value={item.unit_price * item.quantity} />
+                  </td>
+                </>
+              )}
+            />
+          </div>
+        </>
+      )}
+
+      <div className="flex justify-end">
+        <div className="flex flex-col gap-y-2">
+          <dl className="flex justify-between gap-x-4">
+            <dt className="">Sub Total:</dt>
+            <dd>
+              <Price value={data?.sub_total} />
+            </dd>
+          </dl>
+          <dl className="flex justify-between gap-x-4">
+            <dt className="">Discount:</dt>
+            <dd>
+              (
+              <Price value={data?.discount} />)
+            </dd>
+          </dl>
+          <dl className="flex justify-between gap-x-4 font-bold">
+            <dt className="">Total:</dt>
+            <dd>
+              <Price value={data?.total} />
+            </dd>
+          </dl>
+          <dl className="flex justify-between gap-x-4 ">
+            <dt className="">Paid Amount:</dt>
+            <dd>
+              <Price value={data?.amount} />
+            </dd>
+          </dl>
+          <dl className="flex justify-between gap-x-4 ">
+            <dt className="">Change Due:</dt>
+            <dd>
+              <Price value={data?.total - data?.amount} />
+            </dd>
+          </dl>
+
+          <dl className="flex justify-between gap-x-4 border-t border-b my-3 py-3">
+            <dt className="">Payment Method:</dt>
+            <dd>{humanize(data?.method)}</dd>
+          </dl>
+        </div>
+      </div>
+    </>
+  )
+}

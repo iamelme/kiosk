@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { IReturnRepository, Return } from '../interfaces/IReturnRepository'
-import { ReturnType } from '../utils/types'
+import { ReturnType } from '../shared/utils/types'
 import { IInventoryRepository } from '../interfaces/IInventoryRepository'
 
 export class ReturnRepository implements IReturnRepository {
@@ -36,7 +36,7 @@ export class ReturnRepository implements IReturnRepository {
     const insertReturnItem = db.prepare(
       `
                 INSERT INTO return_items
-                (created_at, return_id, quantity, refund_price, product_id, sale_item_id) 
+                (created_at, return_id, quantity, refund_price, product_id, sale_item_id)
                 VALUES(?, ?, ?, ?, ?, ?);
                 `
     )

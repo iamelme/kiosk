@@ -1,9 +1,9 @@
+import { InventoryMovementParams, InventoryMovementReturn } from '../features/inventory/utils/types'
 import {
   IInventoryRepository,
   ProductInventoryType,
-  ProdInventoryType
 } from '../interfaces/IInventoryRepository'
-import { InventoryType, ErrorType, Direction } from '../utils/types'
+import { InventoryType, ErrorType, Direction } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 
 export class InventoryRepository implements IInventoryRepository {
@@ -16,7 +16,7 @@ export class InventoryRepository implements IInventoryRepository {
       (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
         this.getAll(params)
     )
-    ipcMain.handle('inventory:getById', (_, id: number) => this.getById(id))
+    ipcMain.handle('inventory:getById', (_, params: InventoryMovementParams) => this.getById(params))
     ipcMain.handle('inventory:create', (_, params: InventoryType) => this.create(params))
     ipcMain.handle('inventory:update', (_, params: InventoryType) => this.update(params))
     ipcMain.handle('inventory:delete', (_, id: number) => this.delete(id))
@@ -72,22 +72,62 @@ export class InventoryRepository implements IInventoryRepository {
       }
     }
   }
-  getById(id: number): { data: ProdInventoryType | null; error: ErrorType } {
+  getById(params: InventoryMovementParams): {
+    data: {
+      productName: string
+      movements: InventoryMovementReturn[] | null
+    } | null; error: ErrorType
+  } {
     try {
-      const product = this._database
-        .prepare(
-          `
-            SELECT i.*, p.name AS product_name, p.sku AS product_sku
-            FROM inventory AS i
-            LEFT JOIN products AS p ON i.product_id = p.id
-            WHERE i.id = ?
-            `
-        )
-        .get(id)
+      const { startDate, endDate, id, cursorId, direction = 'next', pageSize } = params
+      console.log({ params })
 
-      if (product) {
+      const db = this._database
+
+      let stmt = `
+            SELECT imv.*, p.name AS product_name, p.sku AS product_sku
+            FROM inventory_movement AS imv
+            LEFT JOIN products AS p ON p.id = imv.product_id
+            LEFT JOIN inventory AS i ON i.product_id = imv.product_id
+            WHERE
+              i.id = ?
+              AND imv.id > ?
+              AND (? IS FALSE OR imv.created_at >= ? )
+              AND (? IS FALSE OR imv.created_at <= ?)
+            LIMIT ?
+      `
+
+
+      if (direction === 'prev') {
+        stmt = `
+            SELECT imv.*, p.name AS product_name, p.sku AS product_sku
+            FROM inventory_movement AS imv
+            LEFT JOIN products AS p ON p.id = imv.product_id
+            LEFT JOIN inventory AS i ON i.product_id = imv.product_id
+            WHERE
+              i.id = ?
+              AND imv.id < ?
+              AND(? IS FALSE OR imv.created_at >= ? )
+              AND (? IS FALSE OR imv.created_at <= ?)
+            ORDER BY imv.id DESC
+            LIMIT ?
+      `
+      }
+
+      const movements = db.prepare(stmt).all(id,
+        cursorId,
+        startDate,
+        startDate,
+        endDate,
+        endDate,
+        pageSize + 1)
+
+      if (movements) {
         return {
-          data: product,
+          data: {
+            productName: movements?.[0]?.product_name ?? '',
+            movements
+          },
           error: ''
         }
       }
@@ -162,7 +202,7 @@ export class InventoryRepository implements IInventoryRepository {
 
     try {
       const inventory = db.prepare(
-        `UPDATE inventory 
+        `UPDATE inventory
           SET quantity = ?
           WHERE id = ?`
       )

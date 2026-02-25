@@ -1,6 +1,6 @@
 import { SqliteError } from 'better-sqlite3'
 import { IUserRepository, ReturnType } from '../interfaces/IUserInterRepository'
-import { UserType } from '../utils/types'
+import { UserType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 import argon2 from 'argon2'
 
@@ -19,7 +19,7 @@ export class UserRepository implements IUserRepository {
       const foundUser = this._database
         .prepare(
           `
-        SELECT * FROM users 
+        SELECT * FROM users
         WHERE user_name = ?
         `
         )
@@ -71,7 +71,7 @@ export class UserRepository implements IUserRepository {
       const foundUser = this._database
         .prepare(
           `
-        SELECT * FROM users 
+        SELECT * FROM users
         WHERE user_name = ?
         `
         )

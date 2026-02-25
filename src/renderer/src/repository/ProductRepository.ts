@@ -1,5 +1,5 @@
 import { IProductRepository, ReturnType } from '../interfaces/IProductRepository'
-import { Direction, ProductType } from '../utils/types'
+import { Direction, ProductType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 import { SqliteError } from 'better-sqlite3'
 import { IInventoryRepository } from '../interfaces/IInventoryRepository'

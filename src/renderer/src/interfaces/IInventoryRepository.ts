@@ -1,4 +1,5 @@
-import { Direction, ErrorType, InventoryType, ProductType } from '../utils/types'
+import { InventoryMovementParams, InventoryMovementReturn } from '../features/inventory/utils/types'
+import { Direction, ErrorType, InventoryType, ProductType } from '../shared/utils/types'
 
 export type ProductInventoryType = ProductType & InventoryType
 
@@ -15,7 +16,16 @@ export interface IInventoryRepository {
     data: Array<ProductInventoryType> | null
     error: ErrorType
   }
-  getById(id: number): { data: ProdInventoryType | null; error: ErrorType }
+  getById(params: InventoryMovementParams): {
+    data:
+    {
+
+      productName: string,
+      movements: InventoryMovementReturn[] | null
+    } | null;
+    error: ErrorType
+  }
+
   create(params: InventoryType): { data: InventoryType | null; error: ErrorType }
   update(params: InventoryType): { success: boolean; error: ErrorType }
   delete(id: number): { success: boolean; error: ErrorType }

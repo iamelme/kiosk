@@ -1,5 +1,5 @@
 import { ICategoryRepository, ReturnType } from '../interfaces/ICategoryRepository'
-import { CategoryType } from '../utils/types'
+import { CategoryType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 
 export class CategoryRepository implements ICategoryRepository {

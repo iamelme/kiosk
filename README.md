@@ -1,49 +1,15 @@
-# kiosk-app
+A lightweight retail Point of Sale (POS) system built for small to medium retail businesses.
 
-An Electron application with React and TypeScript.
-This is an open-source project to help small sari-sari/convenience store to have their own way to add their products and check their prices.
+This system includes:
 
-## Recommended IDE Setup
+* 🧾 POS (Sales Processing)
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+* 🔎 Price Verifier
 
-## Project Setup
+* 📊 Sales Reports Dashboard
 
-### Install
+* 📦 Inventory Management
 
-```bash
-$ npm install
-```
+* 🔄 Returns & Refund Handling
 
-### Development
-
-```bash
-$ npm run dev
-```
-
-### Build
-
-```bash
-# For windows
-$ npm run build:win
-
-# For macOS
-$ npm run build:mac
-
-# For Linux
-$ npm run build:linux
-```
-
-| Type   | Meaning           |
-| ------ | ----------------- |
-| IN     | Stock increase    |
-| OUT    | Stock decrease    |
-| ADJUST | Manual correction |
-
-| Reference  | Source             |
-| ---------- | ------------------ |
-| PURCHASE   | Supplier receiving |
-| SALE       | POS sale           |
-| RETURN     | Customer return    |
-| TRANSFER   | Store transfer     |
-| ADJUSTMENT | Stock count        |
+* 📈 Inventory Movement Tracking

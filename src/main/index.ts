@@ -13,7 +13,7 @@ import { SaleRepository } from '../renderer/src/repository/SaleRepository'
 import { ReturnRepository } from '../renderer/src/repository/ReturnRepository'
 import { SettingsRepository } from '../renderer/src/repository/SettingsRepository'
 import createPDF from './createInvoicePDF'
-import { ReturnSaleType } from '../renderer/src/utils/types'
+import { ReturnSaleType } from '../renderer/src/shared/utils/types'
 
 export let db
 

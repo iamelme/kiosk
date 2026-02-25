@@ -1,4 +1,4 @@
-import { ErrorType, PlaceOrderType, ReturnSaleType, SaleType } from '../utils/types'
+import { ErrorType, PlaceOrderType, ReturnSaleType, SaleType } from '../shared/utils/types'
 
 export type ReturnType = {
   data: ReturnSaleType | null
