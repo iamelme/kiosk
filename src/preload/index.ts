@@ -14,12 +14,8 @@ import {
   ReturnItemType
 } from '../renderer/src/shared/utils/types'
 import { InventoryMovementParams, InventoryMovementReturn } from '../renderer/src/features/inventory/utils/types'
+import { SettingsType } from '../renderer/src/features/settings/utils/type'
 
-type SettingsType = {
-  locale: string
-  logo: string
-  tax: number
-}
 
 // type ProdInventoryType = {
 //   id: number
@@ -217,7 +213,8 @@ export const apiSettings = {
   updateLocale: (locale: string): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke('settings:updateLocale', locale),
   uploadLogo: (logo: string): Promise<{ data: string; error: ErrorType }> =>
-    ipcRenderer.invoke('settings:uploadLogo', logo)
+    ipcRenderer.invoke('settings:uploadLogo', logo),
+  update: (params: Partial<SettingsType>): Promise<{ success: boolean; error: ErrorType }> => ipcRenderer.invoke('settings:update', params)
 }
 
 export const apiElectron = {

@@ -20,6 +20,8 @@ import SalesDetail from '../features/sales/pages/Detail'
 import TopProductsPage from '../features/Reports/pages/Top'
 
 import SettingsPage from '../features/settings/pages'
+import GeneralPage from '../features/settings/pages/General'
+import SettingsSystemPage from '../features/settings/pages/System'
 
 export default function Router() {
 
@@ -67,8 +69,9 @@ export default function Router() {
             <Route path="sales" element={<TopProductsPage />} />
           </Route>
 
-          <Route path="settings">
-            <Route index element={<SettingsPage />} />
+          <Route path="settings" element={<SettingsPage />}>
+            <Route index element={<GeneralPage />} />
+            <Route path="system" element={<SettingsSystemPage />} />
           </Route>
 
         </Route>
