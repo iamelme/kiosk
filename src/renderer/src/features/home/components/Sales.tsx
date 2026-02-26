@@ -29,11 +29,9 @@ export default function Sales(): ReactNode {
     return <>Loading...</>
   }
 
-  if (error || !data) {
+  if (error || !data || Array.isArray(data)) {
     return <Alert variant="danger">{error?.message || 'something went wrong'}</Alert>
   }
-
-  console.log({ data })
 
   return (
     <div className="flex gap-3 mb-3">

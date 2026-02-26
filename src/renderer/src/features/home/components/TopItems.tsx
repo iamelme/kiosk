@@ -18,15 +18,23 @@ export default function TopItems(): ReactNode {
     return <Alert variant="danger">{error.message}</Alert>
   }
 
+  if (!data) {
+    return
+  }
+
   return (
     <Card
+      className='h-full'
       header={
         <div className="flex justify-between ">
           <div>
             <h2 className="text-md font-bold">Top Selling Products</h2>
             <p className="text-xs opacity-70">This month</p>
           </div>
-          <Link to="/reports/sales">See more</Link>
+          {
+            data?.length > 4 &&
+            <Link to="/reports/sales">See more</Link>
+          }
         </div>
       }
       content={
