@@ -22,14 +22,23 @@ export type TopItemsType = {
 export type Direction = 'prev' | 'next'
 
 export interface ISaleRepository {
-  getAll(params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
+  getAll(params: {
+    startDate: string,
+    endDate: string,
+    pageSize: number; cursorId: number; userId: number; direction?: Direction
+  }): {
     data: SaleType[] | null
     error: ErrorType
   }
   getByUserId(id: number): ReturnType
   getById(id: number): ReturnType
-  getRevenue(params: { startDate: string; endDate: string }): {
-    data: { gross_revenue: number; total_return: number; net_revenue: number } | null
+  getRevenue(params: { startDate: string; endDate: string, isQuarterly?: boolean }): {
+    data: { month: number, gross_revenue: number; total_return: number; net_revenue: number } | {
+      month: number
+      gross_revenue: number
+      total_return: number
+      net_revenue: number
+    }[] | null
     error: ErrorType
   }
   getTopItems({

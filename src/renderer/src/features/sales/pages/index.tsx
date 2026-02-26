@@ -4,7 +4,7 @@ import Pagination from '../../../shared/components/Pagination'
 import Price from '../../../shared/components/ui/Price'
 import Alert from '../../../shared/components/ui/Alert'
 import useBoundStore from '../../../shared/stores//boundStore'
-import { humanize } from '../../../shared/utils'
+import { addDays, humanize } from '../../../shared/utils'
 import { SaleType } from '../../../shared/utils/types'
 import { useQuery } from '@tanstack/react-query'
 import { ReactNode, useState } from 'react'
@@ -39,12 +39,15 @@ export default function Sales(): ReactNode {
 
   let dir = searchParams.get('dir')
 
+  const normalizedStart = startDate ? new Date(startDate)?.toISOString() : ''
+  const normalizedEnd = endDate ? addDays(new Date(endDate), 1) : ''
+
   const {
     data: sales,
     isPending,
     error
   } = useQuery({
-    queryKey: ['sales', user.id, searchParams.get('cursorId'), dir],
+    queryKey: ['sales', normalizedStart, normalizedEnd, user.id, searchParams.get('cursorId'), dir],
     queryFn: async (): Promise<SaleType[] | null> => {
       if (!user.id) {
         throw new Error('User not found')
@@ -54,7 +57,10 @@ export default function Sales(): ReactNode {
 
       dir = dir ?? 'next'
 
+
       const { data, error } = await window.apiSale.getAll({
+        startDate: normalizedStart,
+        endDate: normalizedEnd,
         pageSize,
         cursorId: cursorId,
         userId: user.id,
@@ -69,9 +75,6 @@ export default function Sales(): ReactNode {
         return null
       }
 
-      // console.log(dir)
-
-      // console.log('data ', data)
       setHasLastItem(false)
 
       if (data.length > pageSize) {
