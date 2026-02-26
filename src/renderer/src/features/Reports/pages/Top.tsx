@@ -18,60 +18,12 @@ const headers = [
 ]
 
 export default function Top(): ReactNode {
-  // const [searchParams, setSearchParams] = useSearchParams()
-  // const [hasLastItem, setHasLastItem] = useState(false)
-  //   const [lastTotal, setLastTotal] = useState(0)
 
-  // filter
   const [startDate, setStartDate] = useState<Date | string>('')
   const [endDate, setEndDate] = useState<Date | string>('')
 
   const [pageSize, setPageSize] = useState(10)
 
-  // let dir = searchParams.get('dir')
-
-  // const { isPending, data, error } = useQuery({
-  //   queryKey: ['top', pageSize, startDate, endDate, searchParams.get('cursorId'), dir],
-  //   queryFn: async () => {
-  //     dir = dir ?? 'next'
-  //     const cursorId = searchParams.get('cursorId') ? Number(searchParams.get('cursorId')) : 0
-  //     const lastTotal = searchParams.get('lastTotal') ? Number(searchParams.get('lastTotal')) : 0
-
-  //     const { data, error } = await window.apiSale.getTopItems({
-  //       pageSize,
-  //       cursorId,
-  //       lastTotal,
-  //       startDate: startDate.toString(),
-  //       endDate: endDate ? addDays(new Date(endDate), 1) : '',
-  //       direction: dir as 'prev' | 'next'
-  //     })
-
-  //     console.log('data', data)
-  //     console.log('error', error)
-
-  //     if (error instanceof Error) {
-  //       throw new Error(error.message)
-  //     }
-
-  //     if (!data) {
-  //       return null
-  //     }
-
-  //     setHasLastItem(false)
-
-  //     //   setSearchParams({
-  //     //     ...searchParams,
-  //     //     lastTotal: String(data[data.length - 1].total_sales)
-  //     //   })
-  //     if (data.length > pageSize) {
-  //       setHasLastItem(true)
-  //       //   setLastTotal(data[data.length - 1].total_sales)
-  //       // data.pop()
-  //     }
-
-  //     return dir == 'next' ? data : data?.toReversed()
-  //   }
-  // })
   const { data, isPending, error } = useTopItems({
     pageSize,
     startDate,
@@ -86,7 +38,6 @@ export default function Top(): ReactNode {
     return <Alert variant="danger">{error.message}</Alert>
   }
 
-  // console.log({ startDate, endDate })
 
   return (
     <>
