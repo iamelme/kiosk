@@ -17,7 +17,7 @@ export class SaleRepository implements ISaleRepository {
     this._inventory = inventory
     ipcMain.handle(
       'sale:getAll',
-      (_, params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
+      (_, params: { startDate: string, endDate: string, pageSize: number; cursorId: number; userId: number; direction?: Direction }) =>
         this.getAll(params)
     )
     ipcMain.handle('sale:getByUserId', (_, id: number) => this.getByUserId(id))
@@ -46,33 +46,48 @@ export class SaleRepository implements ISaleRepository {
     )
     ipcMain.handle('sale:deleteAllItems', (_, sale_id: number) => this.deleteAllItems(sale_id))
   }
-  getAll(params: { pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
+  getAll(params: { startDate: string, endDate: string, pageSize: number; cursorId: number; userId: number; direction?: Direction }): {
     data: SaleType[] | null
     error: Error | string
   } {
-    const { cursorId, userId, direction = 'next', pageSize } = params
+    const { startDate, endDate, cursorId, userId, direction = 'next', pageSize } = params
     console.log('repo currentId', params)
 
     try {
       const db = this._database
 
       let stmt = `
-     SELECT *
-        FROM sales
-        WHERE user_id = ? AND id > ?
+        SELECT
+          *
+        FROM
+          sales
+        WHERE
+          user_id = ?
+          AND id > ?
+          AND
+          (? IS FALSE OR created_at >= ?)
+          AND
+          (? IS FALSE OR created_at <= ?)
         LIMIT ?`
 
       if (direction === 'prev') {
-        stmt = `SELECT *
-        FROM sales
-        WHERE user_id = ? AND id < ?
+        stmt = `
+        SELECT
+          *
+        FROM
+          sales
+        WHERE
+          user_id = ?
+          AND id > ?
+          AND
+          (? IS FALSE OR created_at >= ?)
+          AND
+          (? IS FALSE OR created_at <= ?)
         ORDER BY id DESC
         LIMIT ?`
       }
 
-      console.log('statement', stmt)
-
-      const sales = db.prepare(stmt).all(userId, cursorId, pageSize + 1)
+      const sales = db.prepare(stmt).all(userId, cursorId, startDate, startDate, endDate, endDate, pageSize + 1)
 
       // console.log({ sales })
 
@@ -243,33 +258,39 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
-  getRevenue(params: { startDate: string; endDate: string }): {
+  getRevenue(params: { startDate: string; endDate: string, isQuarterly?: boolean }): {
     data: {
+      month: number
       gross_revenue: number
       total_return: number
       net_revenue: number
-    } | null
+    } | {
+      month: number
+      gross_revenue: number
+      total_return: number
+      net_revenue: number
+    }[] | null
     error: ErrorType
   } {
-    const { startDate, endDate } = params
+    const { startDate, endDate, isQuarterly = false } = params
     const db = this._database
     try {
-      const res = db
-        .prepare(
-          `
+      const stmt = `
         SELECT
+          STRFTIME('%m',  s.created_at) AS month,
           s.gross_revenue,
           r.total_return,
           s.gross_revenue - r.total_return AS net_revenue
         FROM (
           SELECT
+            created_at,
             SUM(COALESCE(total, 0)) AS gross_revenue
           FROM
             sales
           WHERE
-              created_at
-              BETWEEN ?
-              AND ?
+              created_at >= ?
+              AND
+              created_at <= ?
               AND status = 'complete'
         ) AS s,
         (
@@ -278,13 +299,29 @@ export class SaleRepository implements ISaleRepository {
           FROM
             returns
           WHERE
-              created_at
-              BETWEEN ?
-              AND ?
-        ) AS r
-        `
-        )
-        .get(startDate, endDate, startDate, endDate)
+              created_at >= ?
+              AND
+              created_at <= ?
+        ) AS r        `
+      let res
+
+      if (isQuarterly) {
+        res = db
+          .prepare(stmt)
+          .all(startDate, endDate, startDate, endDate)
+        return {
+          data: res,
+          error: ''
+        }
+      } else {
+        res = db
+          .prepare(stmt)
+          .get(startDate, endDate, startDate, endDate)
+        return {
+          data: res,
+          error: ''
+        }
+      }
 
       console.log(res)
 
@@ -292,14 +329,7 @@ export class SaleRepository implements ISaleRepository {
         throw new Error('Something went wrong while  retrieving')
       }
 
-      return {
-        data: {
-          gross_revenue: res.gross_revenue,
-          total_return: res.total_return,
-          net_revenue: res.net_revenue
-        },
-        error: ''
-      }
+
     } catch (error) {
       if (error instanceof Error) {
         return {
@@ -339,7 +369,7 @@ export class SaleRepository implements ISaleRepository {
       SELECT
         p.id,
         p.name,
-        SUM(si.quantity) - COALESCE(SUM(ri.return_qty), 0) AS net_quantity_sold
+        SUM(si.quantity) - COALESCE(ri.return_qty, 0) AS net_quantity_sold
       FROM sale_items si
       JOIN sales s
         ON s.id = si.sale_id

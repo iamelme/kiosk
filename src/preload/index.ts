@@ -86,6 +86,8 @@ export const apiCart = {
 
 export const apiSale = {
   getAll: (params: {
+    startDate: string
+    endDate: string
     pageSize: number
     cursorId: number
     userId: number
@@ -97,8 +99,14 @@ export const apiSale = {
   getRevenue: (params: {
     startDate: string
     endDate: string
+    isQuarterly?: boolean
   }): Promise<{
-    data: { gross_revenue: number; total_return: number; net_revenue: number } | null
+    data: { gross_revenue: number; total_return: number; net_revenue: number } | {
+      month: number
+      gross_revenue: number
+      total_return: number
+      net_revenue: number
+    }[] | null
     error: ErrorType
   }> => ipcRenderer.invoke('sale:getRevenue', params),
   getTopItems: (params: {
