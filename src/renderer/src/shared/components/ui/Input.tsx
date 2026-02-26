@@ -7,11 +7,17 @@ type InputProps = {
 } & DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
 
 export default function Input({ className, ...props }: InputProps): React.JSX.Element {
+  let base = ''
+  if (props.type !== 'checkbox') {
+    base = 'w-full py-1 px-2 bg-white rounded-sm'
+  } else {
+    base = 'w-4 h-4'
+  }
   return (
     <input
       {...props}
       className={twMerge(
-        `w-full py-1 px-2 bg-white border border-slate-400 rounded-t-sm rounded-b-sm ${className}`
+        `${base}  border border-slate-300  ${className}`
       )}
     />
   )
