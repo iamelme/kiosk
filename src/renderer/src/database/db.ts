@@ -30,7 +30,8 @@ export class AppDatabase {
                id INTEGER PRIMARY KEY CHECK (id = 1),
               locale TEXT DEFAULT 'en-PH',
               logo TEXT,
-              tax INTEGER DEFAULT 0
+              tax INTEGER DEFAULT 0,
+              is_tax_inclusive INTEGER DEFAULT 1
             );
 
             INSERT OR IGNORE INTO settings (id) VALUES(1);
