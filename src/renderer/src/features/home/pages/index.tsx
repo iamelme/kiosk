@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import TopItems from '../components/TopItems'
 import Rev from '../components/Sales'
 import useBoundStore from '../../../shared/stores/boundStore'
+import SalesChart from '../components/SalesChart'
 
 export default function HomePage(): ReactNode {
   const user = useBoundStore((state) => state.user)
@@ -21,7 +22,14 @@ export default function HomePage(): ReactNode {
         </h2>
       </header>
       <Rev />
-      <TopItems />
+      <div className='grid grid-cols-5 gap-x-3'>
+        <div className='col-span-3'>
+          <SalesChart />
+        </div>
+        <div className='col-span-2'>
+          <TopItems />
+        </div>
+      </div>
     </div>
   )
 }
