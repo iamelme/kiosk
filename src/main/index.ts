@@ -97,7 +97,7 @@ app.whenReady().then(() => {
     return createPDF(params)
   })
 
-  ipcMain.handle('upload-logo', async () => {
+  ipcMain.handle('upload-logo', async (event) => {
     const userDataPath = app.getPath('userData')
     const imagePath = join(userDataPath, './assets/images')
     if (!fs.existsSync(imagePath)) {
@@ -110,9 +110,6 @@ app.whenReady().then(() => {
 
     if (!res.canceled && res.filePaths.length > 0) {
       const filePath = res.filePaths[0]
-      const stats = fs.statSync(filePath)
-      // const fileContent = fs.readFileSync(filePath)
-      console.log('stats', stats)
 
       const destPath = join(userDataPath, `./assets/images/logo.webp`)
       fs.copyFile(filePath, destPath, (err) => {
@@ -121,6 +118,10 @@ app.whenReady().then(() => {
           throw new Error(err.message)
         }
         console.log('File saved successfully at:', destPath)
+
+        const mainWindow = BrowserWindow.fromWebContents(event.sender);
+        if (mainWindow)
+          mainWindow.webContents.send('upload-complete');
       })
 
       return destPath
