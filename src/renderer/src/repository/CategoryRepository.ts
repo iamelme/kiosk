@@ -6,7 +6,6 @@ export class CategoryRepository implements ICategoryRepository {
   private _database
 
   constructor(database) {
-    console.log('category', database)
     this._database = database
     // ipcRenderer.
     ipcMain.handle('category:getAll', () => this.getAll())
@@ -20,7 +19,6 @@ export class CategoryRepository implements ICategoryRepository {
   }
 
   getAll(): { data: CategoryType[] | null; error: Error | string } {
-    console.log('getall top =====>')
     try {
       const categories = this._database.prepare('SELECT * FROM categories').all()
 
