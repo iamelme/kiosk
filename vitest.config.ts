@@ -5,5 +5,8 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom'
-  }
+  },
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
 })
