@@ -14,20 +14,14 @@ export default function ProductDetailForm({ categoryOptions, errorMessage }: Pro
   return (
     <>
       <FormInput type="hidden" label="" name="inventory_id" />
-      <FormInput label="Name" name="name" />
-      <FormInput label="SKU" name="sku" fieldWatch="name" />
-      <FormInput label="Code" name="code" />
+      <FormInput label="Name" name="name" helperText="Product Name" required />
+      <FormInput label="SKU" name="sku" fieldWatch="name" helperText="This will turn to uppercase after saving." required />
+      <FormInput label="Code" name="code" required />
       <FormInput label="Description" name="description" />
-      <div className="flex gap-x-3">
-        <div className="flex-1">
-          <FormInput label="Price" name="price" />
-        </div>
-        <div className="flex-1">
-          <FormInput label="Cost" name="cost" />
-        </div>
-      </div>
-      <FormInput label="Quantity" name="quantity" />
-      <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} />
+      <FormInput label="Price" name="price" required />
+      <FormInput label="Cost" name="cost" required />
+      <FormInput label="Quantity" name="quantity" required />
+      <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} required />
       {errorMessage && (
         <Alert variant="danger" className="mt-3">
           {errorMessage}
