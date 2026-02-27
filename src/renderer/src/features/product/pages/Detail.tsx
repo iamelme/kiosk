@@ -17,7 +17,7 @@ const schema = z
     price: z.coerce.number(),
     cost: z.coerce.number(),
     code: z.coerce.number(),
-    quantity: z.coerce.number(),
+    quantity: z.coerce.number().nonnegative(),
     category_id: z.coerce.number(),
     inventory_id: z.coerce.number()
   })
@@ -75,7 +75,7 @@ export default function Detail(): React.JSX.Element {
   const user = useBoundStore(state => state.user)
 
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['product-categories'],
     queryFn: async () => {
       const { data } = await window.apiCategory.getAllCategories()
       return data
