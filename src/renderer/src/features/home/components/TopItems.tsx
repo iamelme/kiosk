@@ -1,8 +1,8 @@
-import Card from '../../../shared/components/ui/Card'
-import Alert from '../../../shared/components/ui/Alert'
+import Card from '@renderer/shared/components/ui/Card'
+import Alert from '@renderer/shared/components/ui/Alert'
 import { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import useTopItems from '../../../shared/hooks/useTopItems'
+import useTopItems from '@renderer/shared/hooks/useTopItems'
 
 export default function TopItems(): ReactNode {
   const date = new Date()

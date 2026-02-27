@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
-import FormInput from '../../../shared/components/form/FormInput'
+import FormInput from '@renderer/shared/components/form/FormInput'
 
-import Alert from '../../../shared/components/ui/Alert'
-import Button from '../../../shared/components/ui/Button'
+import Alert from '@renderer/shared/components/ui/Alert'
+import Button from '@renderer/shared/components/ui/Button'
 import { Link } from "react-router-dom";
 
 type Props = {

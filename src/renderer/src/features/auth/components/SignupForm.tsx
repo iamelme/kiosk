@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
-import FormInput from '../../../shared/components/form/FormInput'
-import Button from '../../../shared/components/ui/Button'
+import FormInput from '@renderer/shared/components/form/FormInput'
+import Button from '@renderer/shared/components/ui/Button'
 import { Link } from 'react-router-dom'
 
 

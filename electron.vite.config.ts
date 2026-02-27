@@ -1,8 +1,10 @@
 /// <reference types="vitest/config" />
 
+import { resolve } from 'node:path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   main: {
@@ -23,6 +25,9 @@ export default defineConfig({
   },
   renderer: {
     resolve: {
+      alias: {
+        '@renderer': resolve(__dirname, './src/renderer/src'),
+      }
     },
     esbuild: {
       pure: ['console.log'],
@@ -33,6 +38,6 @@ export default defineConfig({
         external: ['better-sqlite3']
       }
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss(), tsconfigPaths()]
   }
 })

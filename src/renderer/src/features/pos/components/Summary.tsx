@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useContext } from 'react'
 import { NumericFormat } from 'react-number-format'
 
-import Price from '../../../shared/components/ui/Price'
-import { ReturnCartType } from '../../../shared/utils/types'
-import Input from '../../../shared/components/ui/Input'
+import Price from '@renderer/shared/components/ui/Price'
+import { ReturnCartType } from '@renderer/shared/utils/types'
+import Input from '@renderer/shared/components/ui/Input'
 
 type Summary = ReturnCartType & {
   handleDiscount: (v: number) => void

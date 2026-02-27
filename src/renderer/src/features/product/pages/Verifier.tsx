@@ -1,7 +1,7 @@
-import Input from '../../../shared/components/ui/Input'
+import Input from '@renderer/shared/components/ui/Input'
 import { useEffect, useRef, useState } from 'react'
 import useProductSearch from '../hooks/useProductSearch'
-import useDebounce from '../../../shared/hooks/useDebounce'
+import useDebounce from '@renderer/shared/hooks/useDebounce'
 
 export default function Verifier(): React.ReactElement {
   const searchInputRef = useRef<HTMLInputElement | null>(null)

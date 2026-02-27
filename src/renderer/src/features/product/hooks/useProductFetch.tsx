@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { ProductType } from "src/renderer/src/shared/utils/types";
+import { ProductType } from "@renderer/shared/utils/types";
 
 type Params = {
   id?: string

@@ -1,11 +1,11 @@
 import { ReactNode } from "react";
-import FormWrapper from "../../../shared/components/form/FormWrapper";
+import FormWrapper from "@renderer/shared/components/form/FormWrapper";
 import SystemForm from "../components/SystemForm";
 import z from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { SettingsType } from "../utils/type";
 import { useNavigate } from "react-router-dom";
-import Alert from "../../../shared/components/ui/Alert";
+import Alert from "@renderer/shared/components/ui/Alert";
 
 const schema = z.object({
   tax: z.coerce.number(),

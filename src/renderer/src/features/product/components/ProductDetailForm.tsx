@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
-import FormCombobox from '../../../shared/components/form/FormCombobox'
-import FormInput from '../../../shared/components/form/FormInput'
-import Alert from '../../../shared/components/ui/Alert'
-import Button from '../../../shared/components/ui/Button'
+import FormCombobox from '@renderer/shared/components/form/FormCombobox'
+import FormInput from '@renderer/shared/components/form/FormInput'
+import Alert from '@renderer/shared/components/ui/Alert'
+import Button from '@renderer/shared/components/ui/Button'
 
 type Props = {
   categoryOptions?: { label: string, value: string }[]

@@ -1,5 +1,5 @@
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
-import { ProductType } from "../../../shared/utils/types";
+import { ProductType } from "@renderer/shared/utils/types";
 import { NavigateFunction } from "react-router-dom";
 
 type Params = {

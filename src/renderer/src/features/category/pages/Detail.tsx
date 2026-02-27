@@ -1,4 +1,4 @@
-import FormWrapper from '../../../shared/components/form/FormWrapper'
+import FormWrapper from '@renderer/shared/components/form/FormWrapper'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import z from 'zod'

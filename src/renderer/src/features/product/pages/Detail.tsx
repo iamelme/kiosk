@@ -1,12 +1,12 @@
-import FormWrapper from '../../../shared/components/form/FormWrapper'
+import FormWrapper from '@renderer/shared/components/form/FormWrapper'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import z from 'zod'
-import useBoundStore from '../../../shared/stores//boundStore'
+import useBoundStore from '@renderer/shared/stores//boundStore'
 import useProductFetch from '../hooks/useProductFetch'
 import useSubmit from '../hooks/useSubmit'
 import ProductDetailForm from '../components/ProductDetailForm'
-import Alert from '../../../shared/components/ui/Alert'
+import Alert from '@renderer/shared/components/ui/Alert'
 
 const schema = z
   .object({
