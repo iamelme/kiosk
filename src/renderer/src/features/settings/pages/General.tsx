@@ -1,5 +1,5 @@
-import Alert from '../../../shared/components/ui/Alert'
-import Button from '../../../shared/components/ui/Button'
+import Alert from '@renderer/shared/components/ui/Alert'
+import Button from '@renderer/shared/components/ui/Button'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 
@@ -56,7 +56,7 @@ export default function GeneralPage(): ReactNode {
         <div className="col-span-3">
           <h3 className="font-medium">Logo</h3>
           <p className="text-xs text-slate-500">
-            Upload your company logo
+            Upload your company logo. This will be use in your sales invoice pdf.
           </p>
         </div>
         <div className="col-span-4">
