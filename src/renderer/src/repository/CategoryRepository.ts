@@ -135,7 +135,7 @@ export class CategoryRepository implements ICategoryRepository {
 
       console.log('create category', category)
 
-      if (category) {
+      if (!category) {
         throw new Error("Something went wrong while saving a category")
       }
       return {
