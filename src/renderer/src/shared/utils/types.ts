@@ -6,6 +6,11 @@ export type UserType = {
   password: string
 }
 
+export type CustomResponseType = {
+  success: boolean
+  error: ErrorType
+}
+
 export type CategoryType = {
   id: number
   name: string
@@ -147,6 +152,18 @@ export type ReturnItemType = {
   sale_item_id: number
   product_id: number
 }
+
+export type ReturnRevenueType = {
+  month: number
+  gross_revenue: number
+  total_return: number
+  net_revenue: number
+} | {
+  month: number
+  gross_revenue: number
+  total_return: number
+  net_revenue: number
+}[]
 
 export type SettingsType = {
   logo: string
