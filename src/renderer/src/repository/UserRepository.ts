@@ -1,18 +1,18 @@
-import { SqliteError } from 'better-sqlite3'
+import { Database, SqliteError } from 'better-sqlite3'
 import { IUserRepository, ReturnType } from '../interfaces/IUserInterRepository'
-import { UserType } from '../shared/utils/types'
+import { CustomResponseType, UserType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 import argon2 from 'argon2'
 
 export class UserRepository implements IUserRepository {
-  private _database
-  constructor(database) {
+  private _database: Database
+  constructor(database: Database) {
     this._database = database
     ipcMain.handle('user:create', (_, params: UserType) => this.create(params))
     ipcMain.handle('user:login', (_, params: UserType) => this.login(params))
   }
 
-  async create(params: UserType): Promise<ReturnType> {
+  async create(params: UserType): Promise<CustomResponseType> {
     const { user_name, password } = params
     const errorMessage = new Error('Something went wrong while creating a user.')
     try {
@@ -23,13 +23,12 @@ export class UserRepository implements IUserRepository {
         WHERE user_name = ?
         `
         )
-        .get(user_name)
+        .get(user_name) as UserType
+
       if (foundUser?.id) {
-        return {
-          data: null,
-          error: new Error('User is already exists.')
-        }
+        throw new Error('User is already exists.')
       }
+
       const hashedPassword = await argon2.hash(password)
       const user = this._database
         .prepare(
@@ -39,27 +38,27 @@ export class UserRepository implements IUserRepository {
             `
         )
         .run(user_name, hashedPassword)
-      if (user) {
-        return {
-          data: user,
-          error: ''
-        }
+
+      if (!user.changes) {
+        throw new Error(errorMessage.message)
       }
+
       return {
-        data: null,
-        error: errorMessage
+        success: true,
+        error: ''
       }
+
     } catch (error) {
       if (error instanceof SqliteError) {
         if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
           return {
-            data: null,
+            success: false,
             error: new Error('Data needs to be unique')
           }
         }
       }
       return {
-        data: null,
+        success: false,
         error: new Error('Something went wrong while saving the user')
       }
     }
@@ -75,7 +74,7 @@ export class UserRepository implements IUserRepository {
         WHERE user_name = ?
         `
         )
-        .get(user_name)
+        .get(user_name) as UserType
 
       console.log('found user', foundUser)
 

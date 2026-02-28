@@ -1,11 +1,12 @@
+import { Database } from 'better-sqlite3'
 import { ICategoryRepository, ReturnType } from '../interfaces/ICategoryRepository'
-import { CategoryType } from '../shared/utils/types'
+import { CategoryType, CustomResponseType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 
 export class CategoryRepository implements ICategoryRepository {
-  private _database
+  private _database: Database
 
-  constructor(database) {
+  constructor(database: Database) {
     this._database = database
     // ipcRenderer.
     ipcMain.handle('category:getAll', () => this.getAll())
@@ -20,7 +21,9 @@ export class CategoryRepository implements ICategoryRepository {
 
   getAll(): { data: CategoryType[] | null; error: Error | string } {
     try {
-      const categories = this._database.prepare('SELECT * FROM categories').all()
+      const categories = this._database
+        .prepare('SELECT * FROM categories')
+        .all() as CategoryType[]
 
       if (categories) {
         return {
@@ -49,7 +52,10 @@ export class CategoryRepository implements ICategoryRepository {
 
   getById(id: number): ReturnType {
     try {
-      const category = this._database.prepare('SELECT * FROM categories WHERE id= ?').get(id)
+      const category = this._database
+        .prepare('SELECT * FROM categories WHERE id= ?')
+        .get(id) as CategoryType
+
       if (category) {
         return {
           data: category,
@@ -79,7 +85,7 @@ export class CategoryRepository implements ICategoryRepository {
     try {
       const category = this._database
         .prepare('SELECT * FROM categories WHERE LOWER(name) = ?')
-        .get(name)
+        .get(name) as CategoryType
 
       console.log('repo category', category)
 
@@ -108,7 +114,7 @@ export class CategoryRepository implements ICategoryRepository {
     }
   }
 
-  create(name: string): ReturnType {
+  create(name: string): CustomResponseType {
     const normalizeName = name?.trim()
 
     // const found = this._database
@@ -130,75 +136,61 @@ export class CategoryRepository implements ICategoryRepository {
       console.log('create category', category)
 
       if (category) {
-        return {
-          data: category,
-          error: ''
-        }
+        throw new Error("Something went wrong while saving a category")
       }
       return {
-        data: null,
-        error: new Error('Something went wrong while saving a category')
+        success: true,
+        error: ''
       }
+
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error: ${error.message}`)
         console.log('error name', error.name)
         if (error instanceof Error) {
           return {
-            data: null,
+            success: true,
             error: new Error('Something went wrong while saving a category.')
           }
         }
       }
       return {
-        data: null,
+        success: true,
         error: new Error('Something went wrong while saving a category')
       }
     }
   }
 
-  update({ id, name }: { id: number; name: string }): ReturnType {
+  update({ id, name }: { id: number; name: string }): CustomResponseType {
     console.log({ id, name })
 
     const normalizeName = name?.trim()
 
-    // const found = this._database.prepare('SELECT id FROM categories WHERE name = ?').get(name)
-
-    // console.log('found', found)
-    // if (found && found.id !== id) {
-    //   return {
-    //     data: null,
-    //     error: new Error('Category already existed')
-    //   }
-    // }
-
     try {
       const stmt = this._database.prepare('UPDATE categories SET name = ? WHERE id = ? RETURNING *')
-      const updatedRow = stmt.get(normalizeName, id)
+      const updatedRow = stmt.run(normalizeName, id)
       console.log('updatedRow', updatedRow)
       console.log(`Rows changed: ${updatedRow.changes}`)
 
-      if (updatedRow?.id) {
-        return {
-          data: updatedRow,
-          error: ''
-        }
+      if (!updatedRow?.changes) {
+        throw new Error("Something went wrong while updating a category")
       }
+
       return {
-        data: null,
-        error: new Error('Something went wrong while updating a category')
+        success: true,
+        error: ""
       }
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error: ${error.message}`)
         console.log('error name', error.name)
         return {
-          data: null,
+          success: false,
           error: new Error('Something went wrong while updating the category.')
         }
       }
       return {
-        data: null,
+        success: false,
         error: new Error('Something went wrong while updating the category.')
       }
     }

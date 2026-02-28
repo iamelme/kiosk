@@ -1,3 +1,4 @@
+import { Database } from 'better-sqlite3'
 import { IInventoryRepository } from '../interfaces/IInventoryRepository'
 import {
   SaleItem,
@@ -6,13 +7,13 @@ import {
   Direction,
   TopItemsType
 } from '../interfaces/ISaleRepository'
-import { ErrorType, PlaceOrderType, SaleType } from '../shared/utils/types'
+import { ErrorType, PlaceOrderType, ReturnRevenueType, SaleItemType, SaleType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 
 export class SaleRepository implements ISaleRepository {
-  private _database
+  private _database: Database
   private _inventory: IInventoryRepository
-  constructor(database, inventory: IInventoryRepository) {
+  constructor(database: Database, inventory: IInventoryRepository) {
     this._database = database
     this._inventory = inventory
     ipcMain.handle(
@@ -87,7 +88,9 @@ export class SaleRepository implements ISaleRepository {
         LIMIT ?`
       }
 
-      const sales = db.prepare(stmt).all(userId, cursorId, startDate, startDate, endDate, endDate, pageSize + 1)
+      const sales = db
+        .prepare(stmt)
+        .all(userId, cursorId, startDate, startDate, endDate, endDate, pageSize + 1) as SaleType[]
 
       // console.log({ sales })
 
@@ -113,52 +116,64 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
-  getByUserId(id: number): ReturnType {
+  getByUserId(id: number): {
+    data: SaleType & { items: SaleItemType[] } | null
+    error: ErrorType
+  } {
     try {
-      let saleItems, sale
-      const transaction = this._database.transaction(() => {
-        console.log('transaction start')
-
-        saleItems = this._database
-          .prepare(
-            `
+      const stmt = `
                 SELECT  si.*, p.price, p.name, p.sku, p.code, i.quantity AS product_quantity
                 FROM sale_items AS si
                 LEFT JOIN products AS p ON p.id = si.product_id
                 LEFT JOIN inventory AS i ON i.product_id = p.id
                 WHERE si.user_id = ?;
                 `
-          )
-          .all(id)
-
-        sale = this._database
-          .prepare(
-            `
+      const stmtSale = `
             SELECT s.id, s.sub_total, s.discount, s.total
             FROM sales AS s
             WHERE user_id = ?
             `
+      const transaction = this._database.transaction(() => {
+        console.log('transaction start')
+
+        const saleItems = this._database
+          .prepare(
+            stmt
           )
-          .get(id)
+          .all(id) as SaleItemType[]
+
+        let sale = this._database
+          .prepare(
+            stmtSale
+          )
+          .get(id) as SaleType
 
         console.log('sale get by user ', sale)
 
         if (!sale) {
-          sale = this.create(id).data
+          const sale = this.create(id).data
           console.log('create sale', sale)
+          return {
+            sale,
+            items: saleItems
+          }
         }
 
-        // get the discount, tax, and compute the total
+        return {
+          sale,
+          items: saleItems
+        }
+
       })
-      transaction()
+      const res = transaction()
 
       // console.log('sale', sale, saleItems)
 
-      if (sale) {
+      if (res.sale) {
         return {
           data: {
-            ...sale,
-            items: saleItems
+            ...res.sale,
+            items: res.items
           },
           error: ''
         }
@@ -196,7 +211,7 @@ export class SaleRepository implements ISaleRepository {
           WHERE s.id = ?
           `
           )
-          .get(id)
+          .get(id) as SaleType & { amount: number, method: string }
 
         const saleItems = db
           .prepare(
@@ -223,7 +238,7 @@ export class SaleRepository implements ISaleRepository {
               si.product_id;
             `
           )
-          .all(id)
+          .all(id) as SaleItemType[]
 
         return {
           sales,
@@ -259,17 +274,7 @@ export class SaleRepository implements ISaleRepository {
   }
 
   getRevenue(params: { startDate: string; endDate: string, isQuarterly?: boolean }): {
-    data: {
-      month: number
-      gross_revenue: number
-      total_return: number
-      net_revenue: number
-    } | {
-      month: number
-      gross_revenue: number
-      total_return: number
-      net_revenue: number
-    }[] | null
+    data: ReturnRevenueType | null
     error: ErrorType
   } {
     const { startDate, endDate, isQuarterly = false } = params
@@ -303,30 +308,32 @@ export class SaleRepository implements ISaleRepository {
               AND
               created_at <= ?
         ) AS r        `
-      let res
+
 
       if (isQuarterly) {
-        res = db
+        const res = db
           .prepare(stmt)
-          .all(startDate, endDate, startDate, endDate)
+          .all(startDate, endDate, startDate, endDate) as ReturnRevenueType
+
+        if (!res) {
+          throw new Error('Something went wrong while  retrieving')
+        }
+
         return {
           data: res,
           error: ''
         }
       } else {
-        res = db
+        const res = db
           .prepare(stmt)
-          .get(startDate, endDate, startDate, endDate)
+          .get(startDate, endDate, startDate, endDate) as ReturnRevenueType
+        if (!res) {
+          throw new Error('Something went wrong while  retrieving')
+        }
         return {
           data: res,
           error: ''
         }
-      }
-
-      console.log(res)
-
-      if (!res) {
-        throw new Error('Something went wrong while  retrieving')
       }
 
 
@@ -409,7 +416,7 @@ export class SaleRepository implements ISaleRepository {
           endDate,
           endDate,
           pageSize
-        )
+        ) as TopItemsType[]
 
       console.log(products)
 
@@ -437,22 +444,29 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
-  create(user_id: number): ReturnType {
+  create(user_id: number): { data: SaleType | null, error: ErrorType } {
     const createdAt = new Date().toISOString()
     try {
-      const stmt = this._database.prepare(`
+      const db = this._database
+
+      const stmtInsert = `
         INSERT INTO sales (created_at, status, user_id)
         VALUES(?, ?, ?)
         RETURNING id
-        `)
+        `
 
-      const sale = stmt.get(createdAt, 'in-progress', user_id)
+
+      const stmt = db.prepare(stmtInsert)
+
+      const sale = stmt.get(createdAt, 'in-progress', user_id) as SaleType
+
 
       console.log('returning sale', sale)
 
-      if (!sale) {
+      if (!sale.id) {
         throw new Error('Something went wrong while creating a sale')
       }
+
 
       return {
         data: sale,
@@ -603,12 +617,16 @@ export class SaleRepository implements ISaleRepository {
     }
   }
 
-  insertItem(params: SaleItem): ReturnType {
+  insertItem(params: SaleItem): {
+    data: Pick<SaleType, "id" | "sub_total" | "discount" | "total"> & { items: SaleItemType[] } | null
+    error: ErrorType
+  } {
     const { sale_id, product_id, user_id } = params
     try {
-      let items
       let saleId = sale_id
-      const transaction = this._database.transaction(() => {
+
+      const db = this._database
+      const transaction = db.transaction(() => {
         if (!sale_id) {
           const sale = this.create(user_id).data
           if (sale) {
@@ -616,7 +634,7 @@ export class SaleRepository implements ISaleRepository {
           }
         }
 
-        const foundItem = this._database
+        const foundItem = db
           .prepare(
             `
           SELECT si.*, i.quantity AS product_quantity
@@ -625,7 +643,7 @@ export class SaleRepository implements ISaleRepository {
           WHERE si.product_id = ?;
           `
           )
-          .get(product_id)
+          .get(product_id) as SaleItemType
 
         // check if product is in the sale items
         // then update the sale item's quantity if not exceed to product's quantity
@@ -637,7 +655,7 @@ export class SaleRepository implements ISaleRepository {
             throw new Error('You cannot add more to this product')
           }
 
-          this._database
+          db
             .prepare(
               `
             UPDATE sale_items
@@ -647,7 +665,7 @@ export class SaleRepository implements ISaleRepository {
             )
             .run(foundItem.id)
         } else {
-          this._database
+          db
             .prepare(
               `
             INSERT INTO sale_items (quantity, sale_id, product_id, user_id)
@@ -660,27 +678,27 @@ export class SaleRepository implements ISaleRepository {
         // select all items
         // calculate the subtotal, discount, and total
 
-        items = this._database
+        const items = db
           .prepare(
             `SELECT *
             FROM sale_items AS si
             LEFT JOIN products AS p ON p.id = si.product_id
             WHERE sale_id = ?`
           )
-          .all(saleId)
+          .all(saleId) as SaleItemType[]
 
         console.log('from insert', { items })
 
         const subTotal = items?.reduce((acc, cur) => (acc += cur.quantity * cur.price), 0)
 
-        const saleDiscount = this._database
+        const saleDiscount = db
           .prepare(
             `SELECT discount
           FROM sales
           WHERE id = ?
           `
           )
-          .get(saleId)
+          .get(saleId) as SaleType
 
         console.log('discount', saleDiscount, subTotal)
 
@@ -688,31 +706,36 @@ export class SaleRepository implements ISaleRepository {
 
         console.log('total', total)
 
-        this._database
+        db
           .prepare(
             `UPDATE sales
           SET sub_total = ?,
           total = ?
           WHERE id = ?`
-          )
-          .run(subTotal, total, saleId)
+          ).run(subTotal, total, saleId)
 
         console.log('done inserting')
 
         return {
-          data: items,
+          data: {
+            id: saleId,
+            items: items,
+            sub_total: subTotal,
+            discount: saleDiscount.discount,
+            total,
+          },
           error: ''
         }
       })
 
-      const result = transaction()
+      const res = transaction()
 
-      if (!result) {
+      if (!res) {
         throw new Error('Something went wrong while creating an item the product')
       }
 
       return {
-        data: items,
+        data: res.data,
         error: ''
       }
     } catch (error) {
@@ -756,7 +779,7 @@ export class SaleRepository implements ISaleRepository {
       const transaction = db.transaction(() => {
         const sales = stmt.run(status, id)
 
-        const items = itemStmt.all(id)
+        const items = itemStmt.all(id) as Array<SaleItemType & { old_quantity: number }>
 
         const isVoid = status === 'void'
 

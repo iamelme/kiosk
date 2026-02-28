@@ -1,11 +1,12 @@
+import { Database } from 'better-sqlite3'
 import { SettingsType } from '../features/settings/utils/type'
 import { ISettingRepository } from '../interfaces/ISettingRepository'
 import { ipcMain } from 'electron'
 
 export class SettingsRepository implements ISettingRepository {
-  private _database
+  private _database: Database
 
-  constructor(database) {
+  constructor(database: Database) {
     this._database = database
 
     ipcMain.handle('settings:get', () => this.get())
@@ -19,7 +20,7 @@ export class SettingsRepository implements ISettingRepository {
     error: Error | string
   } {
     try {
-      const settings = this._database.prepare(`SELECT * FROM settings`).get()
+      const settings = this._database.prepare(`SELECT * FROM settings`).get() as SettingsType
       return {
         data: settings,
         error: ''
