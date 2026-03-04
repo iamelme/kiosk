@@ -69,6 +69,9 @@ export type ReturnCartType = {
   items: CartItemType[]
   sub_total: number
   discount: number
+  vatable_sales: number
+  vat_amount: number
+  tax: number
   total: number
 }
 
@@ -128,6 +131,8 @@ export type PlaceOrderType = {
   customer_name?: string
   user_id: number
 }
+
+export type PaymentMethod = 'cash' | 'card' | 'e-wallet'
 
 export type ReturnType = {
   id: number
