@@ -215,22 +215,21 @@ export class AppDatabase {
 
             END;
 
-            CREATE TRIGGER IF NOT EXISTS products_after_insert 
+            CREATE TRIGGER IF NOT EXISTS products_after_insert
             AFTER INSERT ON products
             BEGIN
 
-              INSERT INTO inventory (product_id) VALUES(NEW.id);
-              UPDATE counts SET products = products + 1;
+              INSERT INTO inventory (product_id, quantity) VALUES(NEW.id, 0);
 
-              INSERT INTO products_fts (product_id, name, sku, code) 
+              INSERT INTO products_fts (product_id, name, sku, code)
               VALUES(NEW.id, NEW.name, NEW.sku, NEW.code);
             END;
 
-            CREATE TRIGGER IF NOT EXISTS products_after_update 
+            CREATE TRIGGER IF NOT EXISTS products_after_update
             AFTER UPDATE ON products
             BEGIN
 
-              UPDATE products_fts 
+              UPDATE products_fts
               SET name = NEW.name, sku = NEW.sku, code = NEW.code
               WHERE product_id = OLD.id;
             END;
@@ -239,11 +238,9 @@ export class AppDatabase {
             AFTER DELETE ON products
             BEGIN
 
-              UPDATE counts SET products = products - 1;
-              
-              DELETE FROM inventory 
+              DELETE FROM inventory
               WHERE product_id = OLD.id;
-              
+
               DELETE FROM products_fts
               WHERE product_id = OLD.id;
             END;

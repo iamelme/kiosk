@@ -17,16 +17,16 @@ const schema = z
     price: z.coerce.number(),
     cost: z.coerce.number(),
     code: z.coerce.number(),
-    quantity: z.coerce.number().nonnegative(),
-    category_id: z.coerce.number(),
-    inventory_id: z.coerce.number()
+    quantity: z.coerce.number().nonnegative().default(0),
+    category_id: z.coerce.number().nullish(),
+    inventory_id: z.coerce.number().nullish()
   })
   .superRefine(async (data, ctx) => {
     console.log({ data }, { ctx })
 
     const normalizeCode = Number(data?.code)
 
-    if (data.category_id === 0) {
+    if (!data.category_id) {
       ctx.addIssue({
         code: 'custom',
         message: 'There must be a category.',
@@ -112,7 +112,7 @@ export default function Detail(): React.JSX.Element {
         onSubmit={mutate}
         key={id}
       >
-        <ProductDetailForm categoryOptions={categoryOptions} errorMessage={mutateError?.message} />
+        <ProductDetailForm isNew={id === "new"} categoryOptions={categoryOptions} errorMessage={mutateError?.message} />
       </FormWrapper>
     </div>
   )
