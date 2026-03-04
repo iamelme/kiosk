@@ -5,11 +5,12 @@ import Alert from '@renderer/shared/components/ui/Alert'
 import Button from '@renderer/shared/components/ui/Button'
 
 type Props = {
+  isNew: boolean
   categoryOptions?: { label: string, value: string }[]
   errorMessage?: string
 }
 
-export default function ProductDetailForm({ categoryOptions, errorMessage }: Props): ReactNode {
+export default function ProductDetailForm({ isNew, categoryOptions, errorMessage }: Props): ReactNode {
 
   return (
     <>

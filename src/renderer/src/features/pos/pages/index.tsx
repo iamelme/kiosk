@@ -4,7 +4,7 @@ import Button from '@renderer/shared/components/ui/Button'
 import Input from '@renderer/shared/components/ui/Input'
 import Price from '@renderer/shared/components/ui/Price'
 import useBoundStore from '@renderer/shared/stores//boundStore'
-import { ReactNode, useEffect, useRef, useState } from 'react'
+import { ReactNode, useCallback, useRef, useState } from 'react'
 import { Trash2 } from 'react-feather'
 import { NumericFormat } from 'react-number-format'
 import CartItems from '../components/CartItems'
@@ -16,6 +16,7 @@ import useDiscount from '../hooks/useDiscount'
 import useRemoveItem from '../hooks/useRemoveItem'
 import useUpdateItemQty from '../hooks/useUpdateItemQty'
 import usePlaceOrder from '../hooks/usePlaceOrder'
+import { CartItemType } from '@renderer/shared/utils/types'
 
 export default function POS(): ReactNode {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -26,11 +27,11 @@ export default function POS(): ReactNode {
 
   const [discount, setDiscount] = useState(0)
 
-  const debounceValue = useDebounce(String(discount))
+  // const debounceValue = useDebounce(String(discount))
+  //
+  // console.log({ debounceValue })
 
-  console.log({ debounceValue })
-
-  const setBtnRef = (item, el: HTMLElement | null): void => {
+  const setBtnRef = (item: CartItemType, el: HTMLElement | null): void => {
     if (el) {
       btnUpdateQtyRef.current[item.id] = el
       btnUpdateQtyRef.current[item.id].quantity = item.quantity
@@ -93,6 +94,9 @@ export default function POS(): ReactNode {
         items: data.items,
         sub_total: data.sub_total,
         discount: data.discount,
+        vatable_sales: data.vatable_sales,
+        vat_amount: data.vat_amount,
+        tax: data.tax,
         total: data.total
       },
       amount: amount ?? 0,
@@ -138,22 +142,22 @@ export default function POS(): ReactNode {
         )}
       </div>
 
-      <aside className="w-[250px] ms-3 p-4 bg-white rounded-md border border-slate-300">
-        <div className="flex justify-between gap-x-2">
-          <h2 className="font-bold mb-3">Order Summary</h2>
-          <div>
-            <Button
-              disabled={!data?.items?.length}
-              variant="danger"
-              size="icon"
-              title="Remove Order"
-              onClick={handleClearCart}
-            >
-              <Trash2 size={14} />
-            </Button>
+      <aside className="w-[250px] ms-3">
+        <div className="mb-3 p-4 bg-white rounded-md border border-slate-300">
+          <div className="flex justify-between gap-x-2 mb-3">
+            <h2 className="font-bold mb-3">Order Summary</h2>
+            <div>
+              <Button
+                disabled={!data?.items?.length}
+                variant="danger"
+                size="icon"
+                title="Remove Order"
+                onClick={handleClearCart}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="mb-3">
           <Summary
             data={data}
             onChangeDiscount={(v) => {
@@ -169,7 +173,7 @@ export default function POS(): ReactNode {
           </Summary>
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3 p-4 bg-white rounded-md border border-slate-300">
           <h3 className="mb-2 font-bold">Customer</h3>
           <div className="my-3">
             <label htmlFor="customerNameRef">Name</label>
@@ -177,11 +181,11 @@ export default function POS(): ReactNode {
           </div>
         </div>
 
-        <div className="mb-3">
+        <div className="mb-3 p-4 bg-white rounded-md border border-slate-300">
           <h3 className="mb-2 font-bold">Payment</h3>
 
           <div className="mb-3">
-            <label htmlFor="method">Method</label>
+            <label htmlFor="method" className="block mb-1">Method</label>
             <select
               id="method"
               onChange={(e) => setPaymentMethod(e.target.value)}

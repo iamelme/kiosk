@@ -54,8 +54,8 @@ export class AppDatabase {
 
             CREATE TABLE IF NOT EXISTS products(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-              updated_at DATETIME,
+                created_at DATETIME,
+                updated_at DATETIME,
                 name TEXT UNIQUE NOT NULL,
                 sku TEXT UNIQUE NOT NULL,
                 description TEXT NOT NULL,
@@ -64,7 +64,11 @@ export class AppDatabase {
                 cost INTEGER DEFAULT 0,
                 is_active INTEGER DEFAULT 1,
                 category_id INTEGER,
-                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL           
+                user_id INTEGER,
+                updated_by INTEGER,
+                FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
             );
 
             CREATE TABLE IF NOT EXISTS sales(
@@ -183,14 +187,17 @@ export class AppDatabase {
               sub_total INTEGER DEFAULT 0,
               discount INTEGER DEFAULT 0,
               total INTEGER DEFAULT 0,
+              vatable_sales INTEGER DEFAULT 0,
+              vat_amount INTEGER DEFAULT 0,
+              tax INTEGER DEFAULT 0,
               user_id INTEGER,
               FOREIGN KEY (user_id) REFERENCES users(id)
-            ); 
-    
+            );
+
             CREATE TABLE IF NOT EXISTS cart_items(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               quantity INTEGER,
-              cart_id INTEGER,             
+              cart_id INTEGER,
               product_id INTEGER,
               user_id INTEGER,
               FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,

@@ -7,6 +7,9 @@ const data = {
   id: 1,
   sub_total: 9200,
   discount: 0,
+  vatable_sales: (9200 / (1.12)),
+  vat_amount: (9200 - (9200 / (1.12))),
+  tax: 12,
   total: 9200,
   items: [
     {
