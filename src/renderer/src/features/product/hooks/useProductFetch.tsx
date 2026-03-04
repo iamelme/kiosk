@@ -33,11 +33,13 @@ export default function useProductFetch({ id }: Params): UseQueryResult<Omit<Pro
         sku: '',
         description: '',
         price: 0,
-        quantity: 1,
+        quantity: 0,
         code: 0,
         cost: 0,
-        category_id: 0,
-        inventory_id: 0
+        user_id: null,
+        updated_by: null,
+        category_id: null,
+        inventory_id: null
       }
     }
 

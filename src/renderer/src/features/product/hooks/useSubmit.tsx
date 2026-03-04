@@ -28,7 +28,11 @@ export default function useSubmit({ id, userId, onNavigate, onInvalidate }: Para
         onNavigate(-1)
         return
       }
-      const { error } = await window.apiProduct.createProduct(newData)
+      const { error } = await window.apiProduct.createProduct({
+        ...newData,
+        user_id: userId,
+        updated_by: userId
+      })
 
       if (error) {
         throw new Error(error.message)

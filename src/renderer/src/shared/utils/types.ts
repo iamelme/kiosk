@@ -25,8 +25,10 @@ export type ProductType = {
   cost: number
   code: number
   quantity: number
-  category_id: number
-  inventory_id: number
+  user_id: number | null
+  updated_by: number | null
+  category_id: number | null
+  inventory_id: number | null
 }
 
 export const movementType = {

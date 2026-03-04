@@ -21,7 +21,7 @@ export default function ProductDetailForm({ isNew, categoryOptions, errorMessage
       <FormInput label="Description" name="description" />
       <FormInput label="Price" name="price" required />
       <FormInput label="Cost" name="cost" required />
-      <FormInput label="Quantity" name="quantity" required />
+      <FormInput label="Quantity" name="quantity" required={isNew} disabled={isNew} helperText={`${isNew ? "Initial quantity for new product is 0" : ""}`} />
       <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} required />
       {errorMessage && (
         <Alert variant="danger" className="mt-3">
