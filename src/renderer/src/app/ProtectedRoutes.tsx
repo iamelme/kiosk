@@ -1,30 +1,39 @@
-import useBoundStore from '../shared/stores//boundStore'
-import { ReactNode, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import useBoundStore from "../shared/stores//boundStore";
+import { ReactNode, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function ProtectedRoutes({ children }: { children: ReactNode }): ReactNode {
-  const user = useBoundStore((state) => state.user)
-  const userUpdate = useBoundStore((state) => state.updateUser)
+export default function ProtectedRoutes({
+  children,
+}: {
+  children: ReactNode;
+}): ReactNode {
+  const user = useBoundStore((state) => state.user);
+  const userUpdate = useBoundStore((state) => state.updateUser);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const navigate = useNavigate()
-
-  console.log('user protected routes', user)
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user?.id) {
-      const auth = localStorage.getItem('auth')
+      const auth = localStorage.getItem("app");
       if (auth) {
-        const state = JSON.parse(auth)
+        const state = JSON.parse(auth);
         if (state?.state?.user?.id) {
-          userUpdate(state.state.user)
-          console.log(JSON.parse(auth))
-          navigate('/')
+          userUpdate(state.state.user);
+          setIsLoading(false);
+          navigate("/");
         }
       }
 
-      navigate('/login')
+      navigate("/login");
     }
-  }, [user, navigate, userUpdate])
 
-  return children
+    setIsLoading(false);
+  }, [user, navigate, userUpdate]);
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+
+  return children;
 }
