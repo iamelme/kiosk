@@ -31,7 +31,8 @@ export class AppDatabase {
               locale TEXT DEFAULT 'en-PH',
               logo TEXT,
               tax INTEGER DEFAULT 0,
-              is_tax_inclusive INTEGER DEFAULT 1
+              is_tax_inclusive INTEGER DEFAULT 1,
+              is_redirect_to_sales INTEGER DEFAULT 0
             );
 
             INSERT OR IGNORE INTO settings (id) VALUES(1);
