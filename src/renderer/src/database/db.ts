@@ -1,7 +1,7 @@
-import { join } from 'path'
-import Database from 'better-sqlite3'
+import { join } from "path";
+import Database, { type Database as DatabaseType } from "better-sqlite3";
 // import { type Database as DatabaseType, Database } from 'better-sqlite3'
-import { app } from 'electron'
+import { app } from "electron";
 
 // const dbPath =
 //   process.env.NODE_ENV === 'development'
@@ -12,15 +12,15 @@ import { app } from 'electron'
 // db.pragma('journal_mode = WAL')
 
 export class AppDatabase {
-  private db
+  db: DatabaseType;
 
   constructor() {
-    const dbPath = join(app.getPath('userData'), 'kiosk.sqlite')
-    console.log('dbpath', dbPath)
+    const dbPath = join(app.getPath("userData"), "kiosk.sqlite");
+    console.log("dbpath", dbPath);
 
-    this.db = new Database(dbPath)
-    this.db.pragma('journal_mode = WAL')
-    this.setUp()
+    this.db = new Database(dbPath);
+    this.db.pragma("journal_mode = WAL");
+    this.setUp();
   }
 
   setUp(): void {
@@ -233,9 +233,9 @@ export class AppDatabase {
               WHERE product_id = OLD.id;
             END;
 
-            `
-    )
+            `,
+    );
 
-    console.log('database is created')
+    console.log("database is created");
   }
 }

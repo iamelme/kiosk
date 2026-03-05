@@ -1,21 +1,29 @@
-import fs from 'fs'
-import { app, shell, BrowserWindow, ipcMain, dialog, protocol, net } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
-import { AppDatabase } from '../renderer/src/database/db'
-import { CategoryRepository } from '../renderer/src/repository/CategoryRepository'
-import { ProductRepository } from '../renderer/src/repository/ProductRepository'
-import { InventoryRepository } from '../renderer/src/repository/InventoryRepository'
-import { UserRepository } from '../renderer/src/repository/UserRepository'
-import { CartRepository } from '../renderer/src/repository/CartRepository'
-import { SaleRepository } from '../renderer/src/repository/SaleRepository'
-import { ReturnRepository } from '../renderer/src/repository/ReturnRepository'
-import { SettingsRepository } from '../renderer/src/repository/SettingsRepository'
-import createPDF from './createInvoicePDF'
-import { ReturnSaleType } from '../renderer/src/shared/utils/types'
-
-export let db
+import fs from "fs";
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  protocol,
+  net,
+} from "electron";
+import { join } from "path";
+import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import icon from "../../resources/icon.png?asset";
+import { AppDatabase } from "../renderer/src/database/db";
+import { CategoryRepository } from "../renderer/src/repository/CategoryRepository";
+import { ProductRepository } from "../renderer/src/repository/ProductRepository";
+import { InventoryRepository } from "../renderer/src/repository/InventoryRepository";
+import { UserRepository } from "../renderer/src/repository/UserRepository";
+import { CartRepository } from "../renderer/src/repository/CartRepository";
+import { SaleRepository } from "../renderer/src/repository/SaleRepository";
+import { ReturnRepository } from "../renderer/src/repository/ReturnRepository";
+import { SettingsRepository } from "../renderer/src/repository/SettingsRepository";
+import createPDF from "./createInvoicePDF";
+import { ReturnSaleType } from "../renderer/src/shared/utils/types";
+import { hashPassword } from "./hashPassword";
+import verifyPassword from "./verifyPassword";
 
 function createWindow(): void {
   // Create the browser window.
@@ -24,33 +32,35 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === "linux" ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
+      preload: join(__dirname, "../preload/index.js"),
+      sandbox: false,
+    },
+  });
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+  mainWindow.on("ready-to-show", () => {
+    mainWindow.show();
+  });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+    shell.openExternal(details.url);
+    return { action: "deny" };
+  });
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+    mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
 
-const protocolName = 'elme-cute'
-protocol.registerSchemesAsPrivileged([{ scheme: protocolName, privileges: { bypassCSP: true } }])
+const protocolName = "elme-cute";
+protocol.registerSchemesAsPrivileged([
+  { scheme: protocolName, privileges: { bypassCSP: true } },
+]);
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -62,100 +72,159 @@ app.whenReady().then(() => {
     // const userDataPath = app.getPath('userData')
     // return net.fetch(`${protocolName}://${userDataPath}`)
 
-    const url = request.url.replace(`${protocolName}://`, 'file://')
-    return net.fetch(url)
+    const url = request.url.replace(`${protocolName}://`, "file://");
+    return net.fetch(url);
 
     // const filePath = request.url.slice(`${protocolName}://`.length)
     // Serve a file from your application directory
     // return net.fetch(url.pathToFileURL(path.resolve(__dirname, filePath)).toString())
-  })
+  });
 
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId("com.electron");
 
-  db = new AppDatabase()
+  const db = new AppDatabase();
 
-  const inventory = new InventoryRepository(db.db)
+  const inventory = new InventoryRepository(db.db);
 
-  new CategoryRepository(db.db)
-  new ProductRepository(db.db, inventory)
-  new UserRepository(db.db)
-  new CartRepository(db.db)
-  new SaleRepository(db.db, inventory)
-  new SettingsRepository(db.db)
-  new ReturnRepository(db.db, inventory)
+  new CategoryRepository(db.db);
+  new ProductRepository(db.db, inventory);
+  new UserRepository(db.db, hashPassword, verifyPassword);
+  new CartRepository(db.db);
+  new SaleRepository(db.db, inventory);
+  new SettingsRepository(db.db);
+  new ReturnRepository(db.db, inventory);
 
   // console.log('db from main', db)
 
   // const locale = app.getLocale()
   // console.log('Current application locale:', locale)
 
-  ipcMain.handle('get-locale', () => {
-    return app.getLocale()
-  })
+  ipcMain.handle("get-locale", () => {
+    return app.getLocale();
+  });
 
-  ipcMain.handle('create-pdf', (_, params: ReturnSaleType & { logo: string }) => {
-    return createPDF(params)
-  })
+  ipcMain.handle(
+    "create-pdf",
+    (
+      _,
+      params: ReturnSaleType & {
+        logo: string;
+        locale: string;
+        currency: string;
+      },
+    ) => {
+      return createPDF(params);
+    },
+  );
 
-  ipcMain.handle('upload-logo', async (event) => {
-    const userDataPath = app.getPath('userData')
-    const imagePath = join(userDataPath, './assets/images')
+  ipcMain.handle("print-pdf", async (_, arrayBuffer) => {
+    const printWin = new BrowserWindow({ show: false });
+
+    // Convert ArrayBuffer → base64 data URL
+    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    const dataUrl = `data:application/pdf;base64,${base64}`;
+
+    await printWin.loadURL(dataUrl);
+
+    printWin.webContents.on("did-finish-load", () => {
+      // 4. Print
+      printWin.webContents.print(
+        {
+          silent: true,
+          printBackground: true,
+        },
+        (success, failureReason) => {
+          if (!success) console.error(failureReason);
+          printWin.close(); // Close the hidden printWindow
+        },
+      );
+    });
+
+    // // Wait for it to finish rendering
+    // await new Promise((resolve) =>
+    //   printWin.webContents.once("zoom-changed", resolve),
+    // );
+    //
+    // printWin.webContents.print(
+    //   { silent: true, printBackground: true },
+    //   (success, errorType) => {
+    //     console.log({ success });
+    //     if (!success) console.error("Print failed:", errorType);
+    //     printWin.close();
+    //   },
+    // );
+  });
+
+  ipcMain.handle("hash-password", async (_, password: string) => {
+    return hashPassword(password);
+  });
+
+  ipcMain.handle(
+    "verify-password",
+    async (_, params: { hashedPassword: string; password: string }) => {
+      console.log("handle main verify-password", params);
+      return verifyPassword(params.hashedPassword, params.password);
+    },
+  );
+
+  ipcMain.handle("upload-logo", async (event) => {
+    const userDataPath = app.getPath("userData");
+    const imagePath = join(userDataPath, "./assets/images");
     if (!fs.existsSync(imagePath)) {
-      fs.mkdirSync(imagePath, { recursive: true })
+      fs.mkdirSync(imagePath, { recursive: true });
     }
 
     const res = await dialog.showOpenDialog({
-      properties: ['openFile']
-    })
+      properties: ["openFile"],
+    });
 
     if (!res.canceled && res.filePaths.length > 0) {
-      const filePath = res.filePaths[0]
+      const filePath = res.filePaths[0];
 
-      const destPath = join(userDataPath, `./assets/images/logo.webp`)
+      const destPath = join(userDataPath, `./assets/images/logo.webp`);
       fs.copyFile(filePath, destPath, (err) => {
         if (err) {
-          console.error('Save failed:', err)
-          throw new Error(err.message)
+          console.error("Save failed:", err);
+          throw new Error(err.message);
         }
-        console.log('File saved successfully at:', destPath)
+        console.log("File saved successfully at:", destPath);
 
         const mainWindow = BrowserWindow.fromWebContents(event.sender);
-        if (mainWindow)
-          mainWindow.webContents.send('upload-complete');
-      })
+        if (mainWindow) mainWindow.webContents.send("upload-complete");
+      });
 
-      return destPath
+      return destPath;
     }
-    throw new Error('Something went wrong while uploading the logo')
-  })
+    throw new Error("Something went wrong while uploading the logo");
+  });
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+  app.on("browser-window-created", (_, window) => {
+    optimizer.watchWindowShortcuts(window);
+  });
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on("ping", () => console.log("pong"));
 
-  createWindow()
+  createWindow();
 
-  app.on('activate', function () {
+  app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
