@@ -1,114 +1,135 @@
-import { Database, SqliteError } from 'better-sqlite3'
-import { IUserRepository, ReturnType } from '../interfaces/IUserInterRepository'
-import { CustomResponseType, UserType } from '../shared/utils/types'
-import { ipcMain } from 'electron'
-import argon2 from 'argon2'
+import { Database, SqliteError } from "better-sqlite3";
+import {
+  IUserRepository,
+  ReturnType,
+} from "../interfaces/IUserInterRepository";
+import { CustomResponseType, UserType } from "../shared/utils/types";
+import { ipcMain } from "electron";
+// import argon2 from "argon2";
 
 export class UserRepository implements IUserRepository {
-  private _database: Database
-  constructor(database: Database) {
-    this._database = database
-    ipcMain.handle('user:create', (_, params: UserType) => this.create(params))
-    ipcMain.handle('user:login', (_, params: UserType) => this.login(params))
+  private _database: Database;
+  private _verifyPassword: (
+    hashed: string,
+    password: string,
+  ) => Promise<boolean>;
+  private _hashPassword: (password: string) => Promise<string | false>;
+
+  constructor(
+    database: Database,
+    hashPasswod: (password: string) => Promise<string | false>,
+    verifyPassword: (hashed: string, password: string) => Promise<boolean>,
+  ) {
+    this._database = database;
+    this._hashPassword = hashPasswod;
+    this._verifyPassword = verifyPassword;
+
+    ipcMain.handle("user:create", (_, params: UserType) => this.create(params));
+    ipcMain.handle("user:login", (_, params: UserType) => this.login(params));
   }
 
   async create(params: UserType): Promise<CustomResponseType> {
-    const { user_name, password } = params
-    const errorMessage = new Error('Something went wrong while creating a user.')
+    const { user_name, password } = params;
+    const errorMessage = new Error(
+      "Something went wrong while creating a user.",
+    );
     try {
       const foundUser = this._database
         .prepare(
           `
         SELECT * FROM users
         WHERE user_name = ?
-        `
+        `,
         )
-        .get(user_name) as UserType
+        .get(user_name) as UserType;
 
       if (foundUser?.id) {
-        throw new Error('User is already exists.')
+        throw new Error("User is already exists.");
       }
+      // const res = await window.apiElectron.createPDF({
+      //   ...data,
+      //   logo: settings?.logo as string,
+      // });
 
-      const hashedPassword = await argon2.hash(password)
+      // const hashedPassword = await argon2.hash(password)
+
+      const hashedPassword = await this._hashPassword(password);
       const user = this._database
         .prepare(
           `
             INSERT INTO users (user_name, password)
             VALUES(?, ?)
-            `
+            `,
         )
-        .run(user_name, hashedPassword)
+        .run(user_name, hashedPassword);
 
       if (!user.changes) {
-        throw new Error(errorMessage.message)
+        throw new Error(errorMessage.message);
       }
 
       return {
         success: true,
-        error: ''
-      }
-
+        error: "",
+      };
     } catch (error) {
       if (error instanceof SqliteError) {
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
           return {
             success: false,
-            error: new Error('Data needs to be unique')
-          }
+            error: new Error("Data needs to be unique"),
+          };
         }
       }
       return {
         success: false,
-        error: new Error('Something went wrong while saving the user')
-      }
+        error: new Error("Something went wrong while saving the user"),
+      };
     }
   }
 
   async login(params: UserType): Promise<ReturnType> {
-    const { user_name, password } = params
+    const { user_name, password } = params;
     try {
       const foundUser = this._database
         .prepare(
           `
         SELECT * FROM users
         WHERE user_name = ?
-        `
+        `,
         )
-        .get(user_name) as UserType
-
-      console.log('found user', foundUser)
+        .get(user_name) as UserType;
 
       if (foundUser) {
-        if (await argon2.verify(foundUser.password, password)) {
+        if (await this._verifyPassword(foundUser.password, password)) {
           return {
             data: foundUser,
-            error: ''
-          }
+            error: "",
+          };
         } else {
           return {
             data: null,
-            error: new Error('User name or password is incorrect.')
-          }
+            error: new Error("User name or password is incorrect."),
+          };
         }
       }
 
       return {
         data: null,
-        error: new Error('Something went wrong while signing up.')
-      }
+        error: new Error("Something went wrong while signing up."),
+      };
     } catch (error) {
       if (error instanceof SqliteError) {
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
           return {
             data: null,
-            error: new Error('Data needs to be unique')
-          }
+            error: new Error("Data needs to be unique"),
+          };
         }
       }
       return {
         data: null,
-        error: new Error('Something went wrong while saving the user')
-      }
+        error: new Error("Something went wrong while saving the user"),
+      };
     }
   }
 }
