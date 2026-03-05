@@ -1,5 +1,5 @@
 import { useMutation, UseMutationResult, useQueryClient } from '@tanstack/react-query'
-import { PlaceOrderType } from '../../../shared/utils/types'
+import { PlaceOrderType } from '@renderer/shared/utils/types'
 
 type Props = {
   onRemoveCart?: () => void

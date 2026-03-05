@@ -10,11 +10,11 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { getCurrentQuarterDates } from "../../../shared/utils";
+import { getCurrentQuarterDates } from "@renderer/shared/utils";
 import { useQuery } from "@tanstack/react-query";
-import Alert from "../../../shared/components/ui/Alert";
+import Alert from "@renderer/shared/components/ui/Alert";
 import { monthSaleMapper } from "../utils";
-import Card from "../../../shared/components/ui/Card";
+import Card from "@renderer/shared/components/ui/Card";
 
 ChartJS.register(
   CategoryScale,

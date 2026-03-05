@@ -1,4 +1,4 @@
-import { Direction, ProductType } from '../shared/utils/types'
+import { CustomResponseType, Direction, ProductType } from '../shared/utils/types'
 
 type CreateProduct = Omit<ProductType, 'id'>
 
@@ -17,10 +17,7 @@ export interface IProductRepository {
     data: Array<ProductType & { quantity: number; category_name: string }> | null
     error: Error | string
   }
-  create(params: CreateProduct): {
-    data: ProductType | null
-    error: Error | string
-  }
-  update(params: ProductType & { quantity: number, user_id: number }): ReturnType
-  delete(id: number): { success: boolean; error: Error | string }
+  create(params: CreateProduct): CustomResponseType
+  update(params: ProductType & { quantity: number, user_id: number }): CustomResponseType
+  delete(id: number): CustomResponseType
 }

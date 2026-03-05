@@ -1,9 +1,11 @@
+import { Database } from 'better-sqlite3'
 import { CartItem, ICartRepository, ReturnType } from '../interfaces/ICartRepository'
 import { ipcMain } from 'electron'
+import { CartItemType, InventoryType, ReturnCartType, SettingsType } from '@renderer/shared/utils/types'
 
 export class CartRepository implements ICartRepository {
-  private _database
-  constructor(database) {
+  private _database: Database
+  constructor(database: Database) {
     this._database = database
     ipcMain.handle('cart:getByUserId', (_, id: number) => this.getByUserId(id))
     ipcMain.handle(
@@ -21,53 +23,76 @@ export class CartRepository implements ICartRepository {
     )
     ipcMain.handle('cart:deleteAllItems', (_, cart_id: number) => this.deleteAllItems(cart_id))
   }
+
   getByUserId(id: number): ReturnType {
     try {
-      const transaction = this._database.transaction(() => {
-        const cartItems = this._database
-          .prepare(
-            `
+      const db = this._database
+
+      const stmtItems = `
                 SELECT  ci.*, p.price, p.cost, p.name, p.sku, p.code, i.quantity AS product_quantity
                 FROM cart_items AS ci
                 LEFT JOIN products AS p ON p.id = ci.product_id
                 LEFT JOIN inventory AS i ON i.product_id = p.id
                 WHERE ci.user_id = ?;
                 `
-          )
-          .all(id)
 
-        const cart = this._database
-          .prepare(
-            `
-            SELECT c.id, c.sub_total, c.discount, c.total 
+      const stmtCarts = `
+            SELECT c.id, c.sub_total, c.tax, c.discount, c.vatable_sales, c.vat_amount, c.total
             FROM carts AS c
             WHERE user_id = ?
             `
-          )
-          .get(id)
+      const stmtCart = `
+        INSERT INTO
+          carts
+          (is_active, user_id)
+        VALUES
+          (?, ?)
+        RETURNING *
+      `
+      const transaction = db.transaction(() => {
 
-        // get the discount, tax, and compute the total
+        let cart = db
+          .prepare(stmtCarts)
+          .get(id) as ReturnCartType
+
+        if (!cart) {
+          cart = db.prepare(stmtCart).get(1, id) as ReturnCartType
+        }
+
+        const cartItems = db
+          .prepare(stmtItems)
+          .all(id)
+
+        // const taxAmount = (subTotal / (1 + (tax / 100)))
+        //
+        // if (is_tax_inclusive) {
+        //   subTotal = taxAmount
+        // } else {
+        //   subTotal = subTotal + taxAmount
+        // }
 
         return {
           ...cart,
-          items: cartItems
+          items: cartItems as CartItemType[]
         }
       })
+
       const res = transaction()
 
       if (!res) {
         throw new Error('Something went wrong while retrieving the product.')
       }
+
       return {
         data: res,
         error: ''
       }
     } catch (error) {
-      console.log('inside catch', error)
+      console.log("catch error", error)
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error('Something went wrong while retrieving the product')
+          error: error
         }
       }
       return {
@@ -87,25 +112,33 @@ export class CartRepository implements ICartRepository {
       console.log({ normalizeDiscount })
       const db = this._database
 
-      const transaction = db.transaction(() => {
-        const cart = db
-          .prepare(
-            `
-        SELECT sub_total, id
+      const stmtCarts = `
+        SELECT sub_total, total, id
         FROM carts
         WHERE id = ?
         `
-          )
-          .get(cart_id)
-        const normalizeTotal = cart.sub_total - normalizeDiscount
 
-        db.prepare(
-          `UPDATE carts
+      const stmtCartUpdate = `UPDATE carts
         SET discount = ?,
+        vatable_sales = ?,
+        vat_amount = ?,
         total = ?
         WHERE id = ?
         `
-        ).run(normalizeDiscount, normalizeTotal, cart_id)
+
+      const transaction = db.transaction(() => {
+
+        const { sub_total, vatable_sales, vat_amount } = db
+          .prepare(stmtCarts)
+          .get(cart_id) as ReturnCartType
+
+        const normalizeTotal = sub_total - normalizeDiscount
+
+
+
+        db.prepare(
+          stmtCartUpdate
+        ).run(normalizeDiscount, vatable_sales, vat_amount, normalizeTotal, cart_id)
 
         return true
       })
@@ -121,7 +154,6 @@ export class CartRepository implements ICartRepository {
         error: ''
       }
     } catch (error) {
-      console.log('inside catch', error)
       if (error instanceof Error) {
         return {
           success: false,
@@ -143,29 +175,35 @@ export class CartRepository implements ICartRepository {
 
     try {
       const db = this._database
-      const transaction = db.transaction(() => {
-        console.log('transaction start')
-        db.prepare(
-          `
+      const stmtCartItemsUpdate = `
           UPDATE cart_items
           SET quantity = ?
           WHERE id = ?
           `
-        ).run(quantity, id)
-
-        const items = db
-          .prepare(
-            `SELECT ci.quantity, p.price, c.discount
+      const stmtCartItems = `SELECT ci.quantity, p.price, c.discount
           FROM cart_items AS ci
           LEFT JOIN products AS p ON p.id = ci.product_id
           LEFT JOIN carts AS c ON ci.cart_id = c.id
           WHERE ci.cart_id = ?`
+
+
+      const transaction = db.transaction(() => {
+
+        db.prepare(
+          stmtCartItemsUpdate
+        ).run(quantity, id)
+
+        const items = db
+          .prepare(
+            stmtCartItems
           )
-          .all(cart_id)
+          .all(cart_id) as Array<CartItemType & { discount: number }>
 
         console.log({ items })
 
-        const subTotal = items?.reduce((acc, cur) => (acc += cur.price * cur.quantity), 0)
+        let subTotal = items?.reduce((acc, cur) => (acc += cur.price * cur.quantity), 0)
+
+
         const total = subTotal - items?.[0]?.discount
 
         db.prepare(
@@ -208,19 +246,74 @@ export class CartRepository implements ICartRepository {
   insertItem(params: CartItem): ReturnType {
     const { cart_id, product_id, user_id } = params
     try {
-      let items
       const db = this._database
+
+      const stmtCartItems = `
+          SELECT ci.*, i.quantity AS product_quantity, p.is_active
+          FROM cart_items AS ci
+          LEFT JOIN inventory AS i ON ci.product_id = i.product_id
+          LEFT JOIN products AS p
+            ON p.id = i.product_id
+          WHERE
+            ci.product_id = ?
+            AND
+            p.is_active  = 1;
+          `
+
+      const stmtCartItemsUpdate = `
+            UPDATE cart_items
+            SET quantity = quantity + 1
+            WHERE id = ?
+            `
+
+      const stmtInv = `
+            SELECT
+              i.quantity
+            FROM
+              inventory AS i
+            LEFT JOIN
+              products AS p
+            ON
+              p.id = i.product_id
+            WHERE
+              i.product_id = ?
+            AND
+              p.is_active = 1
+            `
+
+      const stmtCartItemsBtm = `
+            INSERT INTO cart_items (quantity, cart_id, product_id, user_id)
+            VALUES(1, ?, ?, ?)
+            `
+
+      const stmtCartItemsProd = `SELECT *
+            FROM cart_items AS ci
+            LEFT JOIN products AS p ON p.id = ci.product_id
+            WHERE cart_id = ?`
+      const stmtDiscount = `SELECT discount
+          FROM carts
+          WHERE id = ?
+          `
+      const stmtCartUpdate = `UPDATE carts
+          SET sub_total = ?,
+          tax = ?,
+          vatable_sales = ?,
+          vat_amount = ?,
+          total = ?
+          WHERE id = ?`
+
+      const stmtSettings = `
+        SELECT
+          *
+        FROM
+          settings
+      `
       const transaction = db.transaction(() => {
         const foundItem = db
           .prepare(
-            `
-          SELECT ci.*, i.quantity AS product_quantity 
-          FROM cart_items AS ci
-          LEFT JOIN inventory AS i ON ci.product_id = i.product_id
-          WHERE ci.product_id = ?;
-          `
+            stmtCartItems
           )
-          .get(product_id)
+          .get(product_id) as CartItemType & { quantity: number }
 
         // check if product is in the cart items
         // then update the cart item's quantity if not exceed to product's quantity
@@ -233,79 +326,89 @@ export class CartRepository implements ICartRepository {
           }
 
           db.prepare(
-            `
-            UPDATE cart_items
-            SET quantity = quantity + 1
-            WHERE id = ?
-            `
+            stmtCartItemsUpdate
           ).run(foundItem.id)
+
         } else {
-          // check product inventory
+          // check product inventory and is still active
 
           const product = db
             .prepare(
-              `
-            SELECT quantity
-            FROM inventory
-            WHERE product_id = ?
-            `
+              stmtInv
             )
-            .get(product_id)
+            .get(product_id) as InventoryType
+
+          if (!product) {
+            throw new Error("Product not found")
+          }
 
           if (product.quantity < 1) {
-            throw new Error('Product is out of stock')
+            throw new Error("Product is out of stock")
           }
 
           db.prepare(
-            `
-            INSERT INTO cart_items (quantity, cart_id, product_id, user_id)
-            VALUES(1, ?, ?, ?)
-            `
+            stmtCartItemsBtm
           ).run(cart_id, product_id, user_id)
         }
 
         // select all items
         // calculate the subtotal, discount, and total
 
-        items = db
+        const items = db
           .prepare(
-            `SELECT * 
-            FROM cart_items AS ci
-            LEFT JOIN products AS p ON p.id = ci.product_id
-            WHERE cart_id = ?`
+            stmtCartItemsProd
           )
-          .all(cart_id)
+          .all(cart_id) as CartItemType[]
 
         console.log('from insert', { items })
 
-        const subTotal = items?.reduce((acc, cur) => (acc += cur.quantity * cur.price), 0)
 
-        const cartDiscount = db
+        const settings = db
+          .prepare(stmtSettings)
+          .get() as SettingsType
+
+        const { tax } = settings
+
+        // const discount = total - subTotal
+
+        let subTotal = items?.reduce((acc, cur) => (acc += cur.quantity * cur.price), 0)
+
+        const { discount } = db
           .prepare(
-            `SELECT discount 
-          FROM carts
-          WHERE id = ?
-          `
+            stmtDiscount
           )
-          .get(cart_id)
+          .get(cart_id) as ReturnCartType
 
-        console.log('discount', cartDiscount, subTotal)
+        const taxRate = (tax ?? 0) / 100
 
-        const total = (subTotal || 0) - (cartDiscount.discount ?? 0)
+        subTotal = subTotal - discount
 
-        console.log('total', total)
+        console.log('discount', subTotal)
+
+        const total = subTotal
+
+        const vatableSales = subTotal / (1 + taxRate)
+        const vat = subTotal - vatableSales
+
+        console.log('total', total, { vatableSales, vat })
 
         db.prepare(
-          `UPDATE carts
-          SET sub_total = ?,
-          total = ?
-          WHERE id = ?`
-        ).run(subTotal, total, cart_id)
+          stmtCartUpdate
+        ).run(subTotal, tax, vatableSales, vat, total, cart_id)
 
         console.log('done inserting')
 
         return {
-          data: items,
+          data: {
+            id: cart_id,
+            items,
+            sub_total: subTotal,
+            tax,
+            discount,
+            vatable_sales: vatableSales,
+            vat_amount: vat,
+            total
+          },
           error: ''
         }
       })
@@ -317,7 +420,7 @@ export class CartRepository implements ICartRepository {
       }
 
       return {
-        data: items,
+        data: res.data,
         error: ''
       }
     } catch (error) {
@@ -340,70 +443,75 @@ export class CartRepository implements ICartRepository {
 
   removeItem(id: number, cart_id: number): { success: boolean; error: Error | string } {
     try {
-      const transaction = this._database.transaction(() => {
-        this._database
-          .prepare(
-            `DELETE FROM cart_items
+      const db = this._database
+      const stmtDel = `DELETE FROM cart_items
             WHERE id = ?
           `
-          )
-          .run(id)
-
-        console.log('2nd')
-
-        // calculate the cart
-
-        const items = this._database
-          .prepare(
-            `
+      const stmtCartItems = `
           SELECT p.price, ci.quantity
           FROM cart_items AS ci
           LEFT JOIN products AS p ON ci.product_id = p.id
           WHERE cart_id = ?
           `
-          )
-          .all(cart_id)
-
-        console.log('items', items)
-
-        if (!items.length) {
-          this._database
-            .prepare(
-              `
+      const stmtCartUpdate = `
             UPDATE carts
             SET sub_total = 0,
             discount = 0,
             total = 0
             WHERE id = ?
             `
+      const stmtDis = `
+          SELECT discount
+          FROM carts
+          WHERE id = ?
+          `
+      const stmtCartFinUpdate = `
+            UPDATE carts
+            SET sub_total = ?,
+            total = ?
+            WHERE id = ?
+            `
+      const transaction = db.transaction(() => {
+        db
+          .prepare(
+            stmtDel
+          )
+          .run(id)
+
+
+        // calculate the cart
+
+        const items = db
+          .prepare(
+            stmtCartItems
+          )
+          .all(cart_id) as CartItemType[]
+
+        console.log('items', items)
+
+        if (!items.length) {
+          db
+            .prepare(
+              stmtCartUpdate
             )
             .run(cart_id)
 
           return true
         }
 
-        const cart = this._database
+        const cart = db
           .prepare(
-            `
-          SELECT discount
-          FROM carts
-          WHERE id = ?
-          `
+            stmtDis
           )
-          .get(cart_id)
+          .get(cart_id) as ReturnCartType
         console.log(cart)
 
         const subTotal = items.reduce((acc, cur) => (acc += cur.price * cur.quantity), 0)
         const total = subTotal - (cart?.discount ?? 0)
 
-        this._database
+        db
           .prepare(
-            `
-            UPDATE carts
-            SET sub_total = ?,
-            total = ?
-            WHERE id = ?
-            `
+            stmtCartFinUpdate
           )
           .run(subTotal, total, cart_id)
 
@@ -436,24 +544,31 @@ export class CartRepository implements ICartRepository {
 
   deleteAllItems(cart_id: number): { success: boolean; error: Error | string } {
     try {
-      const transaction = this._database.transaction(() => {
-        this._database
+      const db = this._database
+      const stmt =
+
+        db
           .prepare(
             `DELETE FROM cart_items
         WHERE cart_id = ?`
           )
-          .run(cart_id)
-
-        this._database
-          .prepare(
-            `UPDATE carts
+      const stmtUpdate =
+        db
+          .prepare(`UPDATE carts
           SET discount = 0,
           sub_total = 0,
+          vatable_sales = 0,
+          vat_amount = 0,
           total = 0
           WHERE id = ?
           `
+
           )
-          .run(cart_id)
+      const transaction = db.transaction(() => {
+
+        stmt.run(cart_id)
+
+        stmtUpdate.run(cart_id)
 
         return true
       })

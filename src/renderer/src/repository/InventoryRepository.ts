@@ -1,15 +1,16 @@
+import { Database } from 'better-sqlite3'
 import { InventoryMovementParams, InventoryMovementReturn } from '../features/inventory/utils/types'
 import {
   IInventoryRepository,
   ProductInventoryType,
 } from '../interfaces/IInventoryRepository'
-import { InventoryType, ErrorType, Direction } from '../shared/utils/types'
+import { InventoryType, ErrorType, Direction, CustomResponseType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
 
 export class InventoryRepository implements IInventoryRepository {
-  private _database
+  private _database: Database
 
-  constructor(database) {
+  constructor(database: Database) {
     this._database = database
     ipcMain.handle(
       'inventory:getAll',
@@ -50,7 +51,7 @@ export class InventoryRepository implements IInventoryRepository {
       `
       }
 
-      const products = db.prepare(stmt).all(cursorId, pageSize + 1)
+      const products = db.prepare(stmt).all(cursorId, pageSize + 1) as ProductInventoryType[]
 
       if (!products) {
         throw new Error('Something went wrong while retreiving the products')
@@ -121,7 +122,7 @@ export class InventoryRepository implements IInventoryRepository {
         startDate,
         endDate,
         endDate,
-        pageSize + 1)
+        pageSize + 1) as Array<InventoryMovementReturn & { product_name: string }>
 
       if (movements) {
         return {
@@ -150,7 +151,7 @@ export class InventoryRepository implements IInventoryRepository {
       }
     }
   }
-  create(params: InventoryType): { data: InventoryType | null; error: ErrorType } {
+  create(params: InventoryType): CustomResponseType {
     const { quantity, product_id } = params
     try {
       const product = this._database
@@ -160,26 +161,23 @@ export class InventoryRepository implements IInventoryRepository {
         )
         .run(quantity, product_id)
 
-      if (product) {
-        return {
-          data: product,
-          error: ''
-        }
+      if (!product.changes) {
+        throw new Error("Something went wrong while saving an inventory.")
       }
 
       return {
-        data: null,
-        error: 'Something went wrong while saving an inventory.'
+        success: true,
+        error: ''
       }
     } catch (error) {
       if (error instanceof Error) {
         return {
-          data: null,
+          success: false,
           error: new Error('Something went wrong while searching the product')
         }
       }
       return {
-        data: null,
+        success: false,
         error: new Error('Something went wrong while searching the product')
       }
     }

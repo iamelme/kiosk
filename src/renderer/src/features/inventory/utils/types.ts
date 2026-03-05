@@ -1,4 +1,4 @@
-import { Direction, InventoryType } from "../../../shared/utils/types"
+import { Direction, InventoryType } from "@renderer/shared/utils/types"
 
 export type InventoryMovement = {
   id: number
@@ -14,6 +14,8 @@ export type InventoryMovementParams = {
   cursorId: number
   direction?: Direction
 }
+
+
 
 export type InventoryMovementReturn = InventoryType & {
   created_at: string

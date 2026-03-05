@@ -6,6 +6,11 @@ export type UserType = {
   password: string
 }
 
+export type CustomResponseType = {
+  success: boolean
+  error: ErrorType
+}
+
 export type CategoryType = {
   id: number
   name: string
@@ -20,8 +25,10 @@ export type ProductType = {
   cost: number
   code: number
   quantity: number
-  category_id: number
-  inventory_id: number
+  user_id: number | null
+  updated_by: number | null
+  category_id: number | null
+  inventory_id: number | null
 }
 
 export const movementType = {
@@ -64,6 +71,9 @@ export type ReturnCartType = {
   items: CartItemType[]
   sub_total: number
   discount: number
+  vatable_sales: number
+  vat_amount: number
+  tax: number
   total: number
 }
 
@@ -124,6 +134,8 @@ export type PlaceOrderType = {
   user_id: number
 }
 
+export type PaymentMethod = 'cash' | 'card' | 'e-wallet'
+
 export type ReturnType = {
   id: number
   created_at: string
@@ -147,6 +159,18 @@ export type ReturnItemType = {
   sale_item_id: number
   product_id: number
 }
+
+export type ReturnRevenueType = {
+  month: number
+  gross_revenue: number
+  total_return: number
+  net_revenue: number
+} | {
+  month: number
+  gross_revenue: number
+  total_return: number
+  net_revenue: number
+}[]
 
 export type SettingsType = {
   logo: string

@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query'
-import { ReturnCartType } from '../../../shared/utils/types'
+import { ReturnCartType } from '@renderer/shared/utils/types'
 
 export default function useCart(id: number | undefined): UseQueryResult<ReturnCartType> {
   return useQuery({
@@ -22,6 +22,8 @@ export default function useCart(id: number | undefined): UseQueryResult<ReturnCa
           items: [],
           sub_total: 0,
           discount: 0,
+          vatable_sales: 0,
+          vat_amount: 0,
           tax: 0,
           total: 0
         }

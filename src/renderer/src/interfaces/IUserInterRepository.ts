@@ -1,11 +1,11 @@
-import { ErrorType, UserType } from '../shared/utils/types'
+import { CustomResponseType, ErrorType, UserType } from '../shared/utils/types'
 
 export type ReturnType = { data: UserType | null; error: ErrorType }
 
 export interface IUserRepository {
   //   getAll(): UserType[]
   //   getById(id: number): UserType
-  create(params: UserType): Promise<ReturnType>
+  create(params: UserType): Promise<CustomResponseType>
   login(params: UserType): Promise<ReturnType>
-  // delete(id: number)
+// delete(id: number)
 }

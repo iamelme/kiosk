@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import FormInput from "../../../shared/components/form/FormInput";
-import Alert from "../../../shared/components/ui/Alert";
-import Button from "../../../shared/components/ui/Button";
+import FormInput from "@renderer/shared/components/form/FormInput";
+import Alert from "@renderer/shared/components/ui/Alert";
+import Button from "@renderer/shared/components/ui/Button";
 
 type Props = {
   errorMessage?: string

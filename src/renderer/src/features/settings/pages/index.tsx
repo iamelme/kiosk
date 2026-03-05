@@ -1,63 +1,34 @@
-import Alert from '../../../shared/components/ui/Alert'
-import Button from '../../../shared/components/ui/Button'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ReactNode } from 'react'
+import { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
+import { Database, Monitor } from "react-feather";
+import SettingsNav from "../components/SettingsNav";
 
-export default function General(): ReactNode {
-  const {
-    data: settings,
-    isPending,
-    error
-  } = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => {
-      const res = await window.apiSettings.getSettings()
-
-      if (res.error && res.error instanceof Error) {
-        throw new Error(res.error.message)
-      }
-
-      return res.data
-    }
-  })
-
-  const queryClient = useQueryClient()
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const res = await window.apiElectron.uploadLogo()
-      if (res) {
-        const resLogo = await window.apiSettings.uploadLogo(res)
-
-        if (resLogo.error && resLogo.error instanceof Error) {
-          throw new Error(resLogo.error.message)
-        }
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] })
-    }
-  })
-
-  if (isPending) {
-    return <>Loading...</>
+const menu = [
+  {
+    label: 'General',
+    to: '.',
+    icon: <Monitor size={14} />
+  },
+  {
+    label: 'System',
+    to: 'system',
+    icon: <Database size={14} />
   }
+]
 
-  if (error) {
-    return <Alert variant="danger">{error.message}</Alert>
-  }
+export default function SettingsPage(): ReactNode {
+  return <div className="">
+    <header className="mb-5">
+      <h2 className="text-xl">Settings</h2>
+      <p className="text-slate-400">Configure the app to your likes</p>
+    </header>
 
-  return (
-    <>
-      {settings.logo ? (
-        <div className="max-w-[200px] cursor-pointer" onClick={() => mutation.mutate()}>
-          <img src={`elme-cute://${settings.logo}?v=${Date.now()}`} alt="logo" />
-        </div>
-      ) : (
-        <Button type="button" onClick={() => mutation.mutate()}>
-          Upload
-        </Button>
-      )}
-    </>
-  )
+    <SettingsNav items={menu} />
+
+    <div className="flex-1 py-2">
+      <Outlet />
+
+    </div>
+
+  </div>
 }

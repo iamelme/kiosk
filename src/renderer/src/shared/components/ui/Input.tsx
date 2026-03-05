@@ -7,6 +7,12 @@ type InputProps = {
 } & DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
 
 export default function Input({ className, ...props }: InputProps): React.JSX.Element {
+  let base = ''
+  if (props.type !== 'checkbox') {
+    base = 'w-full py-1 px-2 bg-white rounded-sm'
+  } else {
+    base = 'w-4 h-4'
+  }
   return (
     <input
       {...props}

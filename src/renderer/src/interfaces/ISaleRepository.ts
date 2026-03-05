@@ -30,7 +30,10 @@ export interface ISaleRepository {
     data: SaleType[] | null
     error: ErrorType
   }
-  getByUserId(id: number): ReturnType
+  getByUserId(id: number): {
+    data: SaleType & { items: SaleItemType[] } | null
+    error: ErrorType
+  }
   getById(id: number): ReturnType
   getRevenue(params: { startDate: string; endDate: string, isQuarterly?: boolean }): {
     data: { month: number, gross_revenue: number; total_return: number; net_revenue: number } | {
@@ -59,7 +62,7 @@ export interface ISaleRepository {
     data: TopItemsType[] | null
     error: ErrorType
   }
-  create(userId: number): ReturnType
+  create(userId: number): { data: SaleType | null; error: ErrorType }
   placeOrder(params: PlaceOrderType): { success: boolean; error: ErrorType }
   insertItem(params: SaleItem): {
     data: Pick<SaleType, "id" | "sub_total" | "discount" | "total"> & { items: SaleItemType[] } | null

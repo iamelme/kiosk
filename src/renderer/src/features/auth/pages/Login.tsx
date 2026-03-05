@@ -1,5 +1,5 @@
-import FormWrapper from '../../../shared/components/form/FormWrapper'
-import useBoundStore from '../../../shared/stores/boundStore'
+import FormWrapper from '@renderer/shared/components/form/FormWrapper'
+import useBoundStore from '@renderer/shared/stores/boundStore'
 import { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import z from 'zod'

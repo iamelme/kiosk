@@ -1,8 +1,8 @@
-import Price from '../../../shared/components/ui/Price'
-import Alert from '../../../shared/components/ui/Alert'
+import Price from '@renderer/shared/components/ui/Price'
+import Alert from '@renderer/shared/components/ui/Alert'
 import { useQuery } from '@tanstack/react-query'
 import { ReactNode } from 'react'
-import Card from '../../../shared/components/ui/Card'
+import Card from '@renderer/shared/components/ui/Card'
 
 export default function Sales(): ReactNode {
   const date = new Date()

@@ -2,12 +2,13 @@ import { ipcMain } from 'electron'
 import { IReturnRepository, Return } from '../interfaces/IReturnRepository'
 import { ReturnType } from '../shared/utils/types'
 import { IInventoryRepository } from '../interfaces/IInventoryRepository'
+import { Database } from 'better-sqlite3'
 
 export class ReturnRepository implements IReturnRepository {
-  private _database
+  private _database: Database
   private _inventory: IInventoryRepository
 
-  constructor(database, inventory: IInventoryRepository) {
+  constructor(database: Database, inventory: IInventoryRepository) {
     this._database = database
     this._inventory = inventory
     ipcMain.handle('return:create', (_, params: ReturnType) => this.create(params))

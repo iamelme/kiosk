@@ -1,5 +1,5 @@
 import { InventoryMovementParams, InventoryMovementReturn } from '../features/inventory/utils/types'
-import { Direction, ErrorType, InventoryType, ProductType } from '../shared/utils/types'
+import { CustomResponseType, Direction, ErrorType, InventoryType, ProductType } from '../shared/utils/types'
 
 export type ProductInventoryType = ProductType & InventoryType
 
@@ -26,7 +26,7 @@ export interface IInventoryRepository {
     error: ErrorType
   }
 
-  create(params: InventoryType): { data: InventoryType | null; error: ErrorType }
-  update(params: InventoryType): { success: boolean; error: ErrorType }
-  delete(id: number): { success: boolean; error: ErrorType }
+  create(params: InventoryType): CustomResponseType
+  update(params: InventoryType): CustomResponseType
+  delete(id: number): CustomResponseType
 }

@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useContext } from 'react'
 import { NumericFormat } from 'react-number-format'
 
-import Price from '../../../shared/components/ui/Price'
-import { ReturnCartType } from '../../../shared/utils/types'
-import Input from '../../../shared/components/ui/Input'
+import Price from '@renderer/shared/components/ui/Price'
+import { ReturnCartType } from '@renderer/shared/utils/types'
+import Input from '@renderer/shared/components/ui/Input'
 
 type Summary = ReturnCartType & {
   handleDiscount: (v: number) => void
@@ -94,9 +94,16 @@ function Discount(): ReactNode {
           onValueChange={(values) => {
             const { floatValue } = values
 
-            if (floatValue != undefined && floatValue > -1) {
-              ctx.handleDiscount(floatValue)
+            if (floatValue === undefined) {
+              ctx.handleDiscount(0)
+              return
             }
+
+            if (floatValue <= 0) {
+              ctx.handleDiscount(0)
+              return
+            }
+            ctx.handleDiscount(floatValue)
           }}
           thousandSeparator
           className="text-right"
@@ -107,13 +114,13 @@ function Discount(): ReactNode {
 }
 
 function Tax(): ReactNode {
-  // const ctx = useSummaryContext()
+  const ctx = useSummaryContext()
 
   return (
     <dl className="flex justify-between">
-      <dt>Tax:</dt>
+      <dt>Tax (Inclusive):</dt>
       <dd>
-        <Price value={0} />
+        {ctx?.tax ?? 0}%
       </dd>
     </dl>
   )

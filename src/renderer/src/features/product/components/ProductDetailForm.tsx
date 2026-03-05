@@ -1,33 +1,28 @@
 import { ReactNode } from "react";
-import FormCombobox from '../../../shared/components/form/FormCombobox'
-import FormInput from '../../../shared/components/form/FormInput'
-import Alert from '../../../shared/components/ui/Alert'
-import Button from '../../../shared/components/ui/Button'
+import FormCombobox from '@renderer/shared/components/form/FormCombobox'
+import FormInput from '@renderer/shared/components/form/FormInput'
+import Alert from '@renderer/shared/components/ui/Alert'
+import Button from '@renderer/shared/components/ui/Button'
 
 type Props = {
+  isNew: boolean
   categoryOptions?: { label: string, value: string }[]
   errorMessage?: string
 }
 
-export default function ProductDetailForm({ categoryOptions, errorMessage }: Props): ReactNode {
+export default function ProductDetailForm({ isNew, categoryOptions, errorMessage }: Props): ReactNode {
 
   return (
     <>
       <FormInput type="hidden" label="" name="inventory_id" />
-      <FormInput label="Name" name="name" />
-      <FormInput label="SKU" name="sku" fieldWatch="name" />
-      <FormInput label="Code" name="code" />
+      <FormInput label="Name" name="name" helperText="Product Name" required />
+      <FormInput label="SKU" name="sku" fieldWatch="name" helperText="This will turn to uppercase after saving." required />
+      <FormInput label="Code" name="code" required />
       <FormInput label="Description" name="description" />
-      <div className="flex gap-x-3">
-        <div className="flex-1">
-          <FormInput label="Price" name="price" />
-        </div>
-        <div className="flex-1">
-          <FormInput label="Cost" name="cost" />
-        </div>
-      </div>
-      <FormInput label="Quantity" name="quantity" />
-      <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} />
+      <FormInput label="Price" name="price" required />
+      <FormInput label="Cost" name="cost" required />
+      <FormInput label="Quantity" name="quantity" required={isNew} disabled={isNew} helperText={`${isNew ? "Initial quantity for new product is 0" : ""}`} />
+      <FormCombobox label="Category" name="category_id" options={categoryOptions ?? []} required />
       {errorMessage && (
         <Alert variant="danger" className="mt-3">
           {errorMessage}

@@ -2,12 +2,12 @@ import { ReactNode, RefObject } from 'react'
 import { Edit, X } from 'react-feather'
 import { NumericFormat } from 'react-number-format'
 import { Link } from 'react-router-dom'
-import Items from '../../../shared/components/Items'
-import Button from '../../../shared/components/ui/Button'
-import Dialog from '../../../shared/components/ui/Dialog'
-import Input from '../../../shared/components/ui/Input'
-import Price from '../../../shared/components/ui/Price'
-import { CartItemType } from '../../../shared/utils/types'
+import Items from '@renderer/shared/components/Items'
+import Button from '@renderer/shared/components/ui/Button'
+import Dialog from '@renderer/shared/components/ui/Dialog'
+import Input from '@renderer/shared/components/ui/Input'
+import Price from '@renderer/shared/components/ui/Price'
+import { CartItemType } from '@renderer/shared/utils/types'
 
 const headers = [
   { label: 'Name', className: '' },

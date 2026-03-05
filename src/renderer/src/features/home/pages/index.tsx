@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import TopItems from '../components/TopItems'
 import Rev from '../components/Sales'
-import useBoundStore from '../../../shared/stores/boundStore'
+import useBoundStore from '@renderer/shared/stores/boundStore'
 import SalesChart from '../components/SalesChart'
 
 export default function HomePage(): ReactNode {

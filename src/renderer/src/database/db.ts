@@ -30,7 +30,8 @@ export class AppDatabase {
                id INTEGER PRIMARY KEY CHECK (id = 1),
               locale TEXT DEFAULT 'en-PH',
               logo TEXT,
-              tax INTEGER DEFAULT 0
+              tax INTEGER DEFAULT 0,
+              is_tax_inclusive INTEGER DEFAULT 1
             );
 
             INSERT OR IGNORE INTO settings (id) VALUES(1);
@@ -53,8 +54,8 @@ export class AppDatabase {
 
             CREATE TABLE IF NOT EXISTS products(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-              updated_at DATETIME,
+                created_at DATETIME,
+                updated_at DATETIME,
                 name TEXT UNIQUE NOT NULL,
                 sku TEXT UNIQUE NOT NULL,
                 description TEXT NOT NULL,
@@ -63,7 +64,11 @@ export class AppDatabase {
                 cost INTEGER DEFAULT 0,
                 is_active INTEGER DEFAULT 1,
                 category_id INTEGER,
-                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL           
+                user_id INTEGER,
+                updated_by INTEGER,
+                FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
             );
 
             CREATE TABLE IF NOT EXISTS sales(
@@ -169,14 +174,17 @@ export class AppDatabase {
               sub_total INTEGER DEFAULT 0,
               discount INTEGER DEFAULT 0,
               total INTEGER DEFAULT 0,
+              vatable_sales INTEGER DEFAULT 0,
+              vat_amount INTEGER DEFAULT 0,
+              tax INTEGER DEFAULT 0,
               user_id INTEGER,
               FOREIGN KEY (user_id) REFERENCES users(id)
-            ); 
-    
+            );
+
             CREATE TABLE IF NOT EXISTS cart_items(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               quantity INTEGER,
-              cart_id INTEGER,             
+              cart_id INTEGER,
               product_id INTEGER,
               user_id INTEGER,
               FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
@@ -194,22 +202,21 @@ export class AppDatabase {
 
             END;
 
-            CREATE TRIGGER IF NOT EXISTS products_after_insert 
+            CREATE TRIGGER IF NOT EXISTS products_after_insert
             AFTER INSERT ON products
             BEGIN
 
-              INSERT INTO inventory (product_id) VALUES(NEW.id);
-              UPDATE counts SET products = products + 1;
+              INSERT INTO inventory (product_id, quantity) VALUES(NEW.id, 0);
 
-              INSERT INTO products_fts (product_id, name, sku, code) 
+              INSERT INTO products_fts (product_id, name, sku, code)
               VALUES(NEW.id, NEW.name, NEW.sku, NEW.code);
             END;
 
-            CREATE TRIGGER IF NOT EXISTS products_after_update 
+            CREATE TRIGGER IF NOT EXISTS products_after_update
             AFTER UPDATE ON products
             BEGIN
 
-              UPDATE products_fts 
+              UPDATE products_fts
               SET name = NEW.name, sku = NEW.sku, code = NEW.code
               WHERE product_id = OLD.id;
             END;
@@ -218,11 +225,9 @@ export class AppDatabase {
             AFTER DELETE ON products
             BEGIN
 
-              UPDATE counts SET products = products - 1;
-              
-              DELETE FROM inventory 
+              DELETE FROM inventory
               WHERE product_id = OLD.id;
-              
+
               DELETE FROM products_fts
               WHERE product_id = OLD.id;
             END;

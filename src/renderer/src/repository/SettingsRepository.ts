@@ -1,23 +1,26 @@
+import { Database } from 'better-sqlite3'
+import { SettingsType } from '../features/settings/utils/type'
 import { ISettingRepository } from '../interfaces/ISettingRepository'
 import { ipcMain } from 'electron'
 
 export class SettingsRepository implements ISettingRepository {
-  private _database
+  private _database: Database
 
-  constructor(database) {
+  constructor(database: Database) {
     this._database = database
 
     ipcMain.handle('settings:get', () => this.get())
+    ipcMain.handle('settings:update', (_, params: Partial<SettingsType>) => this.update(params))
     ipcMain.handle('settings:updateLocale', (_, locale: string) => this.updateLocale(locale))
     ipcMain.handle('settings:uploadLogo', (_, logo: string) => this.uploadLogo(logo))
   }
 
   get(): {
-    data: { locale: string; logo: string; tax: number } | null
+    data: SettingsType | null
     error: Error | string
   } {
     try {
-      const settings = this._database.prepare(`SELECT * FROM settings`).get()
+      const settings = this._database.prepare(`SELECT * FROM settings`).get() as SettingsType
       return {
         data: settings,
         error: ''
@@ -35,6 +38,7 @@ export class SettingsRepository implements ISettingRepository {
       }
     }
   }
+
   updateLocale(locale: string): {
     success: boolean
     error: Error | string
@@ -43,8 +47,8 @@ export class SettingsRepository implements ISettingRepository {
       this._database
         .prepare(
           `
-            UPDATE 
-            FROM settings 
+            UPDATE
+            FROM settings
             SET locale = ?
             `
         )
@@ -67,6 +71,61 @@ export class SettingsRepository implements ISettingRepository {
     }
   }
 
+  update(params: Partial<SettingsType>): {
+    success: boolean
+    error: Error | string
+  } {
+    try {
+      const db = this._database
+
+      const columns: string[] = []
+      const values: string[] = []
+
+      console.log({ params })
+
+      Object.keys(params).forEach(key => {
+        columns.push(`${key} = ?`)
+        values.push(params[key])
+      })
+
+      const stmt = `
+      UPDATE
+        settings
+        SET
+      `
+
+      const query = `${stmt} ${columns.join(',')}`
+
+      console.log({ query })
+
+      db.prepare(query)
+        .run(...values)
+
+      console.log(...values)
+
+      return {
+        success: true,
+        error: ''
+      }
+
+    } catch (error) {
+      console.log(error)
+      if (error instanceof Error) {
+
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+
+      return {
+        success: false,
+        error: "Something wen't wrong"
+      }
+    }
+
+  }
+
   uploadLogo(path: string): {
     data: string
     error: Error | string
@@ -77,7 +136,7 @@ export class SettingsRepository implements ISettingRepository {
       this._database
         .prepare(
           `
-            UPDATE settings 
+            UPDATE settings
             SET logo = ?
             `
         )

@@ -1,14 +1,14 @@
 import { IProductRepository, ReturnType } from '../interfaces/IProductRepository'
-import { Direction, ProductType } from '../shared/utils/types'
+import { CustomResponseType, Direction, InventoryType, ProductType } from '../shared/utils/types'
 import { ipcMain } from 'electron'
-import { SqliteError } from 'better-sqlite3'
+import { Database, SqliteError } from 'better-sqlite3'
 import { IInventoryRepository } from '../interfaces/IInventoryRepository'
 
 export class ProductRepository implements IProductRepository {
-  private _database
+  private _database: Database
   private _inventory: IInventoryRepository
 
-  constructor(database, inventory: IInventoryRepository) {
+  constructor(database: Database, inventory: IInventoryRepository) {
     this._database = database
     this._inventory = inventory
     ipcMain.handle(
@@ -55,21 +55,9 @@ export class ProductRepository implements IProductRepository {
         LIMIT ? `
       }
 
-      const products = db.prepare(stmt).all(cursorId, pageSize + 1)
+      const products = db.prepare(stmt).all(cursorId, pageSize + 1) as Array<ProductType & { quantity: number; category_name: string }>
 
       console.log('products', products)
-
-      // const products = this._database
-      //   .prepare(
-      //     `SELECT p.*, i.quantity, c.name as category_name
-      //   FROM products AS p
-      //   LEFT JOIN categories as c ON p.category_id = c.id
-      //   LEFT JOIN inventory as i ON p.id = i.product_id
-      //   WHERE p.is_active = 1
-      //   LIMIT 20
-      //   `
-      //   )
-      //   .all()
 
       if (!products) {
         throw new Error('Sorry no products')
@@ -111,8 +99,8 @@ export class ProductRepository implements IProductRepository {
     try {
       const transaction = db.transaction(() => {
 
-        const product = prodStmt.get(id)
-        const inventory = invStmt.get(id)
+        const product = prodStmt.get(id) as ProductType
+        const inventory = invStmt.get(id) as InventoryType
 
         return {
           ...product,
@@ -153,7 +141,7 @@ export class ProductRepository implements IProductRepository {
     try {
       const product = this._database
         .prepare('SELECT * FROM products WHERE LOWER(name) = ?')
-        .get(normalizeName)
+        .get(normalizeName) as ProductType
 
       if (product) {
         return {
@@ -182,7 +170,7 @@ export class ProductRepository implements IProductRepository {
 
   getByCode(code: number): { data: ProductType | null; error: Error | string } {
     try {
-      const product = this._database.prepare('SELECT * FROM products WHERE code = ?').get(code)
+      const product = this._database.prepare('SELECT * FROM products WHERE code = ?').get(code) as ProductType
       if (product) {
         return {
           data: product,
@@ -213,7 +201,7 @@ export class ProductRepository implements IProductRepository {
       const normalizeSKU = sku?.trim()?.toLowerCase()?.replace(/ /g, '-')
       const product = this._database
         .prepare('SELECT * FROM products WHERE sku = ?')
-        .get(normalizeSKU)
+        .get(normalizeSKU) as ProductType
 
       if (product) {
         return {
@@ -255,10 +243,11 @@ export class ProductRepository implements IProductRepository {
           LEFT JOIN inventory as i ON p.id = i.product_id
         WHERE
           products_fts MATCH ?
+        AND p.is_active = 1
         ORDER BY rank
         LIMIT 10`
         )
-        .all(normalizeTerm)
+        .all(normalizeTerm) as Array<ProductType & { quantity: number; category_name: string }>
 
       console.log('normalize term', normalizeTerm)
 
@@ -288,65 +277,88 @@ export class ProductRepository implements IProductRepository {
     }
   }
 
-  create(params: Omit<ProductType, 'id'>): { data: ProductType | null; error: Error | string } {
-    const { name, sku, description, price, code, category_id } = params
+  create(params: Omit<ProductType, 'id'>): CustomResponseType {
+    const { name, sku, description, price, code, cost, category_id, user_id } = params
 
     const normalizePrice = (price ?? 0) * 100
+    const normalizeCost = (cost ?? 0) * 100
     const normalizeSKU = sku?.trim()?.toLowerCase()?.replace(/ /g, '-')
 
     console.log('params', params)
 
-    let product
+    const createdAt = new Date().toISOString()
 
     try {
-      // const transaction = this._database.transaction(() => {
-      const stmt = this._database.prepare(
-        'INSERT INTO products (name, sku, description, price, code, category_id) VALUES(?, ?, ?, ?, ?, ?) RETURNING *'
-      )
-      product = stmt.run(name, normalizeSKU, description, normalizePrice, code, category_id)
 
-      // this._database
-      //   .prepare(
-      //     `
-      //     INSERT INTO inventory (product_id)
-      //     VALUES(?)`
-      //   )
-      //   .run(product.lastInsertRowid)
+      const db = this._database
 
-      // this._database.prepare('UPDATE counts SET products = products + 1').run()
-      // })
-      // transaction()
+      const stmtInsert =
+        db.prepare(
+          `
+        INSERT INTO
+          products
+          (name, sku, description, price, code, cost, user_id, category_id)
+        VALUES
+          (?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING *
+      `
+        )
 
-      if (product) {
-        return {
-          data: product,
-          error: ''
+      const stmtInvMv =
+        db.prepare(`
+       INSERT INTO inventory_movement(created_at, movement_type, reference_type, quantity, reference_id, product_id, user_id)
+              VALUES(?, ?, ?, ?, ?, ?, ?)
+      `)
+
+      const transaction = db.transaction(() => {
+
+        if (!category_id) {
+          throw new Error("Category is required. Please select one")
         }
-      }
+
+        const res = stmtInsert.get(name, normalizeSKU, description, normalizePrice, code, normalizeCost, user_id, category_id) as ProductType
+
+        if (!res.id) {
+          throw new Error("Something went wrong while creating the product")
+        }
+
+        stmtInvMv.run(createdAt, 0, 'initial_stock', 0, null, res.id, user_id)
+
+      })
+
+      transaction()
 
       return {
-        data: null,
-        error: new Error('Something went wrong while creating a product.')
+        success: true,
+        error: ''
       }
+
     } catch (error) {
       console.error('catch error ===>', error)
       //   if (error instanceof Error) throw new Error(error.message)
       if (error instanceof SqliteError) {
         if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
           return {
-            data: null,
+            success: false,
             error: new Error('Data needs to be unique')
           }
         }
       }
+
+      if (error instanceof Error) {
+        return {
+          success: false,
+          error: error
+        }
+      }
       return {
-        data: null,
+        success: false,
         error: new Error('Something went wrong while saving the product')
       }
     }
   }
 
-  update(params: ProductType & { user_id: number }): { data: ProductType | null; error: Error | string } {
+  update(params: ProductType & { user_id: number }): CustomResponseType {
     const { id, name, sku, description, price, cost, code, quantity, category_id, user_id, inventory_id } = params
     // console.log('params', params)
 
@@ -354,25 +366,47 @@ export class ProductRepository implements IProductRepository {
     const normalizeCost = (cost ?? 0) * 100
     const normalizeSKU = sku?.trim()?.toUpperCase()?.replace(/ /g, '-')
 
+    const now = new Date().toISOString()
+
     const db = this._database
 
     try {
       const stmt = db.prepare(
-        'UPDATE products  SET name = ?, sku = ?,  description = ? ,  price = ?, cost = ?,  code = ?,  category_id = ? WHERE id = ? RETURNING *'
+        `UPDATE
+          products
+        SET
+          name = ?,
+          updated_at = ?,
+          sku = ?,
+          description = ?,
+          price = ?,
+          cost = ?,
+          code = ?,
+          category_id = ?,
+          updated_by = ?
+        WHERE
+          id = ?
+        RETURNING *`
       )
 
       const transaction = db.transaction(() => {
 
         stmt.all(
           name,
+          now,
           normalizeSKU,
           description,
           normalizePrice,
           normalizeCost,
           code,
           category_id,
+          user_id,
           id
         )
+
+        if (!inventory_id) {
+          throw new Error("No inventory found")
+        }
 
         this._inventory.update({
           quantity,
@@ -381,40 +415,45 @@ export class ProductRepository implements IProductRepository {
           user_id,
         })
 
+        return true
       })
 
-      transaction()
+      const res = transaction()
 
-      if (transaction) {
-        return {
-          data: null,
-          error: ''
-        }
+      if (!res) {
+        throw new Error("Something went wrong while updating the product")
       }
 
       return {
-        data: null,
-        error: new Error('Error while updating the product')
+        success: true,
+        error: ""
       }
     } catch (error) {
       console.error(error)
       if (error instanceof Error) {
         return {
-          data: null,
+          success: false,
           error: new Error('Something went wrong while updating the product')
         }
       }
       return {
-        data: null,
+        success: false,
         error: new Error('Something went wrong while updating the product')
       }
     }
   }
 
-  delete(id: number): { success: boolean; error: Error | string } {
+  delete(id: number): CustomResponseType {
     try {
       // const transaction = this._database.transaction(() => {
-      this._database.prepare('DELETE FROM products WHERE id = ?').run(id)
+      // this._database.prepare('DELETE FROM products WHERE id = ?').run(id)
+
+      this._database.prepare(`
+                             UPDATE
+                              products
+                              SET is_active = 0
+                            WHERE id = ?
+                             `).run(id)
 
       //   this._database.prepare('UPDATE counts SET products = products - 1').run()
       // })

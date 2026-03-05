@@ -1,12 +1,12 @@
-import FormWrapper from '../../../shared/components/form/FormWrapper'
+import FormWrapper from '@renderer/shared/components/form/FormWrapper'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import z from 'zod'
-import useBoundStore from '../../../shared/stores//boundStore'
+import useBoundStore from '@renderer/shared/stores//boundStore'
 import useProductFetch from '../hooks/useProductFetch'
 import useSubmit from '../hooks/useSubmit'
 import ProductDetailForm from '../components/ProductDetailForm'
-import Alert from '../../../shared/components/ui/Alert'
+import Alert from '@renderer/shared/components/ui/Alert'
 
 const schema = z
   .object({
@@ -17,16 +17,16 @@ const schema = z
     price: z.coerce.number(),
     cost: z.coerce.number(),
     code: z.coerce.number(),
-    quantity: z.coerce.number(),
-    category_id: z.coerce.number(),
-    inventory_id: z.coerce.number()
+    quantity: z.coerce.number().nonnegative().default(0),
+    category_id: z.coerce.number().nullish(),
+    inventory_id: z.coerce.number().nullish()
   })
   .superRefine(async (data, ctx) => {
     console.log({ data }, { ctx })
 
     const normalizeCode = Number(data?.code)
 
-    if (data.category_id === 0) {
+    if (!data.category_id) {
       ctx.addIssue({
         code: 'custom',
         message: 'There must be a category.',
@@ -75,7 +75,7 @@ export default function Detail(): React.JSX.Element {
   const user = useBoundStore(state => state.user)
 
   const { data: categories } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['product-categories'],
     queryFn: async () => {
       const { data } = await window.apiCategory.getAllCategories()
       return data
@@ -112,7 +112,7 @@ export default function Detail(): React.JSX.Element {
         onSubmit={mutate}
         key={id}
       >
-        <ProductDetailForm categoryOptions={categoryOptions} errorMessage={mutateError?.message} />
+        <ProductDetailForm isNew={id === "new"} categoryOptions={categoryOptions} errorMessage={mutateError?.message} />
       </FormWrapper>
     </div>
   )

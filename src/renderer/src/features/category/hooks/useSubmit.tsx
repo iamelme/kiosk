@@ -1,6 +1,6 @@
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
 import { NavigateFunction } from "react-router-dom";
-import { CategoryType } from "../../../shared/utils/types";
+import { CategoryType } from "@renderer/shared/utils/types";
 
 
 type Params = {

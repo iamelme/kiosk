@@ -1,13 +1,13 @@
-import { SaleItemType } from '../../../shared/utils/types'
-import Items from '../../../shared/components/Items'
-import Dialog from '../../../shared/components/ui/Dialog'
+import { SaleItemType } from '@renderer/shared/utils/types'
+import Items from '@renderer/shared/components/Items'
+import Dialog from '@renderer/shared/components/ui/Dialog'
 import { ChangeEvent, ReactNode, RefObject } from 'react'
 import { Link } from 'react-router-dom'
 import { NumericFormat } from 'react-number-format'
-import Input from '../../../shared/components/ui/Input'
-import Alert from '../../../shared/components/ui/Alert'
-import Button from '../../../shared/components/ui/Button'
-import { numericFormatLimit } from '../../../shared/utils'
+import Input from '@renderer/shared/components/ui/Input'
+import Alert from '@renderer/shared/components/ui/Alert'
+import Button from '@renderer/shared/components/ui/Button'
+import { numericFormatLimit } from '@renderer/shared/utils'
 
 type ReturnProp = {
   ref: RefObject<HTMLButtonElement | null>
