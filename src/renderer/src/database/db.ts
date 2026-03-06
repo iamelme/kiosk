@@ -89,11 +89,6 @@ export class AppDatabase {
               FOREIGN KEY (user_id) REFERENCES users(id)
             );
 
-            CREATE TABLE IF NOT EXISTS sale_statuses(
-              key TEXT PRIMARY KEY,
-              name TEXT UNIQUE
-            );
-
             CREATE TABLE IF NOT EXISTS sale_items(
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               created_at DATETIME,
