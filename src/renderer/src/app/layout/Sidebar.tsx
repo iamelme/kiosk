@@ -103,7 +103,7 @@ export default function Sidebar({ onUpdateUser }: Props): React.JSX.Element {
           {settings?.logo && (
             <Link to="/">
               <img
-                src={`elme-cute://${settings.logo}?v=${Date.now()}`}
+                src={`elme-cute:///${settings.logo}?v=${Date.now()}`}
                 alt="logo"
               />
             </Link>

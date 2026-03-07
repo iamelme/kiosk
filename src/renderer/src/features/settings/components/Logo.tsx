@@ -64,7 +64,7 @@ export default function Logo(): ReactNode {
               onClick={() => mutation.mutate()}
             >
               <img
-                src={`elme-cute://${settings.logo}?v=${Date.now()}`}
+                src={`elme-cute:///${settings.logo}?v=${Date.now()}`}
                 alt="logo"
                 className="w-24 h-24 rounded-full aspect-square object-cover"
               />
