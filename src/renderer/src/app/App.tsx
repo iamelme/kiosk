@@ -1,12 +1,15 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import Sidebar from "./layout/Sidebar";
 import useBoundStore from "../shared/stores/boundStore";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 function App(): React.JSX.Element {
   const updateLocale = useBoundStore((state) => state.updateLocale);
   const updateLogo = useBoundStore((state) => state.updateLogo);
+
+  const location = useLocation();
 
   useQuery({
     queryKey: ["settings"],
@@ -23,6 +26,10 @@ function App(): React.JSX.Element {
       return res.data;
     },
   });
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   const updateUser = useBoundStore((state) => state.updateUser);
 
