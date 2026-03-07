@@ -9,7 +9,6 @@ import {
 } from "../interfaces/ISaleRepository";
 import {
   ErrorType,
-  InventoryType,
   PlaceOrderType,
   ReturnRevenueType,
   SaleItemType,
@@ -325,41 +324,159 @@ export class SaleRepository implements ISaleRepository {
     const { startDate, endDate, isQuarterly = false } = params;
     const db = this._database;
     try {
+      // const stmt = `
+      //   SELECT
+      //     STRFTIME('%m', s.created_at) AS month,
+      //     COALESCE(p.prev_gross_revenue, 0) AS prev_gross_revenue,
+      //     s.gross_revenue,
+      //     COALESCE(pr.prev_total_return, 0) as prev_total_return,
+      //     COALESCE(r.total_return, 0) as total_return,
+      //     s.gross_revenue - COALESCE(r.total_return, 0) AS net_revenue
+      //   FROM (
+      //     SELECT
+      //       created_at,
+      //       SUM(COALESCE(total, 0)) AS gross_revenue
+      //     FROM
+      //       sales
+      //     WHERE
+      //         created_at >= :startDate
+      //         AND
+      //         created_at <= :endDate
+      //         AND status != 'void'
+      //   ) AS s,
+      //   (
+      //     SELECT
+      //       created_at,
+      //       SUM(COALESCE(total, 0)) AS prev_gross_revenue
+      //     FROM
+      //       sales
+      //     WHERE
+      //       created_at = STRFTIME('%m', :startDate , '-1 month')
+      //       AND status != 'void'
+      //   ) AS p,
+      //   (
+      //     SELECT
+      //       SUM(COALESCE(refund_amount, 0))  AS total_return
+      //     FROM
+      //       returns
+      //     WHERE
+      //         created_at >= :startDate
+      //         AND
+      //         created_at <= :endDate
+      //   ) AS r,
+      //   (
+      //     SELECT
+      //       SUM(COALESCE(refund_amount, 0))  AS prev_total_return
+      //     FROM
+      //       returns
+      //     WHERE
+      //       created_at = STRFTIME('%m', :startDate , '-1 month')
+      //   ) AS pr;
+      //         `;
+
       const stmt = `
-        SELECT
-          STRFTIME('%m',  s.created_at) AS month,
-          s.gross_revenue,
-          COALESCE(r.total_return, 0) as total_return,
-          s.gross_revenue - COALESCE(r.total_return, 0) AS net_revenue
-        FROM (
-          SELECT
-            created_at,
-            SUM(COALESCE(total, 0)) AS gross_revenue
-          FROM
-            sales
-          WHERE
-              created_at >= ?
-              AND
-              created_at <= ?
-              AND status = 'complete'
-        ) AS s,
-        (
-          SELECT
-            SUM(COALESCE(refund_amount, 0))  AS total_return
-          FROM
-            returns
-          WHERE
-              created_at >= ?
-              AND
-              created_at <= ?
-        ) AS r        `;
+      WITH
+sales_summary AS (
+  SELECT
+  created_at,
+    STRFTIME('%m', created_at) AS month,
+    SUM(total) AS gross_revenue
+  FROM sales
+ WHERE
+	status != 'void'
+	AND
+		created_at >=
+			STRFTIME('%m', :startDate, '-1 month')
+		AND
+			created_at  <= :endDate
+  GROUP BY month
+),
+
+sales_with_lag AS (
+  SELECT
+	created_at,
+    month,
+    gross_revenue,
+    LAG(gross_revenue) OVER (ORDER BY month) AS prev_gross_revenue
+  FROM
+	sales_summary
+),
+
+returns_summary AS (
+	SELECT
+		created_at,
+    STRFTIME('%m', created_at) AS month,
+		SUM(refund_amount) AS total_return
+	FROM
+		returns
+		WHERE
+	created_at >=
+			STRFTIME('%m', :startDate, '-1 month')
+		AND
+			created_at  <= :endDate
+  GROUP BY month
+),
+
+returns_with_lag AS (
+	SELECT
+		created_at,
+		month,
+    total_return,
+		LAG(total_return) OVER (ORDER BY month) AS prev_total_return
+	FROM
+		returns_summary
+	GROUP BY
+		month
+)
+
+
+SELECT
+  s.*,
+  COALESCE(r.total_return, 0) AS total_return,
+  s.gross_revenue - COALESCE(r.total_return, 0) AS net_revenue,
+  COALESCE(r.prev_total_return, 0) AS prev_total_return,
+  COALESCE(
+    ROUND(
+        (s.gross_revenue - COALESCE(r.total_return, 0) - (COALESCE(s.prev_gross_revenue, 0) - COALESCE(r.prev_total_return, 0))) * 100.0 /
+        (COALESCE(s.prev_gross_revenue, 0) - COALESCE(r.prev_total_return, 0)),
+        2
+    ), 0
+  ) AS net_percent_change,
+  COALESCE(
+  ROUND(
+      (COALESCE(r.total_return, 0) - COALESCE(r.prev_total_return, 0)) * 100.0 /
+      COALESCE(r.prev_total_return, 0),
+      2
+    ), 0
+  ) AS return_percent_change,
+  COALESCE(
+    ROUND(
+        (s.gross_revenue - COALESCE(s.prev_gross_revenue, 0)) * 100.0 /
+        s.prev_gross_revenue,
+        2
+    ), 0
+  ) AS gross_percent_change
+FROM sales_with_lag AS s
+LEFT JOIN
+  returns_with_lag AS r
+  ON
+  s.month = r.month
+WHERE
+	s.created_at >=
+			:startDate
+		AND
+			s.created_at  <= :endDate
+
+
+      `;
 
       console.log({ startDate, endDate });
 
       if (isQuarterly) {
         const res = db
           .prepare(stmt)
-          .all(startDate, endDate, startDate, endDate) as ReturnRevenueType;
+          // .all(startDate, endDate,startDate, startDate, endDate,  startDate) as ReturnRevenueType;
+          .all({ startDate, endDate }) as ReturnRevenueType;
 
         if (!res) {
           throw new Error("Something went wrong while  retrieving");
@@ -372,16 +489,25 @@ export class SaleRepository implements ISaleRepository {
       } else {
         const res = db
           .prepare(stmt)
-          .get(startDate, endDate, startDate, endDate) as ReturnRevenueType;
+          // .get(startDate, endDate,startDate, startDate, endDate,  startDate) as ReturnRevenueType;
+          .get({ startDate, endDate }) as ReturnRevenueType;
+
         if (!res) {
-          throw new Error("Something went wrong while  retrieving");
+          return {
+            data: null,
+            error: "",
+          };
         }
+        // if (!res) {
+        //   throw new Error("Something went wrong while  retrieving");
+        // }
         return {
           data: res,
           error: "",
         };
       }
     } catch (error) {
+      console.log(error);
       if (error instanceof Error) {
         return {
           data: null,
@@ -844,47 +970,35 @@ export class SaleRepository implements ISaleRepository {
       );
 
       const transaction = db.transaction(() => {
+        console.log("status to be updated", status);
         const sales = stmt.run(status, id);
 
-        const items = itemStmt.all(id) as Array<
-          SaleItemType & { old_quantity: number }
-        >;
+        // only status void can restore product inventory
+        if (status === "void") {
+          const items = itemStmt.all(id) as Array<
+            SaleItemType & { old_quantity: number }
+          >;
 
-        const isVoid = status === "void";
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
 
-        let referenceType: InventoryType["reference_type"] | undefined;
+            const resItem = this._inventory.update({
+              quantity: item.quantity,
+              id: item.inventory_id,
+              product_id: item.product_id,
+              user_id: item.user_id,
+              movement_type: 0,
+              reference_type: "void",
+            });
 
-        switch (status) {
-          case "void":
-            referenceType = "void";
-            break;
-          case "return":
-            referenceType = "return";
-            break;
-          default:
-            referenceType = "sale";
-            break;
-        }
+            if (!resItem) {
+              throw new Error("Something went wrong while updating the sale");
+            }
+          }
 
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-
-          const resItem = this._inventory.update({
-            quantity: !isVoid ? item.quantity * -1 : item.quantity,
-            id: item.inventory_id,
-            product_id: item.product_id,
-            user_id: item.user_id,
-            movement_type: isVoid ? 0 : 1,
-            reference_type: referenceType,
-          });
-
-          if (!resItem) {
+          if (!sales) {
             throw new Error("Something went wrong while updating the sale");
           }
-        }
-
-        if (!sales) {
-          throw new Error("Something went wrong while updating the sale");
         }
         return true;
       });

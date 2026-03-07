@@ -9,6 +9,7 @@ import { ReactNode, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import useBoundStore from "@renderer/shared/stores//boundStore";
 import Return from "../components/Return";
+import Badge from "@renderer/shared/components/ui/Badge";
 const headers = [
   { label: "Name", className: "" },
   { label: "Quantity", className: "text-right" },
@@ -78,7 +79,6 @@ export default function Detail(): ReactNode {
       > = [];
       for (const [key, value] of selectedItems) {
         const found = data.items.find((i) => i.id === Number(key));
-        console.log({ found });
 
         if (
           !found ||
@@ -92,7 +92,10 @@ export default function Detail(): ReactNode {
 
         items.push({
           product_id: found?.product_id,
-          quantity: value.newQty,
+          quantity:
+            value.newQty > found.available_qty
+              ? found.available_qty
+              : value.newQty,
           old_quantity: found.inventory_qty,
           refund_price: value.price,
           inventory_id: found.inventory_id,
@@ -102,7 +105,6 @@ export default function Detail(): ReactNode {
           sale_item_id: Number(key),
         });
       }
-      console.log("submitted items", items);
 
       const payload = {
         sale_id: Number(id),
@@ -121,6 +123,7 @@ export default function Detail(): ReactNode {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [id, "sales-detail"] });
+      setSelectedItems(new Map());
       if (refReturnBtn?.current) {
         refReturnBtn?.current.click();
         setSelectedItems(new Map());
@@ -129,8 +132,6 @@ export default function Detail(): ReactNode {
   });
 
   const handleToggleAll = (e): void => {
-    console.log({ checked: e.target.checked });
-
     const { checked } = e.target;
 
     if (data) {
@@ -141,7 +142,8 @@ export default function Detail(): ReactNode {
             price:
               data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
             newQty:
-              data?.items?.find((item) => item.id === cur.id)?.quantity ?? 0,
+              data?.items?.find((item) => item.id === cur.id)?.available_qty ??
+              0,
           };
 
           return acc;
@@ -155,7 +157,6 @@ export default function Detail(): ReactNode {
   };
 
   const handleToggleSelect = (id) => (e) => {
-    console.log({ id, checked: e.target.checked });
     const { checked } = e.target;
 
     const items = new Map(selectedItems);
@@ -167,7 +168,6 @@ export default function Detail(): ReactNode {
           newQty: data?.items?.find((item) => item.id === id)?.quantity ?? 0,
         })
       : items.delete(`${id}`);
-    console.log(items.size);
 
     if (items.size === data?.items.length && data?.items.length > 0) {
       if (!checked) {
@@ -179,7 +179,7 @@ export default function Detail(): ReactNode {
           isChecked: true,
           price:
             data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
-          newQty: items.get(`${cur.id}`)?.newQty || cur.quantity,
+          newQty: items.get(`${cur.id}`)?.newQty || cur.available_qty,
         };
 
         return acc;
@@ -202,25 +202,18 @@ export default function Detail(): ReactNode {
   if (!data) {
     return <Alert variant="danger">No Details for this Sales Invoice</Alert>;
   }
-  console.log("data", data);
 
   const settings: SettingsType | undefined = queryClient.getQueryData([
     "settings",
   ]);
   const handleDownloadPDF = async (): Promise<void> => {
     try {
-      console.log("Cached user data:", settings, settings?.logo);
-
       const res = await window.apiElectron.createPDF({
         ...data,
         logo: settings?.logo as string,
       });
 
       downloadblePDF({ res, invoiceNumber: data?.invoice_number });
-
-      // console.log('convert blob', new Blob([res], { type: 'application/pdf' }))
-
-      // console.log('res', res)
     } catch (error) {
       console.error(error);
     }
@@ -239,7 +232,7 @@ export default function Detail(): ReactNode {
     }
   };
 
-  console.log("selectedItems", selectedItems);
+  const returnable = data?.items?.every((item) => item.available_qty > 0);
 
   return (
     <>
@@ -261,7 +254,7 @@ export default function Detail(): ReactNode {
                 Download PDF
               </Button>
             </div>
-            {data?.status !== "void" && (
+            {data?.status !== "void" && returnable && (
               <Return
                 ref={refReturnBtn}
                 items={data.items}
@@ -285,17 +278,23 @@ export default function Detail(): ReactNode {
                 {mutationUpdateStatus.error?.message}
               </Alert>
             )}
-            <select
-              disabled={data.status === "void"}
-              defaultValue={data.status}
-              onChange={(e) => mutationUpdateStatus.mutate(e.target.value)}
-            >
-              {saleStatuses.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
+            {["void", "partial_return", "return"].find(
+              (status) => status === data?.status,
+            ) ? (
+              <Badge>{humanize(data.status)}</Badge>
+            ) : (
+              <select
+                key={data.status}
+                defaultValue={data.status}
+                onChange={(e) => mutationUpdateStatus.mutate(e.target.value)}
+              >
+                {saleStatuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+            )}
           </p>
         </div>
       </div>
