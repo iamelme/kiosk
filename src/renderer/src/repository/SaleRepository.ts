@@ -970,47 +970,35 @@ WHERE
       );
 
       const transaction = db.transaction(() => {
+        console.log("status to be updated", status);
         const sales = stmt.run(status, id);
 
-        const items = itemStmt.all(id) as Array<
-          SaleItemType & { old_quantity: number }
-        >;
+        // only status void can restore product inventory
+        if (status === "void") {
+          const items = itemStmt.all(id) as Array<
+            SaleItemType & { old_quantity: number }
+          >;
 
-        const isVoid = status === "void";
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
 
-        let referenceType: InventoryType["reference_type"] | undefined;
+            const resItem = this._inventory.update({
+              quantity: item.quantity,
+              id: item.inventory_id,
+              product_id: item.product_id,
+              user_id: item.user_id,
+              movement_type: 0,
+              reference_type: "void",
+            });
 
-        switch (status) {
-          case "void":
-            referenceType = "void";
-            break;
-          case "return":
-            referenceType = "return";
-            break;
-          default:
-            referenceType = "sale";
-            break;
-        }
+            if (!resItem) {
+              throw new Error("Something went wrong while updating the sale");
+            }
+          }
 
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-
-          const resItem = this._inventory.update({
-            quantity: !isVoid ? item.quantity * -1 : item.quantity,
-            id: item.inventory_id,
-            product_id: item.product_id,
-            user_id: item.user_id,
-            movement_type: isVoid ? 0 : 1,
-            reference_type: referenceType,
-          });
-
-          if (!resItem) {
+          if (!sales) {
             throw new Error("Something went wrong while updating the sale");
           }
-        }
-
-        if (!sales) {
-          throw new Error("Something went wrong while updating the sale");
         }
         return true;
       });
