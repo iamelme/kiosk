@@ -1,23 +1,31 @@
 import { ReactNode } from "react";
-import FormInput from '@renderer/shared/components/form/FormInput'
+import FormInput from "@renderer/shared/components/form/FormInput";
 
-import Alert from '@renderer/shared/components/ui/Alert'
-import Button from '@renderer/shared/components/ui/Button'
+import Alert from "@renderer/shared/components/ui/Alert";
+import Button from "@renderer/shared/components/ui/Button";
 import { Link } from "react-router-dom";
 
 type Props = {
-  errorMessage?: string
-}
-
+  errorMessage?: string;
+};
 
 export default function LoginForm({ errorMessage }: Props): ReactNode {
-
   return (
     <>
-      <FormInput autoFocus label="User Name" name="user_name" />
-      <FormInput label="Password" name="password" type="password" />
+      <FormInput
+        variant="default"
+        autoFocus
+        label="User Name"
+        name="user_name"
+      />
+      <FormInput
+        variant="default"
+        label="Password"
+        name="password"
+        type="password"
+      />
       <p className="mb-3 text-blue-500">
-        <Link to="/signup">Register</Link>
+        <Link to="/auth/signup">Register</Link>
       </p>
       {errorMessage && (
         <Alert variant="danger" className="mb-3 test">
@@ -28,5 +36,5 @@ export default function LoginForm({ errorMessage }: Props): ReactNode {
         Login
       </Button>
     </>
-  )
+  );
 }
