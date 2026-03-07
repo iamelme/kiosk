@@ -25,6 +25,8 @@ import SettingsPage from "../features/settings/pages";
 import GeneralPage from "../features/settings/pages/General";
 import SettingsSystemPage from "../features/settings/pages/System";
 
+import NotFoundPage from "../features/notFound/pages";
+
 export default function Router() {
   return (
     <HashRouter>
@@ -75,6 +77,7 @@ export default function Router() {
             <Route path="system" element={<SettingsSystemPage />} />
           </Route>
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </HashRouter>
   );
