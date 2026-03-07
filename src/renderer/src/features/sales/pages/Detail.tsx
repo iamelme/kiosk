@@ -92,7 +92,10 @@ export default function Detail(): ReactNode {
 
         items.push({
           product_id: found?.product_id,
-          quantity: value.newQty,
+          quantity:
+            value.newQty > found.available_qty
+              ? found.available_qty
+              : value.newQty,
           old_quantity: found.inventory_qty,
           refund_price: value.price,
           inventory_id: found.inventory_id,
@@ -121,6 +124,7 @@ export default function Detail(): ReactNode {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [id, "sales-detail"] });
+      setSelectedItems(new Map());
       if (refReturnBtn?.current) {
         refReturnBtn?.current.click();
         setSelectedItems(new Map());
@@ -141,7 +145,8 @@ export default function Detail(): ReactNode {
             price:
               data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
             newQty:
-              data?.items?.find((item) => item.id === cur.id)?.quantity ?? 0,
+              data?.items?.find((item) => item.id === cur.id)?.available_qty ??
+              0,
           };
 
           return acc;
@@ -179,7 +184,7 @@ export default function Detail(): ReactNode {
           isChecked: true,
           price:
             data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
-          newQty: items.get(`${cur.id}`)?.newQty || cur.quantity,
+          newQty: items.get(`${cur.id}`)?.newQty || cur.available_qty,
         };
 
         return acc;
