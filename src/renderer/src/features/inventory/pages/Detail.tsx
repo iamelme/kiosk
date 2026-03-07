@@ -1,22 +1,24 @@
 // import FormInput from '@renderer/shared/components/form/FormInput'
 // import FormWrapper from '@renderer/shared/components/form/FormWrapper'
 // import Alert from '@renderer/shared/components/ui/Alert'
-import Button from '@renderer/shared/components/ui/Button'
+import Button from "@renderer/shared/components/ui/Button";
 // import { ProdInventoryType } from '@renderer/interfaces/IInventoryRepository'
 // import useBoundStore from '@renderer/shared/stores//boundStore'
 // import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ReactNode, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { ReactNode, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 // import z from 'zod'
-import useInventoryFetch from '../hooks/useInventoryFetch'
-import Pagination from '@renderer/shared/components/Pagination'
-import Input from '@renderer/shared/components/ui/Input'
-import ListPage from '@renderer/shared/components/ListPage'
-import DateFilter from '@renderer/shared/components/DateFilter'
-import Items from '@renderer/shared/components/Items'
-import { NumericFormat } from 'react-number-format'
-import { movementType } from '@renderer/shared/utils/types'
-import { humanize } from '@renderer/shared/utils'
+import useInventoryFetch from "../hooks/useInventoryFetch";
+import Pagination from "@renderer/shared/components/Pagination";
+import Input from "@renderer/shared/components/ui/Input";
+import ListPage from "@renderer/shared/components/ListPage";
+import DateFilter from "@renderer/shared/components/DateFilter";
+import Items from "@renderer/shared/components/Items";
+import { NumericFormat } from "react-number-format";
+import { movementType } from "@renderer/shared/utils/types";
+import { addDays, humanize } from "@renderer/shared/utils";
+import Dialog from "@renderer/shared/components/ui/Dialog";
+import Adjustment from "../components/Adjustment";
 
 // const schema = z.object({
 //   id: z.coerce.number().optional(),
@@ -27,77 +29,52 @@ import { humanize } from '@renderer/shared/utils'
 // type ValuesType = z.infer<typeof schema>
 
 export default function Detail(): ReactNode {
-  const { id } = useParams()
+  const { id } = useParams();
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  // const user = useBoundStore((state) => state.user)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [hasLastItem, setHasLastItem] = useState(false)
+  const adjustmentRef = useRef<HTMLButtonElement | null>(null);
 
-  const [startDate, setStartDate] = useState<string | Date>('')
-  const [endDate, setEndDate] = useState<string | Date>('')
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [hasLastItem, setHasLastItem] = useState(false);
 
-  const [pageSize, setPageSize] = useState(20)
+  const [startDate, setStartDate] = useState<string | Date>("");
+  const [endDate, setEndDate] = useState<string | Date>("");
 
-  let dir = searchParams.get('dir')
+  const [pageSize, setPageSize] = useState(20);
 
-  const cursorId = searchParams.get('cursorId')
+  let dir = searchParams.get("dir");
+
+  const cursorId = searchParams.get("cursorId");
 
   const { isPending, error, data } = useInventoryFetch({
     startDate: startDate && new Date(startDate).toISOString(),
-    endDate: endDate && new Date(endDate).toISOString(),
+    endDate: endDate && addDays(new Date(endDate), 1),
+
     pageSize,
     id,
     cursorId,
-    direction: dir ?? 'next', onHasLastItem: setHasLastItem
-  })
-  // const queryClient = useQueryClient()
+    direction: dir ?? "next",
+    onHasLastItem: setHasLastItem,
+  });
 
-  // const mutation = useMutation({
-  //   mutationFn: async (formData: ProdInventoryType) => {
-  //     if (!user?.id) return
-  //     if (data?.quantity === formData.quantity) {
-  //       navigate(-1)
-  //       return
-  //     }
-  //     const { error } = await window.apiInventory.updateInventory({
-  //       ...formData,
-  //       user_id: user.id,
-  //       movement_type: 2
-  //     })
-  //     if (error instanceof Error) {
-  //       throw new Error(error.message)
-  //     }
-  //     navigate(-1)
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ['inventory-products'] })
-  //   }
-  // })
-  //
   if (isPending) {
-    return <>Loading...</>
+    return <>Loading...</>;
   }
 
   if (error) {
-    return <>{error.message}</>
+    return <>{error.message}</>;
   }
 
-  console.log({ data })
-
-
-
-  console.log("movements", data?.movements, data?.movements?.length && data[data?.movements?.length - 1]?.id)
+  console.log({ data });
 
   return (
     <>
-
       <ListPage
         header={{
           left: {
             title: `${data?.productName}`,
-            subTitle: 'Inventory Movement'
+            subTitle: `Current stock: ${data?.quantity ?? 0}`,
           },
           right: (
             <>
@@ -107,11 +84,37 @@ export default function Detail(): ReactNode {
                 onStartDate={setStartDate}
                 onEndDate={setEndDate}
               />
-              <div className='flex justify-end mt-3'>
-                <Button variant='outline' size="sm" onClick={() => navigate(-1)}>Go Back</Button>
+              <div className="flex gap-x-2 justify-end mt-3">
+                <Dialog>
+                  <Dialog.Trigger
+                    ref={(el) => {
+                      adjustmentRef.current = el;
+                    }}
+                  >
+                    Adjustment
+                  </Dialog.Trigger>
+                  <Dialog.Content className="max-w-[500px]">
+                    <Dialog.Header>
+                      <h2 className="text-xl">Inventory Adjustment</h2>
+                    </Dialog.Header>
+                    <Adjustment
+                      ref={adjustmentRef}
+                      id={Number(id)}
+                      quantity={data.quantity}
+                      productId={data.product_id}
+                    />
+                  </Dialog.Content>
+                </Dialog>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(-1)}
+                >
+                  Go Back
+                </Button>
               </div>
             </>
-          )
+          ),
         }}
         isPending={isPending}
         error={error}
@@ -121,13 +124,20 @@ export default function Detail(): ReactNode {
             <>
               <Items
                 items={data.movements}
-                headers={[{ label: 'Date' }, { label: 'Last Quantity', className: 'text-right' }, { label: 'Movement Type' }, { label: 'Ref Type' }]}
+                headers={[
+                  { label: "Date" },
+                  { label: "Last Quantity", className: "text-right" },
+                  { label: "Movement Type" },
+                  { label: "Ref Type" },
+                ]}
                 renderItems={(item) => (
                   <>
                     <td>{new Date(item.created_at).toLocaleDateString()}</td>
-                    <td className='text-right'>{item.quantity}</td>
+                    <td className="text-right">{item.quantity}</td>
                     <td>{movementType[item.movement_type ?? 0]}</td>
-                    <td>{humanize(item.reference_type)}</td>
+                    <td>
+                      {item?.reference_type && humanize(item.reference_type)}
+                    </td>
                   </>
                 )}
               />
@@ -136,9 +146,7 @@ export default function Detail(): ReactNode {
         </>
         <div className="flex items-end justify-between gap-x-2">
           <div>
-
-            {
-              data && data?.movements?.length !== undefined &&
+            {data && data?.movements?.length !== undefined && (
               <Pagination
                 direction={dir}
                 firstId={data?.movements?.[0]?.id}
@@ -147,7 +155,7 @@ export default function Detail(): ReactNode {
                 searchParams={searchParams}
                 onSearchParams={setSearchParams}
               />
-            }
+            )}
           </div>
           <div>
             <span>Per page</span>
@@ -156,10 +164,14 @@ export default function Detail(): ReactNode {
                 defaultValue={pageSize}
                 customInput={Input}
                 onValueChange={(values) => {
-                  const { floatValue } = values
+                  const { floatValue } = values;
 
                   if (floatValue) {
-                    setPageSize(floatValue)
+                    setSearchParams({
+                      ...searchParams,
+                      cursorId: "0",
+                    });
+                    setPageSize(floatValue);
                   }
                 }}
               />
@@ -167,7 +179,6 @@ export default function Detail(): ReactNode {
           </div>
         </div>
       </ListPage>
-
     </>
-  )
+  );
 }
