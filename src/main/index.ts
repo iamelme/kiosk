@@ -1,14 +1,4 @@
-import fs from "fs";
-import {
-  app,
-  shell,
-  BrowserWindow,
-  ipcMain,
-  dialog,
-  protocol,
-  net,
-  nativeImage,
-} from "electron";
+import { app, shell, BrowserWindow, ipcMain, protocol, net } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
@@ -26,6 +16,8 @@ import { ReturnSaleType } from "../renderer/src/shared/utils/types";
 import { hashPassword } from "./hashPassword";
 import verifyPassword from "./verifyPassword";
 import initializeLogo from "./initializeLogo";
+import { addBackUp } from "./addBackUp";
+import uploadLogo from "./uploadLogo";
 
 function createWindow(): void {
   // Create the browser window.
@@ -92,17 +84,14 @@ app.whenReady().then(() => {
   const inventory = new InventoryRepository(db.db);
 
   new CategoryRepository(db.db);
-  new ProductRepository(db.db, inventory);
+  new ProductRepository(db.db);
   new UserRepository(db.db, hashPassword, verifyPassword);
   new CartRepository(db.db);
-  new SaleRepository(db.db, inventory);
+  const sales = new SaleRepository(db.db, inventory);
   new SettingsRepository(db.db);
-  new ReturnRepository(db.db, inventory);
+  new ReturnRepository(db.db, inventory, sales);
 
-  // console.log('db from main', db)
-
-  // const locale = app.getLocale()
-  // console.log('Current application locale:', locale)
+  addBackUp(db.db);
 
   ipcMain.handle("get-locale", () => {
     return app.getLocale();
@@ -172,36 +161,7 @@ app.whenReady().then(() => {
     },
   );
 
-  ipcMain.handle("upload-logo", async (event) => {
-    const userDataPath = app.getPath("userData");
-    const imagePath = join(userDataPath, "./assets/images");
-    if (!fs.existsSync(imagePath)) {
-      fs.mkdirSync(imagePath, { recursive: true });
-    }
-
-    const res = await dialog.showOpenDialog({
-      properties: ["openFile"],
-    });
-
-    if (!res.canceled && res.filePaths.length > 0) {
-      const filePath = res.filePaths[0];
-
-      const destPath = join(userDataPath, `./assets/images/logo.webp`);
-      fs.copyFile(filePath, destPath, (err) => {
-        if (err) {
-          console.error("Save failed:", err);
-          throw new Error(err.message);
-        }
-        console.log("File saved successfully at:", destPath);
-
-        const mainWindow = BrowserWindow.fromWebContents(event.sender);
-        if (mainWindow) mainWindow.webContents.send("upload-complete");
-      });
-
-      return destPath;
-    }
-    throw new Error("Something went wrong while uploading the logo");
-  });
+  uploadLogo();
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
