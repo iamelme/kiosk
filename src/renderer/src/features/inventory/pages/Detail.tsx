@@ -16,6 +16,8 @@ import DateFilter from "@renderer/shared/components/DateFilter";
 import Items from "@renderer/shared/components/Items";
 import { NumericFormat } from "react-number-format";
 import { movementType } from "@renderer/shared/utils/types";
+import Dialog from "@renderer/shared/components/ui/Dialog";
+import Adjustment from "../components/Adjustment";
 
 // const schema = z.object({
 //   id: z.coerce.number().optional(),
@@ -30,9 +32,7 @@ export default function Detail(): ReactNode {
 
   const navigate = useNavigate();
 
-  // const user = useBoundStore((state) => state.user)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [hasLastItem, setHasLastItem] = useState(false)
+  const adjustmentRef = useRef<HTMLButtonElement | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [hasLastItem, setHasLastItem] = useState(false);
@@ -82,11 +82,37 @@ export default function Detail(): ReactNode {
                 onStartDate={setStartDate}
                 onEndDate={setEndDate}
               />
-              <div className='flex justify-end mt-3'>
-                <Button variant='outline' size="sm" onClick={() => navigate(-1)}>Go Back</Button>
+              <div className="flex gap-x-2 justify-end mt-3">
+                <Dialog>
+                  <Dialog.Trigger
+                    ref={(el) => {
+                      adjustmentRef.current = el;
+                    }}
+                  >
+                    Adjustment
+                  </Dialog.Trigger>
+                  <Dialog.Content className="max-w-[500px]">
+                    <Dialog.Header>
+                      <h2 className="text-xl">Inventory Adjustment</h2>
+                    </Dialog.Header>
+                    <Adjustment
+                      ref={adjustmentRef}
+                      id={Number(id)}
+                      quantity={data.quantity}
+                      productId={data.product_id}
+                    />
+                  </Dialog.Content>
+                </Dialog>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(-1)}
+                >
+                  Go Back
+                </Button>
               </div>
             </>
-          )
+          ),
         }}
         isPending={isPending}
         error={error}
