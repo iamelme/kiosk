@@ -1,8 +1,8 @@
-import { Database } from "better-sqlite3";
+import Database, { type Database as DatabaseType } from "better-sqlite3";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { join } from "path";
 
-export function addBackUp(db: Database) {
+export function addBackUp(db: DatabaseType) {
   ipcMain.handle("save-db", async (_) => {
     const date = new Date();
     const win = BrowserWindow.getFocusedWindow();
@@ -21,15 +21,28 @@ export function addBackUp(db: Database) {
       }
 
       try {
-        db.exec(`
-                  PRAGMA journal_mode=WAL;
-                  VACUUM INTO '${filePath}.db';
-                  `);
+        db.pragma("journal_mode = WAL");
+        db.exec(`VACUUM INTO '${filePath}.db';`);
 
-        db.prepare("INSERT INTO backup_logs (filename) VALUES (?)").run(
-          `${filePath}.db`,
-        );
+        const newDb = new Database(`${filePath}.db`);
+
+        const result = newDb.pragma("integrity_check", {
+          simple: true,
+        });
+
+        console.log("result", result);
+
+        if (result === "ok") {
+          console.log("Database integrity is healthy.");
+        } else {
+          console.error("Database corruption detected:");
+        }
+
+        db.prepare(
+          "INSERT INTO backup_logs (created_at, filename, status) VALUES (?, ?, ?)",
+        ).run(new Date().toISOString(), `${filePath}.db`, result);
       } catch (error) {
+        console.log(error);
         if (error instanceof Error) {
           dialog.showErrorBox("Save Failed", error.message);
         }
