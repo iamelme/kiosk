@@ -12,6 +12,7 @@ import {
   SaleType,
   ReturnType,
   ReturnItemType,
+  ReturnRevenueType,
 } from "../renderer/src/shared/utils/types";
 import {
   InventoryMovementParams,
@@ -111,17 +112,11 @@ export const apiSale = {
     endDate: string;
     isQuarterly?: boolean;
   }): Promise<{
-    data:
-      | { gross_revenue: number; total_return: number; net_revenue: number }
-      | {
-          month: number;
-          gross_revenue: number;
-          total_return: number;
-          net_revenue: number;
-        }[]
-      | null;
+    data: ReturnRevenueType;
     error: ErrorType;
-  }> => ipcRenderer.invoke("sale:getRevenue", params),
+  }> => {
+    return ipcRenderer.invoke("sale:getRevenue", params);
+  },
   getTopItems: (params: {
     pageSize: number;
     cursorId: number;
