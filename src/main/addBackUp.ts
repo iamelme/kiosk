@@ -7,26 +7,28 @@ export function addBackUp(db: Database) {
     const date = new Date();
     const win = BrowserWindow.getFocusedWindow();
     if (win) {
-      const { filePath } = await dialog.showSaveDialog(win, {
+      const { canceled, filePath } = await dialog.showSaveDialog(win, {
         title: "Select a location to save your database backup",
         defaultPath: join(
           app.getPath("downloads"),
-          `baligya_${date.getFullYear()}-${date.getMonth()}-${date.getDay()}`,
+          `baligya_${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
         ),
         buttonLabel: "Save",
       });
 
-      // if (canceled) {
-      //   return { status: "cancelled" };
-      // }
-
-      console.log({ filePath });
+      if (canceled) {
+        return;
+      }
 
       try {
         db.exec(`
                   PRAGMA journal_mode=WAL;
                   VACUUM INTO '${filePath}.db';
                   `);
+
+        db.prepare("INSERT INTO backup_logs (filename) VALUES (?)").run(
+          `${filePath}.db`,
+        );
       } catch (error) {
         if (error instanceof Error) {
           dialog.showErrorBox("Save Failed", error.message);
