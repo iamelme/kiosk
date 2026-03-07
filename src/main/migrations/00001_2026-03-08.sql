@@ -1,0 +1,5 @@
+CREATE TABLE backup_logs (
+  id INTEGER PRIMARY KEY,
+  filename TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
