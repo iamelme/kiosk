@@ -124,7 +124,7 @@ export type ReturnSaleType = {
   created_at: Date;
   invoice_number: string;
   status: string;
-  items: SaleItemType[];
+  items: Array<SaleItemType & { available_qty: number }>;
   sub_total: number;
   discount: number;
   vatable_sales: number;
@@ -173,14 +173,21 @@ export type ReturnItemType = {
 
 export type ReturnRevenueType =
   | {
-      month: number;
       gross_revenue: number;
+      gross_percent_change: number;
+      return_percent_change: number;
+      net_percent_change: number;
+      prev_gross_revenue: number | null;
       total_return: number;
       net_revenue: number;
     }
   | {
       month: number;
       gross_revenue: number;
+      gross_percent_change: number;
+      return_percent_change: number;
+      prev_gross_revenue: number | null;
+      net_percent_change: number;
       total_return: number;
       net_revenue: number;
     }[];
