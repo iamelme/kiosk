@@ -33,10 +33,12 @@ const StatusWrapper = ({
   switch (status) {
     case "complete":
       return <Badge variant="success">{children}</Badge>;
+    case "partial_return":
+      return <Badge variant="warning">{children}</Badge>;
     case "return":
       return <Badge>{children}</Badge>;
     default:
-      return <Badge>{children}</Badge>;
+      return <Badge variant="danger">{children}</Badge>;
   }
 };
 
