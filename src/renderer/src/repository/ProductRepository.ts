@@ -452,6 +452,7 @@ export class ProductRepository implements IProductRepository {
       price,
       cost,
       code,
+      is_active,
       category_id,
       user_id,
     } = params;
@@ -477,6 +478,7 @@ export class ProductRepository implements IProductRepository {
           price = ?,
           cost = ?,
           code = ?,
+          is_active = ?,
           category_id = ?,
           updated_by = ?
         WHERE
@@ -484,26 +486,21 @@ export class ProductRepository implements IProductRepository {
         RETURNING *`,
       );
 
-      const transaction = db.transaction(() => {
-        stmt.all(
-          name,
-          now,
-          normalizeSKU,
-          description,
-          normalizePrice,
-          normalizeCost,
-          code,
-          category_id,
-          user_id,
-          id,
-        );
+      const product = stmt.run(
+        name,
+        now,
+        normalizeSKU,
+        description,
+        normalizePrice,
+        normalizeCost,
+        code,
+        is_active,
+        category_id,
+        user_id,
+        id,
+      );
 
-        return true;
-      });
-
-      const res = transaction();
-
-      if (!res) {
+      if (!product.changes) {
         throw new Error("Something went wrong while updating the product");
       }
 
