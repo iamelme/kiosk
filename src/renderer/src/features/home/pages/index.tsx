@@ -20,8 +20,7 @@ export default function HomePage(): ReactNode {
     <div>
       <header className="mb-4">
         <h2 className="text-lg font-medium">
-          Hello, {user.user_name}{" "}
-          {isMorning ? <>&#9728;</> : <>&#127769;</>}{" "}
+          Hey {user.user_name}! {isMorning ? <>&#9728;</> : <>&#127769;</>}{" "}
         </h2>
       </header>
       <Rev />
