@@ -97,9 +97,9 @@ export default function Sidebar({ onUpdateUser }: Props): React.JSX.Element {
   });
 
   return (
-    <aside className="flex flex-col justify-between w-[200px] bg-gray-900 border-r border-slate-200 text-slate-300">
+    <aside className="flex flex-col justify-between w-[200px] h-[100svh] overflow-auto bg-gray-900 border-r border-slate-200 text-slate-300">
       <div>
-        <h1 className="py-2 px-3">
+        <h1 className="sticky top-0 left-0 py-2 px-3">
           {settings?.logo && (
             <Link to="/">
               <img
