@@ -1,24 +1,32 @@
-import { SaleItemType } from '@renderer/shared/utils/types'
-import Items from '@renderer/shared/components/Items'
-import Dialog from '@renderer/shared/components/ui/Dialog'
-import { ChangeEvent, ReactNode, RefObject } from 'react'
-import { Link } from 'react-router-dom'
-import { NumericFormat } from 'react-number-format'
-import Input from '@renderer/shared/components/ui/Input'
-import Alert from '@renderer/shared/components/ui/Alert'
-import Button from '@renderer/shared/components/ui/Button'
-import { numericFormatLimit } from '@renderer/shared/utils'
+import { SaleItemType } from "@renderer/shared/utils/types";
+import Items from "@renderer/shared/components/Items";
+import Dialog from "@renderer/shared/components/ui/Dialog";
+import { ChangeEvent, ReactNode, RefObject } from "react";
+import { Link } from "react-router-dom";
+import { NumericFormat } from "react-number-format";
+import Input from "@renderer/shared/components/ui/Input";
+import Alert from "@renderer/shared/components/ui/Alert";
+import Button from "@renderer/shared/components/ui/Button";
+import { numericFormatLimit } from "@renderer/shared/utils";
+import { CornerUpLeft } from "react-feather";
 
 type ReturnProp = {
-  ref: RefObject<HTMLButtonElement | null>
-  items: SaleItemType[]
-  onToggleAll: (e: ChangeEvent<HTMLInputElement>) => void
-  onToggleSelect: (id: string | number) => (e: ChangeEvent<HTMLInputElement>) => void
-  selectedItems: Map<string, { isChecked: boolean; price: number; newQty: number }>
-  onSelectedItems: (v: Map<string, { isChecked: boolean; price: number; newQty: number }>) => void
-  errorMessage?: string
-  onReturn: () => void
-}
+  ref: RefObject<HTMLButtonElement | null>;
+  items: SaleItemType[];
+  onToggleAll: (e: ChangeEvent<HTMLInputElement>) => void;
+  onToggleSelect: (
+    id: string | number,
+  ) => (e: ChangeEvent<HTMLInputElement>) => void;
+  selectedItems: Map<
+    string,
+    { isChecked: boolean; price: number; newQty: number }
+  >;
+  onSelectedItems: (
+    v: Map<string, { isChecked: boolean; price: number; newQty: number }>,
+  ) => void;
+  errorMessage?: string;
+  onReturn: () => void;
+};
 
 export default function Return({
   ref,
@@ -28,12 +36,12 @@ export default function Return({
   selectedItems,
   onSelectedItems,
   errorMessage,
-  onReturn
+  onReturn,
 }: ReturnProp): ReactNode {
   return (
     <Dialog>
       <Dialog.Trigger ref={ref} size="sm" variant="outline">
-        Return
+        <CornerUpLeft size={14} /> Return
       </Dialog.Trigger>
       <Dialog.Content>
         <Dialog.Header>
@@ -43,10 +51,10 @@ export default function Return({
           <Items
             items={items}
             headers={[
-              { label: 'Name' },
-              { label: 'Sold', className: 'text-right' },
-              { label: 'Returned', className: 'text-right' },
-              { label: 'Available', className: 'text-right' }
+              { label: "Name" },
+              { label: "Sold", className: "text-right" },
+              { label: "Returned", className: "text-right" },
+              { label: "Available", className: "text-right" },
             ]}
             hasCheckBox
             onSelectAll={onToggleAll}
@@ -64,27 +72,29 @@ export default function Return({
                 <td>
                   <NumericFormat
                     displayType={
-                      selectedItems.get(`${item.id}`) && item.available_qty > 0 ? 'input' : 'text'
+                      selectedItems.get(`${item.id}`) && item.available_qty > 0
+                        ? "input"
+                        : "text"
                     }
                     customInput={Input}
                     value={item.available_qty}
                     isAllowed={numericFormatLimit(item.available_qty)}
                     className="text-right"
                     onValueChange={(values) => {
-                      const { floatValue } = values
-                      console.log({ floatValue })
-                      const items = new Map(selectedItems)
+                      const { floatValue } = values;
+                      console.log({ floatValue });
+                      const items = new Map(selectedItems);
                       if (floatValue) {
                         onSelectedItems(
                           items.set(`${item.id}`, {
                             isChecked: true,
                             price: item.unit_price,
-                            newQty: floatValue
-                          })
-                        )
+                            newQty: floatValue,
+                          }),
+                        );
                       } else {
-                        items.delete(`${item.id}`)
-                        onSelectedItems(items)
+                        items.delete(`${item.id}`);
+                        onSelectedItems(items);
                       }
                     }}
                   />
@@ -104,5 +114,5 @@ export default function Return({
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog>
-  )
+  );
 }

@@ -10,6 +10,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import useBoundStore from "@renderer/shared/stores//boundStore";
 import Return from "../components/Return";
 import Badge from "@renderer/shared/components/ui/Badge";
+import { FileText, Printer } from "react-feather";
 const headers = [
   { label: "Name", className: "" },
   { label: "Quantity", className: "text-right" },
@@ -243,15 +244,15 @@ export default function Detail(): ReactNode {
           </Button>
         </div>
         <div className="text-right">
-          <div className="flex justify-end gap-x-2">
+          <div className="flex justify-end gap-x-2 mb-4">
             <div>
               <Button variant="outline" size="sm" onClick={handlePrintPDF}>
-                Print PDF
+                <Printer size={14} /> Print PDF
               </Button>
             </div>
             <div>
               <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-                Download PDF
+                <FileText size={14} /> Download PDF
               </Button>
             </div>
             {data?.status !== "void" && returnable && (
@@ -307,8 +308,8 @@ export default function Detail(): ReactNode {
       )}
       {data?.items && (
         <>
-          <h3 className="font-medium mb-2">Line Items</h3>
-          <div className="mb-3 border border-slate-300 rounded-md">
+          <h3 className="font-medium">Line Items</h3>
+          <div className="">
             <Items
               items={data.items}
               headers={headers}
