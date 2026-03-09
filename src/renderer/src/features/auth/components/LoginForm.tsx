@@ -25,7 +25,7 @@ export default function LoginForm({ errorMessage }: Props): ReactNode {
         type="password"
       />
       <p className="mb-3 text-blue-500">
-        <Link to="/auth/signup">Register</Link>
+        <Link to="/auth/signup">Need an account? Register</Link>
       </p>
       {errorMessage && (
         <Alert variant="danger" className="mb-3 test">
