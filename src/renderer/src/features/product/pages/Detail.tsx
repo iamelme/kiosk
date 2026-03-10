@@ -93,7 +93,7 @@ export default function Detail(): React.JSX.Element {
     onInvalidate: queryClient.invalidateQueries({ queryKey: ["products"] }),
   });
 
-  const categoryOptions = categories?.map((cat) => ({
+  const categoryOptions = categories?.results?.map((cat) => ({
     label: cat.name,
     value: String(cat.id),
   }));
