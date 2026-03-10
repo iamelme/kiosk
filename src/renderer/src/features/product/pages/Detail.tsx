@@ -77,7 +77,10 @@ export default function Detail(): React.JSX.Element {
   const { data: categories } = useQuery({
     queryKey: ["product-categories"],
     queryFn: async () => {
-      const { data } = await window.apiCategory.getAllCategories();
+      const { data } = await window.apiCategory.getAllCategories({
+        offset: 0,
+        pageSize: 10,
+      });
       return data;
     },
   });

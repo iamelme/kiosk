@@ -24,10 +24,22 @@ const headers = [
 ];
 
 export default function CategoryPage(): React.JSX.Element {
+  const [pageSize, setPageSize] = useState(50);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const currentPage = Number(searchParams.get("currentPage")) || 0;
+
   const { isPending, error, data } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", pageSize, currentPage],
     queryFn: async () => {
-      const { data } = await window.apiCategory.getAllCategories();
+      const { data, error } = await window.apiCategory.getAllCategories({
+        offset: currentPage,
+        pageSize,
+      });
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
       return data;
     },
   });
