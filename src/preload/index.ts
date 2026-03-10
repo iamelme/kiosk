@@ -14,15 +14,15 @@ import {
   ReturnItemType,
   ReturnRevenueType,
 } from "../renderer/src/shared/utils/types";
-import {
-  InventoryMovementParams,
-  InventoryMovementReturn,
-} from "../renderer/src/features/inventory/utils/types";
+import { InventoryMovementParams } from "../renderer/src/features/inventory/utils/types";
 import { SettingsType } from "../renderer/src/features/settings/utils/type";
 import {
   GetAllParams,
   ReturnAllProductType,
-} from "@renderer/interfaces/IProductRepository";
+} from "../main/interfaces/IProductRepository";
+import { ReturnInventoryByIdType } from "../main/interfaces/IInventoryRepository";
+
+import { ReturnCatAllType } from "../main/interfaces/ICategoryRepository";
 
 // type ProdInventoryType = {
 //   id: number
