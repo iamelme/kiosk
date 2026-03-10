@@ -1,4 +1,5 @@
 import {
+  GetAllParams,
   ICategoryRepository,
   ReturnCatAllType,
   ReturnType,
@@ -15,7 +16,9 @@ export class CategoryRepository implements ICategoryRepository {
 
   constructor(database: AppDatabase) {
     this._database = database;
-    ipcMain.handle("category:getAll", () => this.getAll());
+    ipcMain.handle("category:getAll", (_, params: GetAllParams) =>
+      this.getAll(params),
+    );
     ipcMain.handle("category:getById", (_, id: number) => this.getById(id));
     ipcMain.handle("category:getByName", (_, name: string) =>
       this.getByName(name),
@@ -29,43 +32,63 @@ export class CategoryRepository implements ICategoryRepository {
     ipcMain.handle("category:delete", (_, id: number) => this.delete(id));
   }
 
-  getAll(): ReturnCatAllType {
+  getAll(params: GetAllParams): ReturnCatAllType {
+    const { offset, pageSize = 10 } = params;
     try {
       const db = this._database.getDb();
 
-      const categories = db
-        .prepare(
-          `
+      const stmt = db.prepare(
+        `
           SELECT
             *
           FROM
             categories
           ORDER BY
             name ASC
+          LIMIT :limit
+          OFFSET :offset
                  `,
-        )
-        .all() as CategoryType[];
+      );
 
-      console.log({ categories });
+      const stmtCount = db.prepare(`
+               SELECT
+                count
+               FROM
+                counter
+               WHERE
+                name = ?
+               `);
 
-      if (categories) {
+      const transaction = db.transaction(() => {
+        const categories = stmt.all({
+          limit: pageSize,
+          offset: offset * pageSize,
+        }) as CategoryType[];
+
+        // console.log({ categories });
+
+        if (!categories) {
+          throw new Error(
+            "Something went wrong while retrieving the categories",
+          );
+        }
+
+        const res = stmtCount.get("categories") as { count: number };
+
         return {
-          data: {
-            total: 0,
-            results: categories,
-          },
-          error: "",
+          total: res.count || 0,
+          categories,
         };
-      }
+      });
+
+      const res = transaction();
 
       return {
         data: {
-          total: 0,
-          results: null,
+          total: res.total,
+          results: res.categories,
         },
-        error: new Error(
-          "Something went wrong while retrieving the categories",
-        ),
+        error: "",
       };
     } catch (error) {
       console.log(error);
@@ -75,9 +98,7 @@ export class CategoryRepository implements ICategoryRepository {
             total: 0,
             results: null,
           },
-          error: new Error(
-            "Something went wrong while deleting the categories",
-          ),
+          error: error,
         };
       }
       return {
