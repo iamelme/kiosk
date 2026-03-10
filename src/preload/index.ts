@@ -22,7 +22,10 @@ import {
 } from "../main/interfaces/IProductRepository";
 import { ReturnInventoryByIdType } from "../main/interfaces/IInventoryRepository";
 
-import { ReturnCatAllType } from "../main/interfaces/ICategoryRepository";
+import {
+  GetAllParams as GetCatAllParams,
+  ReturnCatAllType,
+} from "../main/interfaces/ICategoryRepository";
 
 // type ProdInventoryType = {
 //   id: number
@@ -166,8 +169,8 @@ export const apiReturn = {
 
 // Custom APIs for renderer
 export const apiCategory = {
-  getAllCategories: (): Promise<ReturnCatAllType> =>
-    ipcRenderer.invoke("category:getAll"),
+  getAllCategories: (params: GetCatAllParams): Promise<ReturnCatAllType> =>
+    ipcRenderer.invoke("category:getAll", params),
   getCategoryById: (id: number): Promise<CategoryReturnType> =>
     ipcRenderer.invoke("category:getById", id),
   getCategoryByName: (name: string): Promise<CategoryReturnType> =>
