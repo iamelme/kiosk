@@ -69,7 +69,7 @@ export default function System(): ReactNode {
           </p>
         </div>
         <div className="col-span-4">
-          <Button onClick={() => window.apiElectron.addBackUp()}>
+          <Button onClick={() => window.apiSettings.addBackUp()}>
             <Download size={14} /> Backup Database
           </Button>
         </div>
