@@ -1,9 +1,11 @@
 import Items from "@renderer/shared/components/Items";
 import ListPage from "@renderer/shared/components/ListPage";
+import Pagination2 from "@renderer/shared/components/Pagination2";
 import Button from "@renderer/shared/components/ui/Button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { PlusCircle, Trash2 } from "react-feather";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const Action = (): React.JSX.Element => (
   <div className="flex justify-end">
@@ -53,26 +55,39 @@ export default function CategoryPage(): React.JSX.Element {
       isPending={isPending}
       error={error}
     >
-      <Items
-        headers={headers}
-        items={data}
-        renderItems={(item) => (
-          <>
-            <td>
-              <Link to={`/categories/${item.id}`}>{item.name}</Link>
-            </td>
-            <td className="text-right">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleDelete(item.id)}
-              >
-                <Trash2 size={14} />
-              </Button>
-            </td>
-          </>
-        )}
-      />
+      {data?.results ? (
+        <>
+          <Items
+            headers={headers}
+            items={data.results}
+            renderItems={(item) => (
+              <>
+                <td>
+                  <Link to={`/categories/${item.id}`}>{item.name}</Link>
+                </td>
+                <td className="text-right">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleDelete(item.id)}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </td>
+              </>
+            )}
+          />
+          <Pagination2
+            pageSize={pageSize}
+            paginateSize={5}
+            total={data.total}
+            searchParams={searchParams}
+            onSearchParams={setSearchParams}
+            currentPage={Number(currentPage) || 0}
+            onPageSize={setPageSize}
+          />
+        </>
+      ) : null}
     </ListPage>
   );
 }
