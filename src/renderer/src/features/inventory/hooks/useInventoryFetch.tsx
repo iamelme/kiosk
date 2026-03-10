@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { ReturnInventoryByIdType } from "@renderer/interfaces/IInventoryRepository";
+import { ReturnInventoryByIdType } from "../../../../../main/interfaces/IInventoryRepository";
 
 type Params = {
   startDate?: string;

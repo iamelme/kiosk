@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { ReturnAllProductType } from "@renderer/interfaces/IProductRepository";
+import { ReturnAllProductType } from "../../../../../main/interfaces/IProductRepository";
 
 type Params = {
   searchTerm: string | null;
