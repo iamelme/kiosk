@@ -208,9 +208,12 @@ export default function POS(): ReactNode {
 
         <div className="mb-3 p-4 bg-white rounded-md border border-slate-300">
           <h3 className="mb-2 font-bold">Customer</h3>
-          <div className="my-3">
-            <label htmlFor="customerNameRef">Name</label>
-            <Input ref={inputRefCustName} id="customerNameRef" />
+          <div className="flex flex-col gap-y-3">
+            <Input
+              ref={inputRefCustName}
+              id="customerNameRef"
+              placeholder="Name..."
+            />
           </div>
         </div>
 
@@ -218,14 +221,11 @@ export default function POS(): ReactNode {
           <h3 className="mb-2 font-bold">Payment</h3>
 
           <div className="mb-3">
-            <label htmlFor="method" className="block mb-1">
-              Method
-            </label>
             <select
               id="method"
               onChange={(e) => setPaymentMethod(e.target.value)}
               value={paymentMethod}
-              className="w-full py-1 px-2 border border-slate-400 rounded-md"
+              className="w-full py-1 px-2 border border-slate-300 rounded-md"
             >
               <option value="e-wallet">E-wallet</option>
               <option value="cash">Cash</option>
@@ -264,7 +264,7 @@ export default function POS(): ReactNode {
           </div>
 
           <div className="mb-3">
-            <dl className="flex justify-between gap-x-2">
+            <dl className="flex justify-between gap-x-2 font-bold">
               <dt>Change Due:</dt>
               <dd>
                 <Price value={amount * 100 - data?.total} />
