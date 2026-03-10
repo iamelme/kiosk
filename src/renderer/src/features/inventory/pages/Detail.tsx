@@ -85,26 +85,28 @@ export default function Detail(): ReactNode {
                 onEndDate={setEndDate}
               />
               <div className="flex gap-x-2 justify-end mt-3">
-                <Dialog>
-                  <Dialog.Trigger
-                    ref={(el) => {
-                      adjustmentRef.current = el;
-                    }}
-                  >
-                    Adjustment
-                  </Dialog.Trigger>
-                  <Dialog.Content className="max-w-[500px]">
-                    <Dialog.Header>
-                      <h2 className="text-xl">Inventory Adjustment</h2>
-                    </Dialog.Header>
-                    <Adjustment
-                      ref={adjustmentRef}
-                      id={Number(id)}
-                      quantity={data.quantity}
-                      productId={data.product_id}
-                    />
-                  </Dialog.Content>
-                </Dialog>
+                {data?.productIsActive ? (
+                  <Dialog>
+                    <Dialog.Trigger
+                      ref={(el) => {
+                        adjustmentRef.current = el;
+                      }}
+                    >
+                      Adjustment
+                    </Dialog.Trigger>
+                    <Dialog.Content className="max-w-[500px]">
+                      <Dialog.Header>
+                        <h2 className="text-xl">Inventory Adjustment</h2>
+                      </Dialog.Header>
+                      <Adjustment
+                        ref={adjustmentRef}
+                        id={Number(id)}
+                        quantity={data.quantity}
+                        productId={data.product_id}
+                      />
+                    </Dialog.Content>
+                  </Dialog>
+                ) : null}
                 <Button
                   variant="outline"
                   size="sm"
@@ -126,7 +128,7 @@ export default function Detail(): ReactNode {
                 items={data.movements}
                 headers={[
                   { label: "Date" },
-                  { label: "Last Quantity", className: "text-right" },
+                  { label: "Last Change", className: "text-right" },
                   { label: "Movement Type" },
                   { label: "Ref Type" },
                 ]}

@@ -1,6 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { InventoryMovementReturn } from "../utils/types";
-import { InventoryType } from "@renderer/shared/utils/types";
+import { ReturnInventoryByIdType } from "@renderer/interfaces/IInventoryRepository";
 
 type Params = {
   startDate?: string;
@@ -20,12 +19,7 @@ export default function useInventoryFetch({
   cursorId,
   direction,
   onHasLastItem,
-}: Params): UseQueryResult<
-  InventoryType & {
-    productName: string;
-    movements: InventoryMovementReturn[] | null;
-  }
-> {
+}: Params): UseQueryResult<ReturnInventoryByIdType> {
   return useQuery({
     queryKey: [
       "inventory-product",
@@ -58,6 +52,7 @@ export default function useInventoryFetch({
           movement_type: 0,
           reference_type: undefined,
           productName: "",
+          productIsActive: 0,
           movements: null,
         };
       }

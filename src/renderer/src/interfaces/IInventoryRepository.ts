@@ -20,6 +20,14 @@ export type ProdInventoryType = {
   product_sku: string;
 };
 
+export type ReturnInventoryByIdType =
+  | (InventoryType & {
+      productName: string;
+      productIsActive: number;
+      movements: InventoryMovementReturn[] | null;
+    })
+  | null;
+
 export interface IInventoryRepository {
   getAll(params: {
     pageSize: number;
@@ -30,12 +38,7 @@ export interface IInventoryRepository {
     error: ErrorType;
   };
   getById(params: InventoryMovementParams): {
-    data:
-      | (InventoryType & {
-          productName: string;
-          movements: InventoryMovementReturn[] | null;
-        })
-      | null;
+    data: ReturnInventoryByIdType;
     error: ErrorType;
   };
 
