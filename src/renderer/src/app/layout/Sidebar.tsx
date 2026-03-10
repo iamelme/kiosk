@@ -86,13 +86,13 @@ export default function Sidebar({ onUpdateUser }: Props): React.JSX.Element {
   const { data: settings } = useQuery({
     queryKey: ["settings"],
     queryFn: async () => {
-      const res = await window.apiSettings.getSettings();
+      const { data, error } = await window.apiSettings.getSettings();
 
-      if (res.error && res.error instanceof Error) {
-        throw new Error(res.error.message);
+      if (error instanceof Error) {
+        throw new Error(error.message);
       }
 
-      return res.data;
+      return data;
     },
   });
 
