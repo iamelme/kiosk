@@ -29,7 +29,7 @@ export default function Info(): ReactNode {
 
       <div className="flex flex-col gap-y-3 mb-5">
         <dl className="grid grid-cols-7 gap-x-5 pb-3 border-b border-slate-200">
-          <dt className="col-span-3 text-slate-400">Date</dt>
+          <dt className="col-span-3 text-slate-400">Last backup</dt>
           <dd className="col-span-4">
             {new Date(data?.created_at).toLocaleDateString()}{" "}
             {new Date(data?.created_at).toLocaleTimeString()}
