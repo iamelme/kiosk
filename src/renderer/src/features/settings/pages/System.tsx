@@ -1,17 +1,4 @@
-import { ReactNode, useState } from "react";
-// import FormWrapper from "@renderer/shared/components/form/FormWrapper";
-// import SystemForm from "../components/SystemForm";
-// import z from "zod";
-// import { SettingsType } from "../utils/type";
-// import { useNavigate } from "react-router-dom";
-import Alert from "@renderer/shared/components/ui/Alert";
-import Button from "@renderer/shared/components/ui/Button";
-import { Download, Upload } from "react-feather";
-
-// const schema = z.object({
-// });
-
-// type ValuesType = z.infer<typeof schema>;
+import Info from "../components/Info";
 
 export default function System(): ReactNode {
   const [error, setError] = useState<Record<string, Error | string>>({
@@ -76,5 +63,8 @@ export default function System(): ReactNode {
         </div>
       </div>
     </div>
+    <>
+      <Info />
+    </>
   );
 }
