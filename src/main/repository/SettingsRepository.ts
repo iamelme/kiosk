@@ -1,6 +1,9 @@
 import { AppDatabase } from "../database/db";
 import { SettingsType } from "../../renderer/src/features/settings/utils/type";
-import { ISettingRepository } from "../interfaces/ISettingRepository";
+import {
+  ISettingRepository,
+  ReturnBackuplog,
+} from "../interfaces/ISettingRepository";
 import { ipcMain } from "electron";
 
 export class SettingsRepository implements ISettingRepository {
@@ -10,6 +13,7 @@ export class SettingsRepository implements ISettingRepository {
     this._database = database;
 
     ipcMain.handle("settings:get", () => this.get());
+    ipcMain.handle("settings:getBackupLogs", () => this.getBackuplog());
     ipcMain.handle("settings:update", (_, params: Partial<SettingsType>) =>
       this.update(params),
     );
@@ -38,12 +42,55 @@ export class SettingsRepository implements ISettingRepository {
       if (error instanceof Error) {
         return {
           data: null,
-          error: new Error("Something went wrong while retrieving the product"),
+          error,
         };
       }
       return {
         data: null,
-        error: new Error("Something went wrong while  retrieving the product"),
+        error: new Error("Something went wrong while  retrieving the settings"),
+      };
+    }
+  }
+
+  getBackuplog(): ReturnBackuplog {
+    try {
+      const db = this._database.getDb();
+
+      const logs = db
+        .prepare(
+          `
+      SELECT
+        *
+      FROM
+        backup_logs
+      ORDER BY
+        id
+      DESC
+      LIMIT 1
+      `,
+        )
+        .get() as ReturnBackuplog["data"];
+
+      if (!logs) {
+        throw new Error();
+      }
+
+      return {
+        data: logs,
+        error: "",
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return {
+          data: null,
+          error,
+        };
+      }
+      return {
+        data: null,
+        error: new Error(
+          "Something went wrong while  retrieving the backup logs",
+        ),
       };
     }
   }

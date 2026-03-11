@@ -256,6 +256,10 @@ export const apiInventory = {
 export const apiSettings = {
   getSettings: (): Promise<{ data: SettingsType; error: ErrorType }> =>
     ipcRenderer.invoke("settings:get"),
+  getBackuplogs: (): Promise<{
+    data: { created_at: string; status?: string };
+    error: ErrorType;
+  }> => ipcRenderer.invoke("settings:getBackupLogs"),
   updateLocale: (
     locale: string,
   ): Promise<{ success: boolean; error: ErrorType }> =>
@@ -267,7 +271,8 @@ export const apiSettings = {
   ): Promise<{ success: boolean; error: ErrorType }> =>
     ipcRenderer.invoke("settings:update", params),
   addBackUp: (): Promise<void> => ipcRenderer.invoke("save-db"),
-  uploadBackUp: (): Promise<boolean> => ipcRenderer.invoke("upload-backup"),
+  uploadBackUp: (): Promise<boolean | undefined> =>
+    ipcRenderer.invoke("upload-backup"),
 };
 
 export const apiElectron = {
