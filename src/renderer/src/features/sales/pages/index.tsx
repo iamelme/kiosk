@@ -120,9 +120,8 @@ export default function Sales(): ReactNode {
         }}
         isPending={isPending}
         error={error}
-      >
-        <>
-          {sales && (
+        content={
+          sales && (
             <Items
               items={sales}
               headers={headers}
@@ -156,20 +155,20 @@ export default function Sales(): ReactNode {
                 </>
               )}
             />
-          )}
-        </>
-      </ListPage>
-
-      <Pagination2
-        pageSize={pageSize}
-        paginateSize={3}
-        total={total}
-        searchParams={searchParams}
-        onSearchParams={setSearchParams}
-        currentPage={Number(currentPage) || 0}
-        onPageSize={setPageSize}
+          )
+        }
+        footer={
+          <Pagination2
+            pageSize={pageSize}
+            paginateSize={3}
+            total={total}
+            searchParams={searchParams}
+            onSearchParams={setSearchParams}
+            currentPage={Number(currentPage) || 0}
+            onPageSize={setPageSize}
+          />
+        }
       />
-
       {
         // <Pagination
         //   direction={dir}

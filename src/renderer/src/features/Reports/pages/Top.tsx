@@ -1,51 +1,49 @@
-import Items from '@renderer/shared/components/Items'
-import ListPage from '@renderer/shared/components/ListPage'
+import Items from "@renderer/shared/components/Items";
+import ListPage from "@renderer/shared/components/ListPage";
 // import Pagination from '@renderer/shared/components/Pagination'
-import Alert from '@renderer/shared/components/ui/Alert'
-import Input from '@renderer/shared/components/ui/Input'
-import { addDays, csvDownload } from '@renderer/shared/utils'
-import { ReactNode, useState } from 'react'
-import { NumericFormat } from 'react-number-format'
-import { Link } from 'react-router-dom'
-import DateFilter from '@renderer/shared/components/DateFilter'
-import Button from '@renderer/shared/components/ui/Button'
-import { Download } from 'react-feather'
-import useTopItems from '@renderer/shared/hooks/useTopItems'
+import Alert from "@renderer/shared/components/ui/Alert";
+import Input from "@renderer/shared/components/ui/Input";
+import { addDays, csvDownload } from "@renderer/shared/utils";
+import { ReactNode, useState } from "react";
+import { NumericFormat } from "react-number-format";
+import { Link } from "react-router-dom";
+import DateFilter from "@renderer/shared/components/DateFilter";
+import Button from "@renderer/shared/components/ui/Button";
+import { Download } from "react-feather";
+import useTopItems from "@renderer/shared/hooks/useTopItems";
 
 const headers = [
-  { label: 'Name', className: '' },
-  { label: 'Total Sales', className: 'text-right' }
-]
+  { label: "Name", className: "" },
+  { label: "Total Sales", className: "text-right" },
+];
 
 export default function Top(): ReactNode {
+  const [startDate, setStartDate] = useState<Date | string>("");
+  const [endDate, setEndDate] = useState<Date | string>("");
 
-  const [startDate, setStartDate] = useState<Date | string>('')
-  const [endDate, setEndDate] = useState<Date | string>('')
-
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(10);
 
   const { data, isPending, error } = useTopItems({
     pageSize,
     startDate,
-    endDate: endDate ? addDays(new Date(endDate), 1) : ''
-  })
+    endDate: endDate ? addDays(new Date(endDate), 1) : "",
+  });
 
   if (isPending) {
-    return <>Loading...</>
+    return <>Loading...</>;
   }
 
   if (error) {
-    return <Alert variant="danger">{error.message}</Alert>
+    return <Alert variant="danger">{error.message}</Alert>;
   }
-
 
   return (
     <>
       <ListPage
         header={{
           left: {
-            title: 'Top Products',
-            subTitle: 'Top selling products'
+            title: "Top Products",
+            subTitle: "Top selling products",
           },
           right: (
             <>
@@ -61,9 +59,12 @@ export default function Top(): ReactNode {
                   title="Download CSV"
                   onClick={() =>
                     csvDownload({
-                      header: ['Product', 'Total'],
-                      data: data?.map((d) => ({ name: d.name, total: d.net_quantity_sold })),
-                      title: `${startDate} ${endDate}`
+                      header: ["Product", "Total"],
+                      data: data?.map((d) => ({
+                        name: d.name,
+                        total: d.net_quantity_sold,
+                      })),
+                      title: `${startDate} ${endDate}`,
                     })
                   }
                 >
@@ -71,13 +72,12 @@ export default function Top(): ReactNode {
                 </Button>
               </div>
             </>
-          )
+          ),
         }}
         isPending={isPending}
         error={error}
-      >
-        <>
-          {data && (
+        content={
+          data && (
             <>
               <Items
                 items={data}
@@ -93,37 +93,28 @@ export default function Top(): ReactNode {
                   </>
                 )}
               />
-
-              {/* <div className="hidden">
-                <Pagination
-                  direction={dir}
-                  firstId={data[0]?.id}
-                  lastId={data[data.length - 1]?.id}
-                  hasLastItem={hasLastItem}
-                  searchParams={searchParams}
-                  onSearchParams={setSearchParams}
-                />
-              </div> */}
             </>
-          )}
-        </>
-        <div className="flex items-center justify-end gap-x-2">
-          <span>Per page</span>
-          <div className="w-[100px]">
-            <NumericFormat
-              defaultValue={pageSize}
-              customInput={Input}
-              onValueChange={(values) => {
-                const { floatValue } = values
+          )
+        }
+        footer={
+          <div className="flex items-center justify-end gap-x-2">
+            <span>Per page</span>
+            <div className="w-[100px]">
+              <NumericFormat
+                defaultValue={pageSize}
+                customInput={Input}
+                onValueChange={(values) => {
+                  const { floatValue } = values;
 
-                if (floatValue) {
-                  setPageSize(floatValue)
-                }
-              }}
-            />
+                  if (floatValue) {
+                    setPageSize(floatValue);
+                  }
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </ListPage>
+        }
+      />
     </>
-  )
+  );
 }

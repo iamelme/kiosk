@@ -66,29 +66,34 @@ export default function CategoryPage(): React.JSX.Element {
       }}
       isPending={isPending}
       error={error}
-    >
-      {data?.results ? (
-        <>
-          <Items
-            headers={headers}
-            items={data.results}
-            renderItems={(item) => (
-              <>
-                <td>
-                  <Link to={`/categories/${item.id}`}>{item.name}</Link>
-                </td>
-                <td className="text-right">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </td>
-              </>
-            )}
-          />
+      content={
+        data?.results ? (
+          <>
+            <Items
+              headers={headers}
+              items={data.results}
+              renderItems={(item) => (
+                <>
+                  <td>
+                    <Link to={`/categories/${item.id}`}>{item.name}</Link>
+                  </td>
+                  <td className="text-right">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </td>
+                </>
+              )}
+            />
+          </>
+        ) : null
+      }
+      footer={
+        data ? (
           <Pagination2
             pageSize={pageSize}
             paginateSize={5}
@@ -98,8 +103,8 @@ export default function CategoryPage(): React.JSX.Element {
             currentPage={Number(currentPage) || 0}
             onPageSize={setPageSize}
           />
-        </>
-      ) : null}
-    </ListPage>
+        ) : null
+      }
+    />
   );
 }

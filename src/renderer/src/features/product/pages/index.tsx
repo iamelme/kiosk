@@ -107,9 +107,8 @@ export default function ProductPage(): React.JSX.Element {
         }}
         isPending={isPending}
         error={error}
-      >
-        <>
-          {data?.results && (
+        content={
+          data?.results && (
             <>
               <Items
                 ref={dataGridRef}
@@ -160,19 +159,23 @@ export default function ProductPage(): React.JSX.Element {
                   );
                 }}
               />
-              <Pagination2
-                pageSize={pageSize}
-                paginateSize={5}
-                total={data.total}
-                searchParams={searchParams}
-                onSearchParams={setSearchParams}
-                currentPage={Number(currentPage) || 0}
-                onPageSize={setPageSize}
-              />
             </>
-          )}
-        </>
-      </ListPage>
+          )
+        }
+        footer={
+          data ? (
+            <Pagination2
+              pageSize={pageSize}
+              paginateSize={5}
+              total={data.total}
+              searchParams={searchParams}
+              onSearchParams={setSearchParams}
+              currentPage={Number(currentPage) || 0}
+              onPageSize={setPageSize}
+            />
+          ) : null
+        }
+      />
     </>
   );
 }

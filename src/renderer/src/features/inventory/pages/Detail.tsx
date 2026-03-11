@@ -120,67 +120,70 @@ export default function Detail(): ReactNode {
         }}
         isPending={isPending}
         error={error}
-      >
-        <>
-          {data?.movements && (
-            <>
-              <Items
-                items={data.movements}
-                headers={[
-                  { label: "Date" },
-                  { label: "Last Change", className: "text-right" },
-                  { label: "Movement Type" },
-                  { label: "Ref Type" },
-                ]}
-                renderItems={(item) => (
-                  <>
-                    <td>{new Date(item.created_at).toLocaleDateString()}</td>
-                    <td className="text-right">{item.quantity}</td>
-                    <td>{movementType[item.movement_type ?? 0]}</td>
-                    <td>
-                      {item?.reference_type && humanize(item.reference_type)}
-                    </td>
-                  </>
-                )}
-              />
-            </>
-          )}
-        </>
-        <div className="flex items-end justify-between gap-x-2">
-          <div>
-            {data && data?.movements?.length !== undefined && (
-              <Pagination
-                direction={dir}
-                firstId={data?.movements?.[0]?.id}
-                lastId={data?.movements?.[data.movements.length - 1]?.id}
-                hasLastItem={hasLastItem}
-                searchParams={searchParams}
-                onSearchParams={setSearchParams}
-              />
+        content={
+          <>
+            {data?.movements && (
+              <>
+                <Items
+                  items={data.movements}
+                  headers={[
+                    { label: "Date" },
+                    { label: "Last Change", className: "text-right" },
+                    { label: "Movement Type" },
+                    { label: "Ref Type" },
+                  ]}
+                  renderItems={(item) => (
+                    <>
+                      <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                      <td className="text-right">{item.quantity}</td>
+                      <td>{movementType[item.movement_type ?? 0]}</td>
+                      <td>
+                        {item?.reference_type && humanize(item.reference_type)}
+                      </td>
+                    </>
+                  )}
+                />
+              </>
             )}
-          </div>
-          <div>
-            <span>Per page</span>
-            <div className="w-[100px]">
-              <NumericFormat
-                defaultValue={pageSize}
-                customInput={Input}
-                onValueChange={(values) => {
-                  const { floatValue } = values;
+          </>
+        }
+        footer={
+          <div className="flex items-end justify-between gap-x-2">
+            <div>
+              {data && data?.movements?.length !== undefined && (
+                <Pagination
+                  direction={dir}
+                  firstId={data?.movements?.[0]?.id}
+                  lastId={data?.movements?.[data.movements.length - 1]?.id}
+                  hasLastItem={hasLastItem}
+                  searchParams={searchParams}
+                  onSearchParams={setSearchParams}
+                />
+              )}
+            </div>
+            <div>
+              <span>Per page</span>
+              <div className="w-[100px]">
+                <NumericFormat
+                  defaultValue={pageSize}
+                  customInput={Input}
+                  onValueChange={(values) => {
+                    const { floatValue } = values;
 
-                  if (floatValue) {
-                    setSearchParams({
-                      ...searchParams,
-                      cursorId: "0",
-                    });
-                    setPageSize(floatValue);
-                  }
-                }}
-              />
+                    if (floatValue) {
+                      setSearchParams({
+                        ...searchParams,
+                        cursorId: "0",
+                      });
+                      setPageSize(floatValue);
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </ListPage>
+        }
+      />
     </>
   );
 }
