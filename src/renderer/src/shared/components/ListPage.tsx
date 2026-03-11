@@ -1,35 +1,37 @@
-import React, { ReactNode } from 'react'
-import Alert from './ui/Alert'
+import React, { ReactNode } from "react";
+import Alert from "./ui/Alert";
 
 type ListPageProp = {
   header?: {
     left?: {
-      title: string
-      subTitle?: string
-    }
-    right?: ReactNode
-  }
-  isPending: boolean
-  error: Error | null
-  children: ReactNode
-}
+      title: string;
+      subTitle?: string;
+    };
+    right?: ReactNode;
+  };
+  isPending: boolean;
+  error: Error | null;
+  content: ReactNode;
+  footer?: ReactNode;
+};
 
 export default function ListPage({
   header,
   isPending,
   error,
-  children
+  content,
+  footer,
 }: ListPageProp): React.JSX.Element {
   return (
-    <>
+    <section className="flex flex-col h-[100svh] py-4">
       {header && (
-        <div className="flex">
+        <header className="flex shrink-0 pb-4">
           <div className="flex-1">
             <h2 className="text-xl">{header?.left?.title}</h2>
             <p className="text-slate-400">{header?.left?.subTitle}</p>
           </div>
           <div className="flex-1">{header?.right}</div>
-        </div>
+        </header>
       )}
       {error && <Alert variant="danger">{error.message}</Alert>}
       {isPending ? (
@@ -56,8 +58,11 @@ export default function ListPage({
           </div>
         </div>
       ) : (
-        children
+        <section className="flex-1 overflow-x-hidden overflow-y-auto">
+          {content}
+        </section>
       )}
-    </>
-  )
+      {footer ? <footer className="shrink-0 py-3">{footer} </footer> : null}
+    </section>
+  );
 }
