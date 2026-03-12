@@ -13,3 +13,14 @@ BEGIN
     count = count + 1;
 
 END;
+
+CREATE TRIGGER IF NOT EXISTS trg_after_delete_customers
+AFTER DELETE ON customers
+BEGIN
+
+  UPDATE
+    counter
+  SET
+    count = count - 1;
+
+END;

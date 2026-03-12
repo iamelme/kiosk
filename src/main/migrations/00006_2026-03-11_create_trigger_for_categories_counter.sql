@@ -2,11 +2,14 @@ CREATE TRIGGER IF NOT EXISTS trg_after_insert_categories
 AFTER INSERT ON  categories
 BEGIN
 
-  UPDATE
+  INSERT INTO
     counter
+    (name, count)
+  VALUES
+    ('categories', 1)
+  ON CONFLICT (name)
+  DO UPDATE
   SET
-    count = count + 1
-  WHERE
-    name = 'categories';
+    count = count + 1;
 
 END;
