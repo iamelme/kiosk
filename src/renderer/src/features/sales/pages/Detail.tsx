@@ -240,7 +240,13 @@ export default function Detail(): ReactNode {
         logo: logo ?? "",
       });
 
-      await window.apiElectron.printPDF(res);
+      await window.apiElectron.printPDF({
+        arrayBuffer: res,
+        isSilent:
+          settings?.is_print_silent === undefined
+            ? true
+            : !!Number(settings?.is_print_silent),
+      });
     } catch (error) {
       console.error(error);
     }

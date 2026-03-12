@@ -291,8 +291,10 @@ export const apiElectron = {
     params: ReturnSaleType & { logo: string },
   ): Promise<ArrayBuffer> => ipcRenderer.invoke("create-pdf", params),
   uploadLogo: (): Promise<string | null> => ipcRenderer.invoke("upload-logo"),
-  printPDF: (arryBuff: ArrayBuffer): Promise<void> =>
-    ipcRenderer.invoke("print-pdf", arryBuff),
+  printPDF: (params: {
+    arrayBuffer: ArrayBuffer;
+    isSilent?: boolean;
+  }): Promise<void> => ipcRenderer.invoke("print-pdf", params),
   hashPassword: (password: string): Promise<string | boolean> =>
     ipcRenderer.invoke("hash-password", password),
   verifyPassword: (params: {
