@@ -10,13 +10,13 @@ import {
 } from "@renderer/shared/utils";
 import { ReturnItemType } from "@renderer/shared/utils/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ReactNode, useRef, useState } from "react";
+import { ChangeEvent, ReactNode, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import useBoundStore from "@renderer/shared/stores//boundStore";
 import Return from "../components/Return";
 import Badge from "@renderer/shared/components/ui/Badge";
 import { FileText, Printer } from "react-feather";
-import { SettingsType } from "src/main/interfaces/ISettingRepository";
+import { SettingsType } from "../../../shared/utils/types";
 const headers = [
   { label: "Name", className: "" },
   { label: "Quantity", className: "text-right" },
@@ -138,7 +138,7 @@ export default function Detail(): ReactNode {
     },
   });
 
-  const handleToggleAll = (e): void => {
+  const handleToggleAll = (e: ChangeEvent<HTMLInputElement>): void => {
     const { checked } = e.target;
 
     if (data) {
@@ -163,40 +163,41 @@ export default function Detail(): ReactNode {
     }
   };
 
-  const handleToggleSelect = (id) => (e) => {
-    const { checked } = e.target;
+  const handleToggleSelect =
+    (id: string | number) => (e: ChangeEvent<HTMLInputElement>) => {
+      const { checked } = e.target;
 
-    const items = new Map(selectedItems);
+      const items = new Map(selectedItems);
 
-    checked
-      ? items.set(`${id}`, {
-          isChecked: true,
-          price: data?.items?.find((item) => item.id === id)?.unit_price ?? 0,
-          newQty: data?.items?.find((item) => item.id === id)?.quantity ?? 0,
-        })
-      : items.delete(`${id}`);
+      checked
+        ? items.set(`${id}`, {
+            isChecked: true,
+            price: data?.items?.find((item) => item.id === id)?.unit_price ?? 0,
+            newQty: data?.items?.find((item) => item.id === id)?.quantity ?? 0,
+          })
+        : items.delete(`${id}`);
 
-    if (items.size === data?.items.length && data?.items.length > 0) {
-      if (!checked) {
-        setSelectedItems(new Map());
+      if (items.size === data?.items.length && data?.items.length > 0) {
+        if (!checked) {
+          setSelectedItems(new Map());
+          return;
+        }
+        const ids = data?.items.reduce((acc, cur) => {
+          acc[cur.id] = {
+            isChecked: true,
+            price:
+              data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
+            newQty: items.get(`${cur.id}`)?.newQty || cur.available_qty,
+          };
+
+          return acc;
+        }, {});
+        setSelectedItems(new Map(Object.entries(ids)));
         return;
       }
-      const ids = data?.items.reduce((acc, cur) => {
-        acc[cur.id] = {
-          isChecked: true,
-          price:
-            data?.items?.find((item) => item.id === cur.id)?.unit_price ?? 0,
-          newQty: items.get(`${cur.id}`)?.newQty || cur.available_qty,
-        };
 
-        return acc;
-      }, {});
-      setSelectedItems(new Map(Object.entries(ids)));
-      return;
-    }
-
-    setSelectedItems(items);
-  };
+      setSelectedItems(items);
+    };
 
   if (isPending) {
     return <>Loading...</>;
@@ -210,20 +211,19 @@ export default function Detail(): ReactNode {
     return <Alert variant="danger">No Details for this Sales Invoice</Alert>;
   }
 
-  const settingsArr: SettingsType[] | undefined = queryClient.getQueryData([
-    "settings",
-  ]);
+  const settingsArr: { key: keyof SettingsType; value: string }[] | undefined =
+    queryClient.getQueryData(["settings"]);
 
-  const settings = arrKeyValueToObj(settingsArr);
+  const settings = arrKeyValueToObj<keyof SettingsType, string>(settingsArr);
 
-  const logo = settings?.["logo"] ?? "";
+  const logo = settings?.["logo"];
 
   const handleDownloadPDF = async (): Promise<void> => {
     try {
       const res = await window.apiElectron.createPDF({
         ...data,
         ...settings,
-        logo: "",
+        logo: logo || "",
       });
 
       downloadblePDF({ res, invoiceNumber: data?.invoice_number });
