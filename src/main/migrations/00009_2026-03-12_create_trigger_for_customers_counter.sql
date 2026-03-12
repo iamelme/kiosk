@@ -21,6 +21,8 @@ BEGIN
   UPDATE
     counter
   SET
-    count = count - 1;
+    count = count - 1
+  WHERE
+    name = 'customers'
 
 END;
