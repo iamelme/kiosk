@@ -15,6 +15,7 @@ import Menu from "../../shared/components/Menu";
 import Button from "../../shared/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { arrKeyValueToObj } from "@renderer/shared/utils";
 
 const menu = [
   {
@@ -106,7 +107,9 @@ export default function Sidebar({ onUpdateUser }: Props): React.JSX.Element {
     return <>Loading...</>;
   }
 
-  const logo = data?.find((d) => d.key === "logo")?.value;
+  const settings = data && arrKeyValueToObj(data);
+
+  const logo = settings?.["logo"];
 
   return (
     <aside className="flex flex-col w-[240px] h-[100svh] bg-gray-900 border-r border-slate-200 text-slate-300">

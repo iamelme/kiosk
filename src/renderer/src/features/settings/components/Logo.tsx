@@ -1,5 +1,6 @@
 import Alert from "@renderer/shared/components/ui/Alert";
 import Button from "@renderer/shared/components/ui/Button";
+import { arrKeyValueToObj } from "@renderer/shared/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 
@@ -49,7 +50,9 @@ export default function Logo(): ReactNode {
     return <Alert variant="danger">{error.message}</Alert>;
   }
 
-  const logo = settings?.find((d) => d.key === "logo")?.value;
+  const newSettings = settings && arrKeyValueToObj(settings);
+
+  const logo = newSettings?.["logo"];
 
   return (
     <>
