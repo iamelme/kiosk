@@ -113,7 +113,7 @@ export class ProductRepository implements IProductRepository {
         const total = stmtCount.get({ name: "products" }) as { count: number };
 
         return {
-          total: total.count,
+          total: total?.count || 0,
           results: products,
         };
       });

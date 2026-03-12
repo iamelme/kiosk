@@ -108,7 +108,7 @@ export class SaleRepository implements ISaleRepository {
         const total = stmtCount.get({ name: "sales" }) as { count: number };
 
         return {
-          total: total.count,
+          total: total?.count || 0,
           results: sales,
         };
       });

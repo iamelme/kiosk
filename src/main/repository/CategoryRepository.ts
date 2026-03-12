@@ -76,7 +76,7 @@ export class CategoryRepository implements ICategoryRepository {
         const res = stmtCount.get("categories") as { count: number };
 
         return {
-          total: res.count || 0,
+          total: res?.count || 0,
           categories,
         };
       });
