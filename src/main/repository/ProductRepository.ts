@@ -320,7 +320,7 @@ export class ProductRepository implements IProductRepository {
 
       const transaction = db.transaction(() => {
         const products = stmt.all(
-          normalizeTerm,
+          `${normalizeTerm}*`,
         ) as ReturnAllProductType["data"]["results"];
 
         console.log({ normalizeTerm });
