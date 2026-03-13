@@ -20,7 +20,7 @@ export default function Detail(): ReactNode {
 
   console.log({ id });
   const { data, error } = useCustomerFetch({ id });
-  const { mutate } = useSubmit({ id });
+  const { mutate, error: mutateError } = useSubmit({ id });
 
   console.log({ data });
 
@@ -39,7 +39,7 @@ export default function Detail(): ReactNode {
         schema={schema}
         onSubmit={mutate}
       >
-        <CustomerForm />
+        <CustomerForm errorMessage={mutateError?.message}/>
       </FormWrapper>
     </div>
   );
