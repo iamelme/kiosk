@@ -32,6 +32,7 @@ export default function Alert({
   return (
     <div
       {...props}
+      role="alert"
       className={twMerge(
         `rounded-md ${styles.variant[variant]} ${styles.size[size]}`,
         props.className,
